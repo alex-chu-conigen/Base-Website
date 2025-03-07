@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "homepage": "https://alex-chu-conigen.github.io/Base-Website",
+    "gh-pages": "^6.3.0"
+  },
+  "scripts":{
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build" 
+}   
+}
