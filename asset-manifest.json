@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "//alex-chu-conigen.github.io/Base-Website/static/css/main.f0d3f498.css",
-    "main.js": "//alex-chu-conigen.github.io/Base-Website/static/js/main.86ffba31.js",
+    "main.css": "//alex-chu-conigen.github.io/Base-Website/static/css/main.eaf29035.css",
+    "main.js": "//alex-chu-conigen.github.io/Base-Website/static/js/main.0e814e52.js",
     "static/js/453.7b933a10.chunk.js": "//alex-chu-conigen.github.io/Base-Website/static/js/453.7b933a10.chunk.js",
     "index.html": "//alex-chu-conigen.github.io/Base-Website/index.html",
-    "main.f0d3f498.css.map": "//alex-chu-conigen.github.io/Base-Website/static/css/main.f0d3f498.css.map",
-    "main.86ffba31.js.map": "//alex-chu-conigen.github.io/Base-Website/static/js/main.86ffba31.js.map",
+    "main.eaf29035.css.map": "//alex-chu-conigen.github.io/Base-Website/static/css/main.eaf29035.css.map",
+    "main.0e814e52.js.map": "//alex-chu-conigen.github.io/Base-Website/static/js/main.0e814e52.js.map",
     "453.7b933a10.chunk.js.map": "//alex-chu-conigen.github.io/Base-Website/static/js/453.7b933a10.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f0d3f498.css",
-    "static/js/main.86ffba31.js"
+    "static/css/main.eaf29035.css",
+    "static/js/main.0e814e52.js"
   ]
 }
