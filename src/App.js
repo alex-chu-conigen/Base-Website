@@ -18,7 +18,8 @@ function App() {
           <div className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/excel-processor" className="nav-link">Excel Processor</Link>
-            
+            <Link to="/multiple-triad-runs" className="nav-link">Multiple Triad Runs</Link>
+            <Link to="/summary" className="nav-link">Summary Report</Link>
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
           </div>
         </nav>
