@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import SummaryCard from './SummaryCard';
 import './ExcelProcessor.css';
 
 function ExcelProcessor() {
@@ -9,19 +13,48 @@ function ExcelProcessor() {
   const [higherThreshold, setHigherThreshold] = useState('');
   const [showFileNameInput, setShowFileNameInput] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [excludedCells, setExcludedCells] = useState(new Set()); // Store excluded cell locations
+  const [customNames, setCustomNames] = useState({}); // Store custom names for each file
   const DEFAULT_RANGE = 'B25:N33'; // Default range for single file
   const MULTI_FILE_RANGE = 'A7:M15'; // Range for multiple files
 
-  const getCellColor = (value) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const getCellColor = (value, rowKey, colKey) => {
     if (value === '') return '';
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return '';
+    
+    // Check if cell is excluded - now using just rowKey and colKey
+    const location = `${rowKey}${colKey}`;
+    if (excludedCells.has(location)) return 'excluded-cell';
+    
     if (numValue >= parseFloat(higherThreshold)) return 'highlight-green';
     if (numValue >= parseFloat(lowerThreshold)) return 'highlight-yellow';
     return '';
   };
 
-  const getThresholdSummary = (data, sheetName, headers) => {
+  const toggleCellExclusion = (fileIndex, sheetIndex, rowIndex, colIndex, rowKey, colKey) => {
+    // Use just rowKey and colKey for the location
+    const location = `${rowKey}${colKey}`;
+    
+    setExcludedCells(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(location)) {
+        newSet.delete(location);
+      } else {
+        newSet.add(location);
+      }
+      return newSet;
+    });
+  };
+
+  const getThresholdSummary = (data, sheetName, headers, fileIndex) => {
     if (!lowerThreshold && !higherThreshold) return [];
     
     const summary = [];
@@ -34,19 +67,26 @@ function ExcelProcessor() {
         const numValue = parseFloat(cell);
         if (isNaN(numValue)) return;
         
+        const rowKey = data[rowIndex][0] || `Row ${rowIndex + 1}`;
+        const colKey = headers[colIndex] || `Column ${String.fromCharCode(66 + colIndex)}`;
+        const location = `${rowKey}${colKey}`;
+        
+        // Skip excluded cells
+        if (excludedCells.has(location)) return;
+        
         if (higherThreshold && numValue >= parseFloat(higherThreshold)) {
           summary.push({
             value: numValue,
-            rowKey: data[rowIndex][0] || `Row ${rowIndex + 1}`, // Use first column value or fallback
-            colKey: headers[colIndex] || `Column ${String.fromCharCode(66 + colIndex)}`, // Use header or fallback
+            rowKey,
+            colKey,
             threshold: 'higher',
             sheetName
           });
         } else if (lowerThreshold && numValue >= parseFloat(lowerThreshold)) {
           summary.push({
             value: numValue,
-            rowKey: data[rowIndex][0] || `Row ${rowIndex + 1}`,
-            colKey: headers[colIndex] || `Column ${String.fromCharCode(66 + colIndex)}`,
+            rowKey,
+            colKey,
             threshold: 'lower',
             sheetName
           });
@@ -62,33 +102,26 @@ function ExcelProcessor() {
     const allSummaries = [];
     excelSummaries.forEach((summary, fileIndex) => {
       summary.sheets.forEach((sheet, sheetIndex) => {
-        const sheetSummaries = getThresholdSummary(sheet.dataRows, sheet.sheetName, sheet.columns);
+        const sheetSummaries = getThresholdSummary(sheet.dataRows, sheet.sheetName, sheet.columns, fileIndex);
         allSummaries.push(...sheetSummaries.map(item => ({
           ...item,
-          fileNumber: fileIndex + 1, // Add file number starting from 1
-          sheetNumber: sheetIndex + 1 // Add sheet number starting from 1
+          fileNumber: fileIndex + 1,
+          sheetNumber: sheetIndex + 1,
+          customName: customNames[fileIndex] // Add custom name to summary items
         })));
       });
     });
     
-    // Sort by file number (numeric), then sheet number (numeric), then row key (alphabetical), then column key (numeric)
     return allSummaries.sort((a, b) => {
-      // First sort by file number
       if (a.fileNumber !== b.fileNumber) {
         return a.fileNumber - b.fileNumber;
       }
-      
-      // Then sort by sheet number
       if (a.sheetNumber !== b.sheetNumber) {
         return a.sheetNumber - b.sheetNumber;
       }
-      
-      // Then sort by row key (alphabetical)
       if (a.rowKey !== b.rowKey) {
         return a.rowKey.localeCompare(b.rowKey);
       }
-      
-      // Finally sort by column key (numeric)
       const aColNum = parseInt(a.colKey.replace(/\D/g, '')) || 0;
       const bColNum = parseInt(b.colKey.replace(/\D/g, '')) || 0;
       return aColNum - bColNum;
@@ -186,95 +219,299 @@ function ExcelProcessor() {
   const handleFileNameSubmit = (e) => {
     e.preventDefault();
     if (fileName.trim()) {
-      downloadExcel(fileName.trim());
+      downloadExcel(fileName.trim()).catch(error => {
+        console.error('Error downloading Excel file:', error);
+        alert('Error creating Excel file. Please try again.');
+      });
       setShowFileNameInput(false);
       setFileName('');
     }
   };
 
-  const downloadExcel = (fileName) => {
+  const downloadExcel = async (fileName) => {
     // Create a new workbook
-    const wb = XLSX.utils.book_new();
-
+    const wb = new ExcelJS.Workbook();
+    
     // Add the threshold summary sheet
+    const thresholdWs = wb.addWorksheet('Threshold Summary');
+    
+    // Set up columns
+    thresholdWs.columns = [
+      { header: 'Location', key: 'location', width: 25 }, // Increased width for custom names
+      { header: 'Value', key: 'value', width: 15 }
+    ];
+
+    // Add data
     const isSingleFile = excelSummaries.length === 1;
     const thresholdData = getAllThresholdSummaries().map(item => {
-      // Extract just the letter/number parts from rowKey and colKey
       const rowLetter = item.rowKey.match(/[A-Za-z]+/)?.[0] || item.rowKey;
       const colNumber = item.colKey.match(/\d+/)?.[0] || item.colKey;
+      const location = `${isSingleFile ? item.sheetNumber : item.fileNumber}${rowLetter}${colNumber}`;
+      const displayLocation = item.customName ? `${item.customName} - ${location}` : location;
       
       return {
-        'Location': `${isSingleFile ? item.sheetNumber : item.fileNumber}${rowLetter}${colNumber}`,
-        'Value': item.value
+        location: displayLocation,
+        value: item.value
       };
     });
 
-    const thresholdWs = XLSX.utils.json_to_sheet(thresholdData);
-    
-    // Add highlighting to the Value column
-    const range = XLSX.utils.decode_range(thresholdWs['!ref']);
-    for (let R = 1; R <= range.e.r; ++R) {
-      const valueCell = thresholdWs[XLSX.utils.encode_cell({ r: R, c: 1 })]; // Value is in column B
-      if (valueCell) {
-        const value = parseFloat(valueCell.v);
-        if (!isNaN(value)) {
-          valueCell.s = {
-            fill: {
-              fgColor: {
-                rgb: value >= parseFloat(higherThreshold) ? "D4EDDA" : // Green
-                      value >= parseFloat(lowerThreshold) ? "FFF3CD" : // Yellow
-                      "FFFFFF" // White
-              }
-            }
-          };
-        }
+    // Add rows and apply conditional formatting
+    thresholdData.forEach(row => {
+      const excelRow = thresholdWs.addRow(row);
+      const value = parseFloat(row.value);
+      if (!isNaN(value)) {
+        const cell = excelRow.getCell(2); // Value column
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: {
+            argb: value >= parseFloat(higherThreshold) ? 'FFD4EDDA' : // Green
+                  value >= parseFloat(lowerThreshold) ? 'FFFFF3CD' : // Yellow
+                  'FFFFFFFF' // White
+          }
+        };
       }
-    }
-
-    XLSX.utils.book_append_sheet(wb, thresholdWs, 'Threshold Summary');
+    });
 
     // Add individual file sheets
     excelSummaries.forEach((summary, fileIndex) => {
       summary.sheets.forEach((sheet, sheetIndex) => {
-        // Create sheet data with headers
-        const sheetData = sheet.preview.map(row => {
-          const rowData = {};
-          sheet.columns.forEach((col, colIndex) => {
-            rowData[col] = row[colIndex] || '';
-          });
-          return rowData;
-        });
-
-        const ws = XLSX.utils.json_to_sheet(sheetData);
+        // Use custom name for sheet name if available, otherwise use default
+        const customName = customNames[fileIndex];
+        const sheetName = customName 
+          ? `${customName}_Sheet${sheetIndex + 1}`
+          : `File${fileIndex + 1}_Sheet${sheetIndex + 1}`;
         
-        // Add highlighting to all cells in the sheet
-        const sheetRange = XLSX.utils.decode_range(ws['!ref']);
-        for (let R = 1; R <= sheetRange.e.r; ++R) {
-          for (let C = 0; C <= sheetRange.e.c; ++C) {
-            const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
-            if (cell) {
-              const value = parseFloat(cell.v);
-              if (!isNaN(value)) {
-                cell.s = {
-                  fill: {
-                    fgColor: {
-                      rgb: value >= parseFloat(higherThreshold) ? "D4EDDA" : // Green
-                            value >= parseFloat(lowerThreshold) ? "FFF3CD" : // Yellow
-                            "FFFFFF" // White
-                    }
+        const ws = wb.addWorksheet(sheetName);
+        
+        // Add headers
+        ws.columns = sheet.columns.map(header => ({
+          header,
+          key: header,
+          width: 15
+        }));
+
+        // Add data rows and apply conditional formatting
+        sheet.preview.forEach((row, rowIndex) => {
+          const rowData = {};
+          
+          // Add data for each column
+          sheet.columns.forEach((col, colIndex) => {
+            // For the first column, use letters starting from 'A' at row 2
+            if (colIndex === 0) {
+              // If it's the first row, use the original header
+              if (rowIndex === 0) {
+                rowData[col] = row[colIndex] || '';
+              } else {
+                // For subsequent rows, use letters (A starts at row 2)
+                rowData[col] = String.fromCharCode(65 + (rowIndex - 1)); // 65 is ASCII for 'A'
+              }
+            } else {
+              rowData[col] = row[colIndex] || '';
+            }
+          });
+          
+          const excelRow = ws.addRow(rowData);
+          
+          // Apply conditional formatting to each cell
+          row.forEach((cell, colIndex) => {
+            if (colIndex === 0) return; // Skip the first column since it's now letters
+            
+            const value = parseFloat(cell);
+            if (!isNaN(value)) {
+              const colKey = sheet.columns[colIndex] || `Column ${String.fromCharCode(66 + colIndex)}`;
+              // Use the new letter-based row key for location
+              const letterRowKey = rowIndex === 0 ? row[0] : String.fromCharCode(65 + (rowIndex - 1));
+              const location = `${letterRowKey}${colKey}`;
+              
+              // Only apply highlighting if the cell is not excluded
+              if (!excludedCells.has(location)) {
+                const excelCell = excelRow.getCell(colIndex + 1);
+                excelCell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: {
+                    argb: value >= parseFloat(higherThreshold) ? 'FFD4EDDA' : // Green
+                          value >= parseFloat(lowerThreshold) ? 'FFFFF3CD' : // Yellow
+                          'FFFFFFFF' // White
                   }
                 };
               }
             }
-          }
-        }
-
-        XLSX.utils.book_append_sheet(wb, ws, `File${fileIndex + 1}_Sheet${sheetIndex + 1}`);
+          });
+        });
       });
     });
 
-    // Save the file with user-provided name
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
+    // Save the file
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName}.xlsx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    const tablesContent = document.querySelector('.tables-container').innerHTML;
+    const summaryContent = document.querySelector('.global-threshold-summary').innerHTML;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Excel Summary</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              margin: 0;
+            }
+            .print-layout {
+              display: flex;
+              gap: 2rem;
+            }
+            .tables-section {
+              flex: 1;
+            }
+            .summary-section {
+              width: 300px;
+            }
+            .summary-card {
+              background-color: white;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              padding: 1rem;
+              margin-bottom: 1rem;
+            }
+            .summary-card h2 {
+              margin: 0 0 1rem 0;
+              font-size: 1.2rem;
+              color: #333;
+            }
+            .sheet-summary {
+              margin-bottom: 1.5rem;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 0.85rem;
+              margin-bottom: 1rem;
+            }
+            th, td {
+              padding: 4px 6px;
+              border: 1px solid #ddd;
+              text-align: left;
+            }
+            th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+            }
+            tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .highlight-yellow {
+              background-color: #fff3cd;
+            }
+            .highlight-green {
+              background-color: #d4edda;
+            }
+            .summary-list {
+              display: flex;
+              flex-direction: column;
+              gap: 0.25rem;
+            }
+            .summary-item {
+              padding: 0.25rem 0.5rem;
+              border-radius: 4px;
+              font-family: monospace;
+              font-size: 0.8rem;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            @media print {
+              body {
+                padding: 0;
+              }
+              .print-layout {
+                display: flex;
+                gap: 2rem;
+              }
+              .summary-card, .summary-section {
+                break-inside: avoid;
+              }
+              table {
+                break-inside: avoid;
+              }
+              .summary-item {
+                break-inside: avoid;
+              }
+              .print-button {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-layout">
+            <div class="tables-section">
+              ${tablesContent}
+            </div>
+            <div class="summary-section">
+              ${summaryContent}
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over.id) {
+      const oldIndex = parseInt(active.id.split('-')[1]);
+      const newIndex = parseInt(over.id.split('-')[1]);
+
+      setExcelSummaries((items) => arrayMove(items, oldIndex, newIndex));
+      
+      // Update custom names to maintain the association with moved tables
+      setCustomNames(prev => {
+        const newCustomNames = {};
+        const oldNames = { ...prev };
+        
+        // Create array of indices to help with reordering
+        const indices = Object.keys(oldNames).map(Number);
+        if (indices.length === 0) return prev;
+        
+        // Reorder the indices
+        const reorderedIndices = arrayMove(indices, oldIndex, newIndex);
+        
+        // Create new mapping with reordered indices
+        reorderedIndices.forEach((oldIdx, newIdx) => {
+          if (oldNames[oldIdx] !== undefined) {
+            newCustomNames[newIdx] = oldNames[oldIdx];
+          }
+        });
+        
+        return newCustomNames;
+      });
+    }
+  };
+
+  // Add function to handle name updates
+  const handleNameChange = (fileIndex, newName) => {
+    setCustomNames(prev => ({
+      ...prev,
+      [fileIndex]: newName.trim()
+    }));
   };
 
   return (
@@ -357,59 +594,53 @@ function ExcelProcessor() {
       )}
 
       <div className="main-content">
-        <div className="tables-container">
-          {excelSummaries.map((summary, fileIndex) => (
-            <div key={fileIndex} className="summary-card">
-              <h2>{summary.fileName}</h2>
-              {summary.sheets.map((sheet, sheetIndex) => (
-                <div key={sheetIndex} className="sheet-summary">
-                  {excelSummaries.length === 1 && <h3>Sheet: {sheet.sheetName}</h3>}
-                  <div className="preview-table">
-                    <table>
-                      <thead>
-                        <tr>
-                          {sheet.columns.map((col, colIndex) => (
-                            <th key={colIndex}>{col}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sheet.preview.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {row.map((cell, cellIndex) => (
-                              <td 
-                                key={cellIndex}
-                                className={getCellColor(cell)}
-                              >
-                                {cell}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="tables-container">
+            <SortableContext
+              items={excelSummaries.map((_, index) => `file-${index}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              {excelSummaries.map((summary, fileIndex) => (
+                <SummaryCard
+                  key={`file-${fileIndex}`}
+                  summary={summary}
+                  fileIndex={fileIndex}
+                  excelSummaries={excelSummaries}
+                  getCellColor={getCellColor}
+                  toggleCellExclusion={toggleCellExclusion}
+                  customName={customNames[fileIndex] || ''}
+                  onNameChange={(newName) => handleNameChange(fileIndex, newName)}
+                />
               ))}
-            </div>
-          ))}
-        </div>
+            </SortableContext>
+          </div>
+        </DndContext>
         {excelSummaries.length > 0 && (
           <div className="global-threshold-summary">
-            <h4>Combined Threshold Summary</h4>
+            <div className="summary-header">
+              <h4>Combined Threshold Summary</h4>
+              <button onClick={handlePrint} className="print-button">
+                Print Summary
+              </button>
+            </div>
             <div className="summary-list">
               {getAllThresholdSummaries().map((item, index) => {
                 const rowLetter = item.rowKey.match(/[A-Za-z]+/)?.[0] || item.rowKey;
                 const colNumber = item.colKey.match(/\d+/)?.[0] || item.colKey;
                 const isSingleFile = excelSummaries.length === 1;
                 const location = `${isSingleFile ? item.sheetNumber : item.fileNumber}${rowLetter}${colNumber}`;
+                const displayLocation = item.customName ? `${item.customName} - ${location}` : location;
                 
                 return (
                   <div 
                     key={index} 
                     className={`summary-item ${item.threshold === 'higher' ? 'highlight-green' : 'highlight-yellow'}`}
                   >
-                    {location}: {item.value}
+                    {displayLocation}: {item.value}
                   </div>
                 );
               })}

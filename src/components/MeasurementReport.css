@@ -1,0 +1,183 @@
+.quickbase-report {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.quickbase-report h2 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.report-container {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: auto;
+    margin-bottom: 1rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+th, td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Editable cell styles */
+td.editable {
+    cursor: pointer;
+    position: relative;
+}
+
+td.editable:hover {
+    background-color: #f0f7ff;
+}
+
+td.editable::after {
+    content: '✎';
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    color: #007bff;
+    font-size: 0.8rem;
+}
+
+td.editable:hover::after {
+    opacity: 1;
+}
+
+.editing-container {
+    position: relative;
+    width: 100%;
+}
+
+.validation-error {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff3f3;
+    color: #dc3545;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0 0 4px 4px;
+    border: 1px solid #dc3545;
+    border-top: none;
+    z-index: 1;
+}
+
+td.editing {
+    padding: 0;
+    background-color: #fff;
+    position: relative;
+}
+
+td.editing input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+td.editing input:focus {
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+td.editing input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+td.editing input[type="number"]::-webkit-outer-spin-button,
+td.editing input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.checkbox-column {
+    width: 40px;
+    text-align: center;
+}
+
+.checkbox-column input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.view-selected-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.view-selected-button:hover {
+    background-color: #0056b3;
+}
+
+.view-selected-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Loading and error states */
+.loading {
+    text-align: center;
+    padding: 1rem;
+    color: #666;
+}
+
+.error {
+    color: #dc3545;
+    padding: 0.75rem;
+    background-color: #f8d7da;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+    table {
+        font-size: 0.8rem;
+    }
+
+    th, td {
+        padding: 0.4rem;
+    }
+} 
