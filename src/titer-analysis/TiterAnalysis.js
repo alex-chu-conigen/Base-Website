@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {  arrayMove, sortableKeyboardCoordinates, } from '@dnd-kit/sortable';
 import './TiterAnalysis.css';
 import SummaryCard from './SummaryCard';
 
@@ -18,13 +18,6 @@ function TiterAnalysis() {
   const [customNames, setCustomNames] = useState({}); // Store custom names for each file
   const DEFAULT_RANGE = 'B25:N33'; // Default range for single file
   const MULTI_FILE_RANGE = 'A7:M15'; // Range for multiple files
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const getCellColor = (value, rowKey, colKey) => {
     if (value === '') return '';
@@ -626,8 +619,7 @@ function TiterAnalysis() {
         excelSummaries={excelSummaries}
         getCellColor={getCellColor}
         toggleCellExclusion={toggleCellExclusion}
-        customName={excelSummaries[activeTab.file].filename || ''}
-        onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
+customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}        onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
         plateNumber={activeTab.file + 1}
       />
 
