@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
-import { KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import {  arrayMove, sortableKeyboardCoordinates, } from '@dnd-kit/sortable';
 import './TiterAnalysis.css';
 import SummaryCard from './SummaryCard';
 
@@ -29,8 +27,8 @@ function TiterAnalysis() {
     if (excludedCells.has(location)) return 'excluded-cell';
     
     if (numValue >= .5) return 'highlight-green';
-    else return 'highlight-yellow';
-    return '';
+    if (numValue < .5) return 'highlight-yellow';
+ 
   };
 
   const toggleCellExclusion = (fileIndex, sheetIndex, rowIndex, colIndex, rowKey, colKey) => {
@@ -468,39 +466,6 @@ function TiterAnalysis() {
     }, 500);
   };
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    
-    if (active.id !== over.id) {
-      const oldIndex = parseInt(active.id.split('-')[1]);
-      const newIndex = parseInt(over.id.split('-')[1]);
-
-      setExcelSummaries((items) => arrayMove(items, oldIndex, newIndex));
-      
-      // Update custom names to maintain the association with moved tables
-      setCustomNames(prev => {
-        const newCustomNames = {};
-        const oldNames = { ...prev };
-        
-        // Create array of indices to help with reordering
-        const indices = Object.keys(oldNames).map(Number);
-        if (indices.length === 0) return prev;
-        
-        // Reorder the indices
-        const reorderedIndices = arrayMove(indices, oldIndex, newIndex);
-        
-        // Create new mapping with reordered indices
-        reorderedIndices.forEach((oldIdx, newIdx) => {
-          if (oldNames[oldIdx] !== undefined) {
-            newCustomNames[newIdx] = oldNames[oldIdx];
-          }
-        });
-        
-        return newCustomNames;
-      });
-    }
-  };
-
   // Add function to handle name updates
   const handleNameChange = (fileIndex, newName) => {
     setCustomNames(prev => ({
@@ -619,11 +584,13 @@ function TiterAnalysis() {
         excelSummaries={excelSummaries}
         getCellColor={getCellColor}
         toggleCellExclusion={toggleCellExclusion}
-customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}        onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
-        plateNumber={activeTab.file + 1}
+        customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}        
+        onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
+        plateNumber={activeTab.sheet + 1}
       />
 
   )}
+  
 </div>
 
     </div>
