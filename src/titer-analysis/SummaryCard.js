@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleCellExclusion, customName, onNameChange }) {
+function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleCellExclusion, customName, onNameChange, plateNumber }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(customName);
 
@@ -32,7 +32,6 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
     setIsEditing(false);
   };
 
-  // Only render a single sheet (the one passed in as summary)
   return (
     <div 
       ref={setNodeRef}
@@ -56,14 +55,14 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
           </form>
         ) : (
           <div className="card-title">
-            <h2>{customName || summary.fileName || summary.sheetName}</h2>
+            <h2>{customName || (excelSummaries[fileIndex]?.fileName) || summary.fileName}</h2>
             <button onClick={() => setIsEditing(true)} className="edit-button">✎</button>
           </div>
         )}
       </div>
       {summary && summary.columns && summary.preview ? (
         <div className="sheet-summary">
-          <h3>Sheet: {summary.sheetName}</h3>
+          <h3>Plate #{plateNumber}</h3>
           <div className="preview-table">
             <table>
               <thead>

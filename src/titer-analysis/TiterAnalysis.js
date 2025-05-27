@@ -618,53 +618,22 @@ function TiterAnalysis() {
         </div>
       )}
 
-    <div className="main-content">
-      {excelSummaries.length > 0 && (
-        <div className="summary-card">
-          <div className="overall-file-title" style={{marginBottom: "1rem", fontWeight: "bold", fontSize: "1.1rem"}}>
-            {excelSummaries[activeTab.file].fileName}
-          </div>
-          <SummaryCard
-            summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
-            fileIndex={activeTab.file}
-            excelSummaries={excelSummaries}
-            getCellColor={getCellColor}
-            toggleCellExclusion={toggleCellExclusion}
-            customName={customNames[activeTab.file] || ''}
-            onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
-            plateNumber={activeTab.file + 1}
-          />
-        </div>
-      )}
-        {/* {excelSummaries.length > 0 && (
-          <div className="global-threshold-summary">
-            <div className="summary-header">
-              <h4>Combined Threshold Summary</h4>
-              <button onClick={handlePrint} className="print-button">
-                Print Summary
-              </button>
-            </div>
-            <div className="summary-list">
-              {getAllThresholdSummaries().map((item, index) => {
-                const rowLetter = item.rowKey.match(/[A-Za-z]+/)?.[0] || item.rowKey;
-                const colNumber = item.colKey.match(/\d+/)?.[0] || item.colKey;
-                const isSingleFile = excelSummaries.length === 1;
-                const location = `${isSingleFile ? item.sheetNumber : item.fileNumber}${rowLetter}${colNumber}`;
-                const displayLocation = item.customName ? `${item.customName} - ${location}` : location;
-                
-                return (
-                  <div 
-                    key={index} 
-                    className={`summary-item ${item.threshold === 'higher' ? 'highlight-green' : 'highlight-yellow'}`}
-                  >
-                    {displayLocation}: {item.value}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )} */}
-      </div>
+<div className="main-content">
+  {excelSummaries.length > 0 && (
+      <SummaryCard
+        summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+        fileIndex={activeTab.file}
+        excelSummaries={excelSummaries}
+        getCellColor={getCellColor}
+        toggleCellExclusion={toggleCellExclusion}
+        customName={excelSummaries[activeTab.file].filename || ''}
+        onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
+        plateNumber={activeTab.file + 1}
+      />
+
+  )}
+</div>
+
     </div>
   );
 }
