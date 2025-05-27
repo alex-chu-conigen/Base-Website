@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import './TiterAnalysis.css';
-import SummaryCard from './SummaryCard';
+import SummaryCard from './dupBG';
 
 
 function TiterAnalysis() {
