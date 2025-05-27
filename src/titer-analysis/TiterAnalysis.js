@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import './TiterAnalysis.css';
+import PercentCVCard from './PercentCV';
+
 import SummaryCard from './dupBG';
 
 
@@ -577,20 +579,29 @@ function TiterAnalysis() {
       )}
 
 <div className="main-content">
-  {excelSummaries.length > 0 && (
-      <SummaryCard
-        summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
-        fileIndex={activeTab.file}
-        excelSummaries={excelSummaries}
-        getCellColor={getCellColor}
-        toggleCellExclusion={toggleCellExclusion}
-        customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}        
-        onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
-        plateNumber={activeTab.sheet + 1}
-      />
-
+  {/* Mean of Duplicate - BG control */}
+{excelSummaries[activeTab.file] &&
+  excelSummaries[activeTab.file].sheets &&
+  excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
+    <SummaryCard
+      summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+      fileIndex={activeTab.file}
+      excelSummaries={excelSummaries}
+      getCellColor={getCellColor}
+      toggleCellExclusion={toggleCellExclusion}
+      customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
+      onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
+      plateNumber={activeTab.sheet + 1}
+    />
+)}
+{/* Percent CV */}
+<div className="tables-container">
+  {excelSummaries[activeTab.file] &&
+    excelSummaries[activeTab.file].sheets &&
+    excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
+      <PercentCVCard summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]} />
   )}
-  
+</div>
 </div>
 
     </div>
