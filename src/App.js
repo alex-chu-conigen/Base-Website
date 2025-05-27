@@ -4,6 +4,7 @@ import ExcelProcessor from './excel-processing/ExcelProcessor';
 import MultipleTriadRuns from './multiple-triad-runs/MultipleTriadRuns';
 import SelectedItems from './pages/SelectedItems/SelectedItems';
 import Summary from './pages/Summary/Summary';
+import TiterAnalysis from './titer-analysis/TiterAnalysis';
 import EntryDetails from './pages/EntryDetails/EntryDetails';
 import UniProtSearch from './pages/UniProtSearch/UniProtSearch';
 import './App.css';
@@ -21,6 +22,8 @@ function App() {
             <Link to="/multiple-triad-runs" className="nav-link">Multiple Triad Runs</Link>
             <Link to="/summary" className="nav-link">Summary Report</Link>
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
+            <Link to="/titer-analysis" className="nav-link">Titer Analysis</Link>
+
           </div>
         </nav>
         <div className="main-content">
@@ -34,6 +37,8 @@ function App() {
             <Route path="/summary" element={<Summary />} />
             <Route path="/entry-details" element={<EntryDetails />} />
             <Route path="/uniprot-search" element={<UniProtSearch />} />
+            <Route path="/titer-analysis" element={<TiterAnalysis />} />
+
           </Routes>
         </div>
       </div>
