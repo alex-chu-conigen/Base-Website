@@ -4,6 +4,8 @@ import ExcelJS from 'exceljs';
 import './TiterAnalysis.css';
 import PercentCVCard from './percentCV';
 import SummaryCard from './dupBG';
+import ODTiterCard from './odAVG'; // <-- Add this import at the top with your other imports
+
 
 // New RawTableCard component
 function RawTableCard({
@@ -419,6 +421,7 @@ function TiterAnalysis() {
             )}
           </div>
         )}
+
       </div>
 
       {isLoading && (
@@ -427,7 +430,7 @@ function TiterAnalysis() {
         </div>
       )}
 
-      <div className="main-content1">
+            <div className="main-content1">
         {/* Editable Raw Table Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
@@ -460,6 +463,20 @@ function TiterAnalysis() {
               toggleCellExclusion={toggleCellExclusion}
               customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
               onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
+              plateNumber={activeTab.sheet + 1}
+              sampleNames={
+                (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
+                  ? sampleNames[activeTab.file][activeTab.sheet]
+                  : []
+              }
+            />
+          )}
+        {/* OD 0.5 Titer Polynomial Fit Card */}
+        {excelSummaries[activeTab.file] &&
+          excelSummaries[activeTab.file].sheets &&
+          excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
+            <ODTiterCard
+              summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
               plateNumber={activeTab.sheet + 1}
               sampleNames={
                 (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
