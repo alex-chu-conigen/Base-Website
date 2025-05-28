@@ -7,6 +7,7 @@ import Summary from './pages/Summary/Summary';
 import TiterAnalysis from './titer-analysis/TiterAnalysis';
 import EntryDetails from './pages/EntryDetails/EntryDetails';
 import UniProtSearch from './pages/UniProtSearch/UniProtSearch';
+
 import './App.css';
 /*
             
@@ -23,14 +24,12 @@ function App() {
             <Link to="/summary" className="nav-link">Summary Report</Link>
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
             <Link to="/titer-analysis" className="nav-link">Titer Analysis</Link>
-
+            <Link to="/comp-text" className="nav-link">CompText</Link>
           </div>
         </nav>
         <div className="main-content">
           <Routes>
-            <Route path="/" element={
-              <div ></div>
-            } />
+            <Route path="/" element={<div></div>} />
             <Route path="/excel-processor" element={<ExcelProcessor />} />
             <Route path="/multiple-triad-runs" element={<MultipleTriadRuns />} />
             <Route path="/selected-items" element={<SelectedItems />} />
@@ -38,7 +37,20 @@ function App() {
             <Route path="/entry-details" element={<EntryDetails />} />
             <Route path="/uniprot-search" element={<UniProtSearch />} />
             <Route path="/titer-analysis" element={<TiterAnalysis />} />
-
+            <Route
+              path="/comp-text"
+              element={
+                <div style={{ width: '100%', height: '100vh' }}>
+                  <iframe
+                    src={process.env.PUBLIC_URL + '/comp-text/CompText.html'}
+                    title="CompText"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 'none', minHeight: '800px' }}
+                  />
+                </div>
+              }
+            />
           </Routes>
         </div>
       </div>
