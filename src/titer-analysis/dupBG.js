@@ -40,25 +40,11 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
     >
       <div className="drag-handle" {...attributes} {...listeners}>☰</div>
       <div className="card-header">
-        {isEditing ? (
-          <form onSubmit={handleSubmit} className="name-edit-form">
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              placeholder="Enter name"
-              autoFocus
-              className="name-edit-input"
-            />
-            <button type="submit" className="save-button">Save</button>
-            <button type="button" onClick={handleCancel} className="cancel-button">Cancel</button>
-          </form>
-        ) : (
-          <div className="card-title">
-            <h2>{customName || (excelSummaries[fileIndex]?.fileName) || summary.fileName}</h2>
-            <button onClick={() => setIsEditing(true)} className="edit-button">✎</button>
-          </div>
-        )}
+            
+        <div className="card-title">
+          <h2>Mean of Duplicate - Background</h2>
+        </div>
+   
       </div>
       {summary && summary.columns && summary.preview ? (
         <div className="sheet-summary">

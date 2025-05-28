@@ -4,7 +4,7 @@ function calculateCV(val1, val2) {
   const n1 = parseFloat(val1);
   const n2 = parseFloat(val2);
   // Log the values being calculated
-  console.log('Calculating CV for:', { val1, val2, n1, n2 });
+  // console.log('Calculating CV for:', { val1, val2, n1, n2 });
   if (isNaN(n1) || isNaN(n2)) return '';
   const avg = (n1 + n2) / 2;
   const stdev = Math.sqrt(((n1 - avg) ** 2 + (n2 - avg) ** 2) / 2);
