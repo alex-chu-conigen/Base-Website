@@ -43,15 +43,9 @@ function PercentCVCard({ summary, sampleNames = [] }) {
               <tr>
                 <th>{summary.columns[0]}</th>
                 {Array.from({ length: sampleCount }).map((_, idx) => (
-                  <th key={idx} colSpan={2} style={{ textAlign: 'center' }}>
+                  <th key={idx} colSpan={1} style={{ textAlign: 'center' }}>
                     {sampleNames[idx] || `Sample ${idx + 1}`}
                   </th>
-                ))}
-              </tr>
-              <tr>
-                <th></th>
-                {pairedColumns.map((col, idx) => (
-                  <th key={idx}>{col}</th>
                 ))}
               </tr>
             </thead>
