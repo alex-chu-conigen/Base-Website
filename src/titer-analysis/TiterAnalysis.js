@@ -461,13 +461,25 @@ function TiterAnalysis() {
               customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
               onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
               plateNumber={activeTab.sheet + 1}
+              sampleNames={
+                (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
+                  ? sampleNames[activeTab.file][activeTab.sheet]
+                  : []
+              }
             />
           )}
         <div className="tables-container">
           {excelSummaries[activeTab.file] &&
             excelSummaries[activeTab.file].sheets &&
             excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
-              <PercentCVCard summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]} />
+              <PercentCVCard
+                summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+                sampleNames={
+                  (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
+                    ? sampleNames[activeTab.file][activeTab.sheet]
+                    : []
+                }
+              />
             )}
         </div>
         <div style={{ marginTop: 24 }}>
