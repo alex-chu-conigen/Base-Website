@@ -427,7 +427,7 @@ function TiterAnalysis() {
         </div>
       )}
 
-      <div className="main-content">
+      <div className="main-content1">
         {/* Editable Raw Table Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
