@@ -7,6 +7,7 @@ import Summary from './pages/Summary/Summary';
 import TiterAnalysis from './titer-analysis/TiterAnalysis';
 import EntryDetails from './pages/EntryDetails/EntryDetails';
 import UniProtSearch from './pages/UniProtSearch/UniProtSearch';
+import SequenceScoring from './sequence-scoring/SequenceScoring';
 
 import './App.css';
 /*
@@ -20,11 +21,9 @@ function App() {
           <div className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/excel-processor" className="nav-link">Excel Processor</Link>
-            <Link to="/multiple-triad-runs" className="nav-link">Multiple Triad Runs</Link>
-            <Link to="/summary" className="nav-link">Summary Report</Link>
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
             <Link to="/titer-analysis" className="nav-link">Titer Analysis</Link>
-            <Link to="/comp-text" className="nav-link">Sequence Scoring</Link>
+            <Link to="/sequence-scoring" className="nav-link">Sequence Scoring</Link>
           </div>
         </nav>
         <div className="main-content">
@@ -37,6 +36,7 @@ function App() {
             <Route path="/entry-details" element={<EntryDetails />} />
             <Route path="/uniprot-search" element={<UniProtSearch />} />
             <Route path="/titer-analysis" element={<TiterAnalysis />} />
+            <Route path="/sequence-scoring" element={<SequenceScoring />} />
             <Route
               path="/comp-text"
               element={
