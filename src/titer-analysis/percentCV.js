@@ -10,10 +10,14 @@ function calculateCV(val1, val2) {
   const stdev = Math.sqrt(((n1 - avg) ** 2 + (n2 - avg) ** 2) / 2);
   if (avg === 0) return '';
   return ((stdev / avg) * 100).toFixed(2); // percent CV
+  
 }
 
-function PercentCVCard({ summary }) {
+function PercentCVCard({ summary, sampleNames = [] }) {
   if (!summary || !summary.columns || !summary.preview) return null;
+
+  // Calculate sample count
+  const sampleCount = Math.floor((summary.columns.length - 1) / 2);
 
   // Skip the first column (label), then pair columns: [1,2], [3,4], ..., [11,12]
   const pairedColumns = [];
@@ -37,6 +41,15 @@ function PercentCVCard({ summary }) {
           <table>
             <thead>
               <tr>
+                <th>{summary.columns[0]}</th>
+                {Array.from({ length: sampleCount }).map((_, idx) => (
+                  <th key={idx} colSpan={2} style={{ textAlign: 'center' }}>
+                    {sampleNames[idx] || `Sample ${idx + 1}`}
+                  </th>
+                ))}
+              </tr>
+              <tr>
+                <th></th>
                 {pairedColumns.map((col, idx) => (
                   <th key={idx}>{col}</th>
                 ))}
@@ -45,6 +58,7 @@ function PercentCVCard({ summary }) {
             <tbody>
               {summary.preview.map((row, rowIndex) => (
                 <tr key={rowIndex}>
+                  <td>{row[0]}</td>
                   {(() => {
                     const cells = [];
                     for (let i = 1; i < row.length; i += 2) {
@@ -53,7 +67,7 @@ function PercentCVCard({ summary }) {
                       cells.push(
                         <td key={i}>
                           {row[i + 1] !== undefined
-                            ? calculateCV(row[i], row[i + 1])
+                            ? calculateCV(row[i], row[i + 1]) + '%'
                             : ''}
                         </td>
                       );

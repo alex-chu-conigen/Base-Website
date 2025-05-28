@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import './TiterAnalysis.css';
 import PercentCVCard from './PercentCV';
-import SummaryCard from './dupBG';
+import SummaryCard from './DupBG';
 
 // New RawTableCard component
 function RawTableCard({

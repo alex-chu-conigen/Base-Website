@@ -2,7 +2,17 @@ import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleCellExclusion, customName, onNameChange, plateNumber }) {
+function SummaryCard({
+  summary,
+  fileIndex,
+  excelSummaries,
+  getCellColor,
+  toggleCellExclusion,
+  customName,
+  onNameChange,
+  plateNumber,
+  sampleNames = []
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(customName);
 
@@ -32,19 +42,20 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
     setIsEditing(false);
   };
 
+  // Calculate sample count
+  const sampleCount = summary && summary.columns ? Math.floor((summary.columns.length - 1) / 2) : 0;
+
   return (
-    <div 
+    <div
       ref={setNodeRef}
       style={style}
       className="summary-card"
     >
       <div className="drag-handle" {...attributes} {...listeners}>☰</div>
       <div className="card-header">
-            
         <div className="card-title">
           <h2>Mean of Duplicate - Background</h2>
         </div>
-   
       </div>
       {summary && summary.columns && summary.preview ? (
         <div className="sheet-summary">
@@ -53,8 +64,16 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
             <table>
               <thead>
                 <tr>
-                  {summary.columns.map((col, colIndex) => (
-                    <th key={colIndex}>{col}</th>
+                  <th>{summary.columns[0]}</th>
+                  {Array.from({ length: sampleCount }).map((_, idx) => (
+                    <th key={idx} colSpan={2} style={{ textAlign: 'center' }}>
+                      {sampleNames[idx] || `Sample ${idx + 1}`}
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {summary.columns.map((col, colIdx) => (
+                    <th key={colIdx}>{col}</th>
                   ))}
                 </tr>
               </thead>
