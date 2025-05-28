@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import './TiterAnalysis.css';
-import PercentCVCard from './PercentCV';
-import SummaryCard from './DupBG';
+import PercentCVCard from './percentCV';
+import SummaryCard from './dupBG';
 
 // New RawTableCard component
 function RawTableCard({
