@@ -13,7 +13,7 @@ function calculateCV(val1, val2) {
   
 }
 
-function PercentCVCard({ summary, sampleNames = [] }) {
+function PercentCVCard({ summary, sampleNames = [], plateNumber, }) {
   if (!summary || !summary.columns || !summary.preview) return null;
 
   // Calculate sample count
@@ -37,6 +37,7 @@ function PercentCVCard({ summary, sampleNames = [] }) {
         </div>
       </div>
       <div className="sheet-summary">
+        <h3>Plate #{plateNumber}</h3>
         <div className="preview-table">
           <table>
             <thead>

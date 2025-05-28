@@ -84,7 +84,7 @@ function RawTableCard({
           )}
         </div>
         <div style={{ fontSize: "0.95rem", marginTop: 4, color: "#666" }}>
-          Plate {sheetIndex + 1}
+          <h3>Plate #{sheetIndex + 1}</h3>
         </div>
       </div>
       <div className="sheet-summary">
@@ -474,6 +474,7 @@ function TiterAnalysis() {
             excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
               <PercentCVCard
                 summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+                plateNumber={activeTab.sheet + 1}
                 sampleNames={
                   (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
                     ? sampleNames[activeTab.file][activeTab.sheet]
