@@ -1,8 +1,7 @@
 import React from 'react';
+import Plot from 'react-plotly.js';
 
-// Simple 2nd degree polynomial regression using least squares
 function poly2Regression(x, y) {
-  // Fit y = a*x^2 + b*x + c
   const n = x.length;
   let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
   let sumY = 0, sumXY = 0, sumX2Y = 0;
@@ -15,7 +14,6 @@ function poly2Regression(x, y) {
     sumXY += x[i] * y[i];
     sumX2Y += (x[i] ** 2) * y[i];
   }
-  // Solve the normal equations
   const A = [
     [n, sumX, sumX2],
     [sumX, sumX2, sumX3],
@@ -23,7 +21,6 @@ function poly2Regression(x, y) {
   ];
   const B = [sumY, sumXY, sumX2Y];
 
-  // Gaussian elimination
   function gauss(A, B) {
     const n = B.length;
     for (let i = 0; i < n; i++) {
@@ -69,19 +66,15 @@ function poly2Regression(x, y) {
   return { a, b, c };
 }
 
-// Find root of ax^2 + bx + c = y0 (for OD=0.5)
 function solvePoly2(a, b, c, y0) {
-  // a*x^2 + b*x + (c-y0) = 0
   const d = b * b - 4 * a * (c - y0);
   if (d < 0) return null;
   const sqrtD = Math.sqrt(d);
   const x1 = (-b + sqrtD) / (2 * a);
   const x2 = (-b - sqrtD) / (2 * a);
-  // Return the positive root (dilution increases with x)
   return Math.max(x1, x2);
 }
 
-// Calculate R^2 for fit
 function calculateR2(x, y, fit) {
   const yMean = y.reduce((a, b) => a + b, 0) / y.length;
   let ssTot = 0, ssRes = 0;
@@ -96,29 +89,66 @@ function calculateR2(x, y, fit) {
 function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
   if (!summary || !summary.columns || !summary.preview) return null;
 
-  // Assume first column is label, then pairs of OD values for each sample
   const sampleCount = Math.floor((summary.columns.length - 1) / 2);
-
-  // Dilution factors (should match your experiment, adjust as needed)
   const dilutions = [
     1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000
   ];
 
-  // For each sample, extract OD values across all rows
+  // --- Use the same background and averaging logic as dupBG.js ---
+  // Calculate background ONCE: last row, last two columns of the entire table
+  let background = 0;
+  let lastRow = [];
+  if (summary && summary.preview && summary.preview.length > 0) {
+    lastRow = summary.preview[summary.preview.length - 1];
+    const bg1 = parseFloat(lastRow[lastRow.length - 2]);
+    const bg2 = parseFloat(lastRow[lastRow.length - 1]);
+    if (!isNaN(bg1) && !isNaN(bg2)) {
+      background = (bg1 + bg2) / 2;
+    } else if (!isNaN(bg1)) {
+      background = bg1;
+    } else if (!isNaN(bg2)) {
+      background = bg2;
+    }
+  }
+
+  // Prepare averaged data: for each row, for each pair, take average and subtract global background
+  const averagedRows = summary && summary.preview
+    ? summary.preview.map((row, rowIdx) => {
+        const newRow = [];
+        for (let i = 1; i < row.length - 1; i += 2) {
+          const n1 = parseFloat(row[i]);
+          const n2 = parseFloat(row[i + 1]);
+          let avg = '';
+          if (!isNaN(n1) && !isNaN(n2)) {
+            avg = ((n1 + n2) / 2) - background;
+            avg = avg.toFixed(3);
+          } else if (!isNaN(n1)) {
+            avg = n1 - background;
+            avg = avg.toFixed(3);
+          } else if (!isNaN(n2)) {
+            avg = n2 - background;
+            avg = avg.toFixed(3);
+          }
+          newRow.push(avg);
+        }
+        // For the last row, ensure the last value is 0.000
+        if (rowIdx === summary.preview.length - 1) {
+          newRow[newRow.length - 1] = "0.000";
+        }
+        // First column is label, then averaged values
+        return [row[0], ...newRow];
+      })
+    : [];
+
   const titers = [];
   const trendlineData = [];
   for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-    // For each row, get the average OD for this sample (average of the pair)
-    const ods = summary.preview.map(row => {
-      const n1 = parseFloat(row[1 + sampleIdx * 2]);
-      const n2 = parseFloat(row[2 + sampleIdx * 2]);
-      if (!isNaN(n1) && !isNaN(n2)) return (n1 + n2) / 2;
-      if (!isNaN(n1)) return n1;
-      if (!isNaN(n2)) return n2;
-      return NaN;
+    // Use the averagedRows for background-subtracted, averaged data
+    const ods = averagedRows.map(row => {
+      const v = parseFloat(row[1 + sampleIdx]);
+      return !isNaN(v) ? v : NaN;
     });
 
-    // Only use points with valid OD and dilution
     const x = [];
     const y = [];
     for (let i = 0; i < ods.length && i < dilutions.length; i++) {
@@ -128,29 +158,69 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
       }
     }
 
-    // Find the three points: two above and one below OD=0.5 (or vice versa)
-    let idxBelow = -1;
+    // ...existing code...
+
+    // Find the three points: two above 0.5 and one below (or vice versa), all closest to 0.5
+    let idxs = [];
     for (let i = 0; i < y.length - 1; i++) {
+      // Look for a crossing
       if ((y[i] >= 0.5 && y[i + 1] < 0.5) || (y[i] < 0.5 && y[i + 1] >= 0.5)) {
-        idxBelow = y[i] < 0.5 ? i : i + 1;
+        // Collect all indices and their values above and below 0.5
+        const above = [];
+        const below = [];
+        for (let j = 0; j < y.length; j++) {
+          if (y[j] >= 0.5) {
+            above.push({ idx: j, diff: Math.abs(y[j] - 0.5) });
+          } else {
+            below.push({ idx: j, diff: Math.abs(y[j] - 0.5) });
+          }
+        }
+        // Sort by closeness to 0.5
+        above.sort((a, b) => a.diff - b.diff);
+        below.sort((a, b) => a.diff - b.diff);
+
+        // Try to get two above and one below
+        if (above.length >= 2 && below.length >= 1) {
+          idxs = [
+            above[0].idx,
+            above[1].idx,
+            below[0].idx
+          ];
+        } else if (below.length >= 2 && above.length >= 1) {
+          // Or two below and one above
+          idxs = [
+            below[0].idx,
+            below[1].idx,
+            above[0].idx
+          ];
+        } else {
+          // Fallback: just three closest to 0.5
+          idxs = y
+            .map((val, idx) => ({ idx, diff: Math.abs(val - 0.5) }))
+            .sort((a, b) => a.diff - b.diff)
+            .slice(0, 3)
+            .map(obj => obj.idx);
+        }
+        // Sort indices for consistent order
+        idxs = idxs.sort((a, b) => a - b);
         break;
       }
     }
-    let xFit = [], yFit = [];
-    if (idxBelow > 0 && idxBelow < y.length - 1) {
-      // Two above, one below
-      xFit = [x[idxBelow - 1], x[idxBelow], x[idxBelow + 1]];
-      yFit = [y[idxBelow - 1], y[idxBelow], y[idxBelow + 1]];
-    } else if (idxBelow === 0 && y.length >= 3) {
-      // Edge case: first three points
-      xFit = [x[0], x[1], x[2]];
-      yFit = [y[0], y[1], y[2]];
-    } else if (idxBelow === y.length - 1 && y.length >= 3) {
-      // Edge case: last three points
-      xFit = [x[y.length - 3], x[y.length - 2], x[y.length - 1]];
-      yFit = [y[y.length - 3], y[y.length - 2], y[y.length - 1]];
+    // If not found, fallback to three closest to 0.5
+    if (idxs.length !== 3 && y.length >= 3) {
+      idxs = y
+        .map((val, idx) => ({ idx, diff: Math.abs(val - 0.5) }))
+        .sort((a, b) => a.diff - b.diff)
+        .slice(0, 3)
+        .map(obj => obj.idx)
+        .sort((a, b) => a - b);
+    }
+    
+  let xFit = [], yFit = [];
+    if (idxs.length === 3) {
+      xFit = idxs.map(i => x[i]);
+      yFit = idxs.map(i => y[i]);
     } else if (y.length >= 3) {
-      // Fallback: use last three points
       xFit = x.slice(-3);
       yFit = y.slice(-3);
     } else {
@@ -164,12 +234,10 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
     let r2 = null;
     if (xFit.length === 3) {
       fit = poly2Regression(xFit, yFit);
-      // Only generate trendline points for the three fit points
       fitPoints = xFit.map((xi, i) => ({
         logDil: xi,
         od: fit.a * xi * xi + fit.b * xi + fit.c
       }));
-      // Solve for OD=0.5
       const root = solvePoly2(fit.a, fit.b, fit.c, 0.5);
       if (root && isFinite(root)) {
         const dilutionAt05 = Math.pow(10, root);
@@ -185,53 +253,70 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
     titers.push({ titer, r2 });
     trendlineData.push({ xFit, yFit, fit, fitPoints, r2 });
   }
+  
+  function renderPlotly(sampleIdx) {
+    const { xFit, yFit, fit } = trendlineData[sampleIdx];
+    if (!fit || !xFit.length) return null;
 
-    // Visualization using SVG (simple, no dependencies)
-  function renderPlot(sampleIdx) {
-  const { xFit, yFit, fit, fitPoints } = trendlineData[sampleIdx];
-  if (!fit || !fitPoints.length) return null;
-  // SVG dimensions
-  const W = 380, H = 180, PAD = 50; // Increased width
-  // X/Y ranges
-  const minX = Math.min(...xFit), maxX = Math.max(...xFit);
-  const minY = 0, maxY = Math.max(...yFit, 1.2);
-  // Map logDil, od to SVG coords
-  const xMap = xi => PAD + ((xi - minX) / (maxX - minX)) * (W - 2 * PAD);
-  const yMap = yi => H - PAD - ((yi - minY) / (maxY - minY)) * (H - 2 * PAD);
+    // Generate smooth curve for the fit
+    const xSmooth = [];
+    const ySmooth = [];
+    const minX = Math.min(...xFit), maxX = Math.max(...xFit);
+    for (let i = 0; i <= 40; i++) {
+      const xi = minX + (maxX - minX) * (i / 40);
+      xSmooth.push(xi);
+      ySmooth.push(fit.a * xi * xi + fit.b * xi + fit.c);
+    }
 
-  // Trendline curve (only for the three fit points)
-  const trendPath = fitPoints.map((pt, i) =>
-    `${i === 0 ? 'M' : 'L'}${xMap(pt.logDil)},${yMap(pt.od)}`
-  ).join(' ');
+    return (
+      <Plot
+        data={[
+          {
+            x: xFit,
+            y: yFit,
+            mode: 'markers',
+            marker: { color: '#1976d2', size: 12 },
+            name: 'Fit Points'
+          },
+          {
+            x: xSmooth,
+            y: ySmooth,
+            mode: 'lines',
+            line: { color: '#43a047', width: 3 },
+            name: 'Quadratic Fit'
+          },
+          {
+            x: [Math.min(...xFit), Math.max(...xFit)],
+            y: [0.5, 0.5],
+            mode: 'lines',
+            line: { color: '#e55', dash: 'dash', width: 2 },
+            name: 'OD=0.5'
+          }
+        ]}
+        layout={{
+          width: 400,
+          height: 300,
+          margin: { l: 60, r: 30, t: 30, b: 60 },
+          xaxis: {
+            title: { text: 'log₁₀(Dilution)' },
+            range: [Math.min(...xFit) - 0.1, Math.max(...xFit) + 0.1]
+          },
+          yaxis: {
+            title: { text: 'OD' },
+            range: [0, Math.max(...yFit, 1.2) + 0.1]
+          },
+          showlegend: true
+        }}
+        config={{ displayModeBar: false }}
+      />
+    );
+  }
 
-  // OD=0.5 line
-  const od05Y = yMap(0.5);
-
-  return (
-    <svg width={W} height={H} style={{ background: "#fff", border: "1px solid #ccc", margin: 8 }}>
-      {/* Axes */}
-      <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="#333" />
-      <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="#333" />
-      {/* OD=0.5 line */}
-      <line x1={PAD} y1={od05Y} x2={W - PAD} y2={od05Y} stroke="#e55" strokeDasharray="4" />
-      {/* Data points */}
-      {xFit.map((xi, i) => (
-        <circle key={i} cx={xMap(xi)} cy={yMap(yFit[i])} r={6} fill="#1976d2" />
-      ))}
-      {/* Trendline */}
-      <path d={trendPath} fill="none" stroke="#43a047" strokeWidth={2} />
-      {/* Labels */}
-      <text x={PAD} y={PAD - 8} fontSize="12" fill="#333">OD</text>
-      <text x={W - PAD} y={H - PAD + 16} fontSize="12" fill="#333" textAnchor="end">log₁₀(Dilution)</text>
-      <text x={PAD + 4} y={od05Y - 4} fontSize="11" fill="#e55">OD=0.5</text>
-    </svg>
-  );
-}
   return (
     <div className="summary-card">
       <div className="card-header">
         <div className="card-title">
-          <h2>OD 0.5 Titer (Polynomial Fit, 3-point)</h2>
+          <h2>OD 0.5 Titer (Polynomial Fit, 3-point, BG subtracted)</h2>
         </div>
       </div>
       <div className="sheet-summary">
@@ -267,7 +352,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
           <div key={idx} style={{ margin: "24px 0" }}>
             <h4 style={{ marginBottom: 4 }}>{sampleNames[idx] || `Sample ${idx + 1}`}</h4>
             <div style={{ display: "flex", alignItems: "flex-start" }}>
-              {renderPlot(idx)}
+              {renderPlotly(idx)}
               <table style={{ marginLeft: 24, fontSize: 13, borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
@@ -295,5 +380,6 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
     </div>
   );
 }
+
 
 export default ODTiterCard;
