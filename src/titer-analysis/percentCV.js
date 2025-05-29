@@ -14,9 +14,7 @@ function calculateCV(val1, val2) {
 
 
 
-function PercentCVCard({ summary, sampleNames = [], plateNumber }) {
-  // Exclusion state: Set of keys like "r{row}s{sample}d{dup}" (d0/d1 for duplicate 1/2)
-  const [excludedCells, setExcludedCells] = useState(new Set());
+function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells = new Set(), toggleCellExclusion }) {
 
   if (!summary || !summary.columns || !summary.preview) return null;
 
@@ -24,20 +22,6 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber }) {
 
   // Helper to get exclusion key for a duplicate cell
   const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
-
-  // Toggle exclusion for a cell
-  const toggleCellExclusion = (rowIdx, sampleIdx, dupIdx) => {
-    setExcludedCells(prev => {
-      const newSet = new Set(prev);
-      const key = getCellKey(rowIdx, sampleIdx, dupIdx);
-      if (newSet.has(key)) {
-        newSet.delete(key);
-      } else {
-        newSet.add(key);
-      }
-      return newSet;
-    });
-  };
 
   // Get value, but return '' if excluded
   const getValue = (row, rowIdx, sampleIdx, dupIdx) => {

@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import './TiterAnalysis.css';
 import PercentCVCard from './percentCV';
 import SummaryCard from './dupBG';
-import ODTiterCard from './odAVG'; // <-- Add this import at the top with your other imports
+import ODTiterCard from './odAVG';
 
 
 // New RawTableCard component
@@ -184,6 +184,7 @@ function TiterAnalysis() {
   const [sampleNames, setSampleNames] = useState({});
   const DEFAULT_RANGE = 'B25:N33';
   const MULTI_FILE_RANGE = 'A7:M15';
+  
 
   const getCellColor = (value, rowKey, colKey) => {
     if (value === '') return '';
@@ -518,6 +519,15 @@ function TiterAnalysis() {
                   : []
               }
               excludedCells={excludedCells}
+                      toggleCellExclusion={(fileIndex, _sheetIndex, rowIdx, cellIndex) => {
+          // cellIndex: 1-based, so sampleIdx = cellIndex - 1
+          // Only allow toggling for data cells, not label
+          if (cellIndex > 0) {
+            // For mean-of-dup-bg, dupIdx is 0 or 1, but here we only toggle the pair
+            // You may want to open a modal or highlight the raw table instead
+            // For now, do nothing or show a message
+          }
+        }}
             />
           )}
 

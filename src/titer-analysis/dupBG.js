@@ -5,13 +5,14 @@ import { CSS } from '@dnd-kit/utilities';
 function SummaryCard({
   summary,
   fileIndex,
-  excelSummaries,
   getCellColor,
   toggleCellExclusion,
   customName,
   onNameChange,
   plateNumber,
-  sampleNames = []
+  sampleNames = [],
+  excludedCells = new Set(), // <-- add this
+
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(customName);
@@ -59,46 +60,45 @@ if (summary && summary.preview && summary.preview.length > 0) {
   } else if (!isNaN(bg2)) {
     background = bg2;
   }
+
 }
 
-// Prepare averaged data: for each row, for each pair, take average and subtract global background
-const averagedRows = summary && summary.preview
-  ? summary.preview.map((row, rowIdx) => {
-      const newRow = [];
-      // Include all pairs, including the last pair (which uses the last two columns)
-      for (let i = 1; i < row.length - 1; i += 2) {
-        const n1 = parseFloat(row[i]);
-        const n2 = parseFloat(row[i + 1]);
-        let avg = '';
-        if (!isNaN(n1) && !isNaN(n2)) {
-          avg = ((n1 + n2) / 2) - background;
-          console.log(
-            `Row ${rowIdx}, Pair (${i}, ${i + 1}): (${n1}, ${n2}), Background (last row avg): ${background}, Result: ${avg}`
-          );
-          avg = avg.toFixed(3);
-        } else if (!isNaN(n1)) {
-          avg = n1 - background;
-          console.log(
-            `Row ${rowIdx}, Single (${i}): ${n1}, Background (last row avg): ${background}, Result: ${avg}`
-          );
-          avg = avg.toFixed(3);
-        } else if (!isNaN(n2)) {
-          avg = n2 - background;
-          console.log(
-            `Row ${rowIdx}, Single (${i + 1}): ${n2}, Background (last row avg): ${background}, Result: ${avg}`
-          );
-          avg = avg.toFixed(3);
+  const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+
+  // Prepare averaged data: for each row, for each pair, take average and subtract global background
+  const averagedRows = summary && summary.preview
+    ? summary.preview.map((row, rowIdx) => {
+        const newRow = [];
+        for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+          const n1Idx = 1 + sampleIdx * 2;
+          const n2Idx = n1Idx + 1;
+          const n1Key = getCellKey(rowIdx, sampleIdx, 0);
+          const n2Key = getCellKey(rowIdx, sampleIdx, 1);
+
+          const n1 = excludedCells.has(n1Key) ? '' : parseFloat(row[n1Idx]);
+          const n2 = excludedCells.has(n2Key) ? '' : parseFloat(row[n2Idx]);
+
+          let avg = '';
+          if (n1 !== '' && n2 !== '' && !isNaN(n1) && !isNaN(n2)) {
+            avg = ((n1 + n2) / 2) - background;
+            avg = avg.toFixed(3);
+          } else if (n1 !== '' && !isNaN(n1)) {
+            avg = n1 - background;
+            avg = avg.toFixed(3);
+          } else if (n2 !== '' && !isNaN(n2)) {
+            avg = n2 - background;
+            avg = avg.toFixed(3);
+          }
+          newRow.push(avg);
         }
-        newRow.push(avg);
-      }
-      // For the last row, ensure the last value is 0.000
-      if (rowIdx === summary.preview.length - 1) {
-        newRow[newRow.length - 1] = "0.000";
-      }
-      // First column is label, then averaged values
-      return [row[0], ...newRow];
-    })
-  : [];
+        // For the last row, ensure the last value is 0.000
+        if (rowIdx === summary.preview.length - 1) {
+          newRow[newRow.length - 1] = "0.000";
+        }
+        // First column is label, then averaged values
+        return [row[0], ...newRow];
+      })
+    : [];
 
   return (
     <div
