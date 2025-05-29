@@ -1,33 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 
+// Calculate percent CV for two values
 function calculateCV(val1, val2) {
   const n1 = parseFloat(val1);
   const n2 = parseFloat(val2);
-  // Log the values being calculated
-  // console.log('Calculating CV for:', { val1, val2, n1, n2 });
   if (isNaN(n1) || isNaN(n2)) return '';
   const avg = (n1 + n2) / 2;
   const stdev = Math.sqrt(((n1 - avg) ** 2 + (n2 - avg) ** 2) / 2);
   if (avg === 0) return '';
   return ((stdev / avg) * 100).toFixed(2); // percent CV
-  
 }
 
-function PercentCVCard({ summary, sampleNames = [], plateNumber, }) {
+function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
   if (!summary || !summary.columns || !summary.preview) return null;
 
-  // Calculate sample count
   const sampleCount = Math.floor((summary.columns.length - 1) / 2);
 
-  // Skip the first column (label), then pair columns: [1,2], [3,4], ..., [11,12]
-  const pairedColumns = [];
-  for (let i = 1; i < summary.columns.length; i += 2) {
-    const colName1 = summary.columns[i];
-    const colName2 = summary.columns[i + 1];
-    pairedColumns.push(
-      colName2 ? `${colName1}&${colName2}` : colName1
-    );
-  }
+  // Helper to get exclusion key for a duplicate cell
+  const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+
+  // Get value, but return '' if excluded
+  const getValue = (row, rowIdx, sampleIdx, dupIdx) => {
+    const key = getCellKey(rowIdx, sampleIdx, dupIdx);
+    if (excludedCells && excludedCells.has(key)) return '';
+    const colIdx = 1 + sampleIdx * 2 + dupIdx;
+    return row[colIdx];
+  };
+
+  // Calculate CV for a pair, skipping if either is excluded
+  const getCV = (row, rowIdx, sampleIdx) => {
+    const v1 = getValue(row, rowIdx, sampleIdx, 0);
+    const v2 = getValue(row, rowIdx, sampleIdx, 1);
+    return calculateCV(v1, v2);
+  };
 
   return (
     <div className="summary-card">
@@ -44,7 +49,7 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, }) {
               <tr>
                 <th>{summary.columns[0]}</th>
                 {Array.from({ length: sampleCount }).map((_, idx) => (
-                  <th key={idx} colSpan={1} style={{ textAlign: 'center' }}>
+                  <th key={idx} style={{ textAlign: 'center' }}>
                     {sampleNames[idx] || `Sample ${idx + 1}`}
                   </th>
                 ))}
@@ -54,21 +59,21 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, }) {
               {summary.preview.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   <td>{row[0]}</td>
-                  {(() => {
-                    const cells = [];
-                    for (let i = 1; i < row.length; i += 2) {
-                      // Log the values for each cell calculation
-                      console.log(`Row ${rowIndex}, Pair (${i}, ${i + 1}):`, row[i], row[i + 1]);
-                      cells.push(
-                        <td key={i}>
-                          {row[i + 1] !== undefined
-                            ? calculateCV(row[i], row[i + 1]) + '%'
-                            : ''}
-                        </td>
-                      );
-                    }
-                    return cells;
-                  })()}
+                  {Array.from({ length: sampleCount }).map((_, sampleIdx) => {
+                    const cv = getCV(row, rowIndex, sampleIdx);
+                    const cvNum = parseFloat(cv);
+                    return (
+                      <td
+                        key={sampleIdx}
+                        style={{
+                          background: !isNaN(cvNum) && cvNum > 20 ? '#fff3cd' : undefined,
+                          fontWeight: !isNaN(cvNum) && cvNum > 20 ? 600 : undefined
+                        }}
+                      >
+                        {cv !== '' ? `${cv}%` : ''}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

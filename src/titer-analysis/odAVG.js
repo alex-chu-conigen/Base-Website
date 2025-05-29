@@ -216,42 +216,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
         .sort((a, b) => a - b);
     }
     
-  let xFit = [], yFit = [];
-    if (idxs.length === 3) {
-      xFit = idxs.map(i => x[i]);
-      yFit = idxs.map(i => y[i]);
-    } else if (y.length >= 3) {
-      xFit = x.slice(-3);
-      yFit = y.slice(-3);
-    } else {
-      xFit = x;
-      yFit = y;
-    }
 
-    let titer = '';
-    let fit = null;
-    let fitPoints = [];
-    let r2 = null;
-    if (xFit.length === 3) {
-      fit = poly2Regression(xFit, yFit);
-      fitPoints = xFit.map((xi, i) => ({
-        logDil: xi,
-        od: fit.a * xi * xi + fit.b * xi + fit.c
-      }));
-      const root = solvePoly2(fit.a, fit.b, fit.c, 0.5);
-      if (root && isFinite(root)) {
-        const dilutionAt05 = Math.pow(10, root);
-        titer = Math.round(dilutionAt05).toLocaleString();
-      }
-      r2 = calculateR2(xFit, yFit, fit);
-    }
-    if (!titer) {
-      if (y[0] < 0.5) titer = "<1,000";
-      else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
-      else titer = "N/A";
-    }
-    titers.push({ titer, r2 });
-    trendlineData.push({ xFit, yFit, fit, fitPoints, r2 });
   }
   
   function renderPlotly(sampleIdx) {

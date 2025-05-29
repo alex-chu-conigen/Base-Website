@@ -17,6 +17,7 @@ function RawTableCard({
   sampleNames,
   onSampleNameChange,
 }) {
+  const [excludedCells, setExcludedCells] = useState(new Set()); // Store excluded cell locations
   const [isEditingFileName, setIsEditingFileName] = useState(false);
   const [editFileNameValue, setEditFileNameValue] = useState(customFileName || summary.fileName || '');
   const [editingSampleIdx, setEditingSampleIdx] = useState(null);
@@ -24,7 +25,10 @@ function RawTableCard({
 
   // For sample names, every two columns (excluding the first label column) is a sample
   const sampleCount = Math.floor((summary.columns.length - 1) / 2);
-
+    const toggleCellExclusion = (fileIndex, sheetIndex, rowIndex, colIndex, rowKey, colKey) => {
+    // Use just rowKey and colKey for the location
+    const location = `${rowKey}${colKey}`;
+    };
   // Editable file name logic
   const handleFileNameEdit = () => {
     setEditFileNameValue(customFileName || summary.fileName || '');
@@ -54,6 +58,7 @@ function RawTableCard({
     setEditingSampleIdx(null);
     setEditSampleValue('');
   };
+  
 
   // Render header row: label column, then sample names (each spanning 2 columns)
   return (
@@ -130,15 +135,37 @@ function RawTableCard({
                 ))}
               </tr>
             </thead>
-            <tbody>
-              {summary.preview.map((row, rowIdx) => (
-                <tr key={rowIdx}>
-                  {row.map((cell, colIdx) => (
-                    <td key={colIdx}>{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
+<tbody>
+  {summary.preview.map((row, rowIdx) => (
+    <tr key={rowIdx}>
+      <td>{row[0]}</td>
+      {Array.from({ length: sampleCount }).map((_, sampleIdx) =>
+        [0, 1].map(dupIdx => {
+          const colIdx = 1 + sampleIdx * 2 + dupIdx;
+          const key = `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+          const value = row[colIdx];
+          const isExcluded = excludedCells && excludedCells.has(key);
+          return (
+            <td
+              key={colIdx}
+              style={{
+                background: isExcluded ? '#f8d7da' : undefined,
+                cursor: 'pointer',
+                textDecoration: isExcluded ? 'line-through' : undefined,
+                color: isExcluded ? '#888' : undefined,
+                position: 'relative'
+              }}
+              onClick={() => toggleCellExclusion(rowIdx, sampleIdx, dupIdx)}
+              title={isExcluded ? "Click to include this value" : "Click to exclude this value"}
+            >
+              {value}
+            </td>
+          );
+        })
+      )}
+    </tr>
+  ))}
+</tbody>
           </table>
         </div>
       </div>
@@ -158,24 +185,26 @@ function TiterAnalysis() {
   const DEFAULT_RANGE = 'B25:N33';
   const MULTI_FILE_RANGE = 'A7:M15';
 
-  const getCellColor = (value, rowKey, colKey) => {
-    if (value === '') return '';
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return '';
-    const location = `${rowKey}${colKey}`;
-    if (excludedCells.has(location)) return 'excluded-cell';
-    if (numValue >= 0.5) return 'highlight-green';
-    if (numValue < 0.5) return 'highlight-yellow';
-  };
+  // const getCellColor = (value, rowKey, colKey) => {
+  //   if (value === '') return '';
+  //   const numValue = parseFloat(value);
+  //   if (isNaN(numValue)) return '';
+  //   const location = `${rowKey}${colKey}`;
+  //   if (excludedCells.has(location)) return 'excluded-cell';
+  //   if (numValue >= 0.5) return 'highlight-green';
+  //   if (numValue < 0.5) return 'highlight-yellow';
+  // };
 
-  const toggleCellExclusion = (fileIndex, sheetIndex, rowIndex, colIndex, rowKey, colKey) => {
-    const location = `${rowKey}${colKey}`;
+  const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+
+  const toggleCellExclusion = (rowIdx, sampleIdx, dupIdx) => {
     setExcludedCells(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(location)) {
-        newSet.delete(location);
+      const key = getCellKey(rowIdx, sampleIdx, dupIdx);
+      if (newSet.has(key)) {
+        newSet.delete(key);
       } else {
-        newSet.add(location);
+        newSet.add(key);
       }
       return newSet;
     });
@@ -431,7 +460,7 @@ function TiterAnalysis() {
       )}
 
             <div className="main-content1">
-        {/* Editable Raw Table Card */}
+       {/* Raw Table Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
           excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
@@ -449,9 +478,28 @@ function TiterAnalysis() {
               onSampleNameChange={(sampleIdx, newName) =>
                 handleSampleNameChange(activeTab.file, activeTab.sheet, sampleIdx, newName)
               }
+              excludedCells={excludedCells}
+              toggleCellExclusion={toggleCellExclusion}
             />
           )}
-        {/* Existing summary card */}
+
+          {/* Percent CV Card */}
+        {excelSummaries[activeTab.file] &&
+          excelSummaries[activeTab.file].sheets &&
+          excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
+            <PercentCVCard
+              summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+              plateNumber={activeTab.sheet + 1}
+              sampleNames={
+                (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
+                  ? sampleNames[activeTab.file][activeTab.sheet]
+                  : []
+              }
+              excludedCells={excludedCells}
+              toggleCellExclusion={toggleCellExclusion}
+            />
+          )}
+   {/* Mean of Duplicate - Background Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
           excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
@@ -459,8 +507,6 @@ function TiterAnalysis() {
               summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
               fileIndex={activeTab.file}
               excelSummaries={excelSummaries}
-              getCellColor={getCellColor}
-              toggleCellExclusion={toggleCellExclusion}
               customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
               onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
               plateNumber={activeTab.sheet + 1}
@@ -469,8 +515,10 @@ function TiterAnalysis() {
                   ? sampleNames[activeTab.file][activeTab.sheet]
                   : []
               }
+              excludedCells={excludedCells}
             />
           )}
+
         {/* OD 0.5 Titer Polynomial Fit Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
@@ -483,23 +531,10 @@ function TiterAnalysis() {
                   ? sampleNames[activeTab.file][activeTab.sheet]
                   : []
               }
+              excludedCells={excludedCells}
             />
           )}
-        <div className="tables-container">
-          {excelSummaries[activeTab.file] &&
-            excelSummaries[activeTab.file].sheets &&
-            excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
-              <PercentCVCard
-                summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
-                plateNumber={activeTab.sheet + 1}
-                sampleNames={
-                  (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
-                    ? sampleNames[activeTab.file][activeTab.sheet]
-                    : []
-                }
-              />
-            )}
-        </div>
+   
         <div style={{ marginTop: 24 }}>
           <button onClick={handlePrint} className="print-button">
             Print Page
