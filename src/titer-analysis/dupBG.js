@@ -106,7 +106,6 @@ if (summary && summary.preview && summary.preview.length > 0) {
       style={style}
       className="summary-card"
     >
-      <div className="drag-handle" {...attributes} {...listeners}>☰</div>
       <div className="card-header">
         <div className="card-title">
           <h2>Mean of Duplicate - Background</h2>

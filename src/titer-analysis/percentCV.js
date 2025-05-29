@@ -55,13 +55,12 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
     <div className="summary-card">
       <div className="card-header">
         <div className="card-title">
-          <h2>Percent CV Table</h2>
+          <h2>Percent CV</h2>
         </div>
       </div>
       <div className="sheet-summary">
         <h3>Plate #{plateNumber}</h3>
         <div className="preview-table">
-          {/* Percent CV Table */}
           <table>
             <thead>
               <tr>
@@ -113,7 +112,7 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
         </div>
         {/* Raw Data Table with exclusion buttons */}
         <div style={{ marginTop: 32 }}>
-          <h4>Raw Data (click "Exclude" to remove a value from all calculations)</h4>
+          <h4>Raw Data (click to exclude/include values)</h4>
           <div className="preview-table">
             <table>
               <thead>
