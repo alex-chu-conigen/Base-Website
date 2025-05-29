@@ -1,6 +1,7 @@
 import React from 'react';
 import Plot from 'react-plotly.js';
 
+//Polynomial 2 - Quadratic regression   
 function poly2Regression(x, y) {
   const n = x.length;
   let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0;
@@ -74,6 +75,111 @@ function solvePoly2(a, b, c, y0) {
   const x2 = (-b - sqrtD) / (2 * a);
   return Math.max(x1, x2);
 }
+// Polynomial 3 - Cubic regression
+function poly3Regression(x, y) {
+  const n = x.length;
+  let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0, sumX5 = 0, sumX6 = 0;
+  let sumY = 0, sumXY = 0, sumX2Y = 0, sumX3Y = 0;
+  for (let i = 0; i < n; i++) {
+    const xi = x[i], yi = y[i];
+    const xi2 = xi * xi, xi3 = xi2 * xi, xi4 = xi3 * xi, xi5 = xi4 * xi, xi6 = xi5 * xi;
+    sumX += xi;
+    sumX2 += xi2;
+    sumX3 += xi3;
+    sumX4 += xi4;
+    sumX5 += xi5;
+    sumX6 += xi6;
+    sumY += yi;
+    sumXY += xi * yi;
+    sumX2Y += xi2 * yi;
+    sumX3Y += xi3 * yi;
+  }
+  // Solve the system: [ [n, sumX, sumX2, sumX3], ... ]
+  const A = [
+    [n, sumX, sumX2, sumX3],
+    [sumX, sumX2, sumX3, sumX4],
+    [sumX2, sumX3, sumX4, sumX5],
+    [sumX3, sumX4, sumX5, sumX6]
+  ];
+  const B = [sumY, sumXY, sumX2Y, sumX3Y];
+
+  // Gaussian elimination for 4x4
+  function gauss(A, B) {
+    const n = B.length;
+    for (let i = 0; i < n; i++) {
+      let maxEl = Math.abs(A[i][i]);
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++) {
+        if (Math.abs(A[k][i]) > maxEl) {
+          maxEl = Math.abs(A[k][i]);
+          maxRow = k;
+        }
+      }
+      for (let k = i; k < n; k++) {
+        let tmp = A[maxRow][k];
+        A[maxRow][k] = A[i][k];
+        A[i][k] = tmp;
+      }
+      let tmp = B[maxRow];
+      B[maxRow] = B[i];
+      B[i] = tmp;
+
+      for (let k = i + 1; k < n; k++) {
+        let c = -A[k][i] / A[i][i];
+        for (let j = i; j < n; j++) {
+          if (i === j) {
+            A[k][j] = 0;
+          } else {
+            A[k][j] += c * A[i][j];
+          }
+        }
+        B[k] += c * B[i];
+      }
+    }
+    const x = Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+      x[i] = B[i] / A[i][i];
+      for (let k = i - 1; k >= 0; k--) {
+        B[k] -= A[k][i] * x[i];
+      }
+    }
+    return x;
+  }
+  const [d, c, b, a] = gauss(A, B);
+  return { a, b, c, d };
+}
+
+// Solve cubic: a*x^3 + b*x^2 + c*x + d = y0
+function solvePoly3(a, b, c, d, y0) {
+  // Solve a*x^3 + b*x^2 + c*x + (d - y0) = 0
+  d = d - y0;
+  // Use Cardano's method or numeric root finding
+  // We'll use numeric root finding (Newton-Raphson with fallback to bisection)
+  function f(x) { return a*x*x*x + b*x*x + c*x + d; }
+  // Try several initial guesses in the range [0, 10]
+  let root = null;
+  for (let guess = 0; guess <= 10; guess += 0.1) {
+    let x0 = guess;
+    let x = x0;
+    let maxIter = 100;
+    for (let i = 0; i < maxIter; i++) {
+      let fx = f(x);
+      let dfx = 3*a*x*x + 2*b*x + c;
+      if (Math.abs(dfx) < 1e-8) break;
+      let x1 = x - fx / dfx;
+      if (Math.abs(x1 - x) < 1e-7) {
+        if (x1 > 0 && x1 < 10) {
+          root = x1;
+          break;
+        }
+      }
+      x = x1;
+    }
+    if (root !== null) break;
+  }
+  return root;
+}
+
 
 function calculateR2(x, y, fit) {
   const yMean = y.reduce((a, b) => a + b, 0) / y.length;
@@ -222,16 +328,21 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
     let fitPoints = [];
     let r2 = null;
     if (x.length >= 3) {
-      // Fit quadratic to ALL points
-      fit = poly2Regression(x, y);
+      // fit = poly2Regression(x, y);
+
+      fit = poly3Regression(x, y);
       fitPoints = x.map((xi, i) => ({
         logDil: xi,
         od: fit.a * xi * xi + fit.b * xi + fit.c
       }));
       // Still use the three closest points for titer calculation
       if (xFit.length === 3) {
-        const tFit = poly2Regression(xFit, yFit);
-        const root = solvePoly2(tFit.a, tFit.b, tFit.c, 0.5);
+        // const tFit = poly2Regression(xFit, yFit);
+        // const root = solvePoly2(tFit.a, tFit.b, tFit.c, 0.5);
+
+        const tFit = poly3Regression(xFit, yFit);
+        const root = solvePoly3(tFit.a, tFit.b, tFit.c, 0.5);
+
         if (root && isFinite(root)) {
           const dilutionAt05 = Math.pow(10, root);
           titer = Math.round(dilutionAt05).toLocaleString();
@@ -259,7 +370,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
     for (let i = 0; i <= 40; i++) {
       const xi = minX + (maxX - minX) * (i / 40);
       xSmooth.push(xi);
-      ySmooth.push(fit.a * xi * xi + fit.b * xi + fit.c);
+      ySmooth.push(fit.a * xi * xi * xi + fit.b * xi * xi + fit.c * xi + fit.d);
     }
 
     return (
@@ -457,9 +568,9 @@ export function FinSumCard({ summary, sampleNames = [], plateNumber, excludedCel
     let titer = '';
     if (x.length >= 3) {
       // Fit quadratic to all points
-      const fit = poly2Regression(x, y);
+      const fit = poly3Regression(x, y);
       // Solve for log10(dilution) at OD=0.5
-      const root = solvePoly2(fit.a, fit.b, fit.c, 0.5);
+      const root = solvePoly3(fit.a, fit.b, fit.c, 0.5);
       if (root && isFinite(root)) {
         const dilutionAt05 = Math.pow(10, root);
         titer = Math.round(dilutionAt05).toLocaleString();

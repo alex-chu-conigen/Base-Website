@@ -547,18 +547,23 @@ function TiterAnalysis() {
               excludedCells={excludedCells}
             />
           )}
-          
+
         {/* Final Summary Card */}
-        <FinSumCard
-  summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
-  plateNumber={activeTab.sheet + 1}
-  sampleNames={
-    (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
-      ? sampleNames[activeTab.file][activeTab.sheet]
-      : []
-  }
-  excludedCells={excludedCells}
-/>
+        {excelSummaries[activeTab.file] &&
+          excelSummaries[activeTab.file].sheets &&
+          excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
+            <FinSumCard
+              summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+              plateNumber={activeTab.sheet + 1}
+              sampleNames={
+                (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
+                  ? sampleNames[activeTab.file][activeTab.sheet]
+                  : []
+              }
+              excludedCells={excludedCells}
+            />
+          )}
+
         <div style={{ marginTop: 24 }}>
           <button onClick={handlePrint} className="print-button">
             Print Page
