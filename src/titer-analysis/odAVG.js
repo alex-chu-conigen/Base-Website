@@ -145,6 +145,8 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
       })
     : [];
 
+ // ...existing code...
+
   const titers = [];
   const trendlineData = [];
   for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
@@ -166,9 +168,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
     // Find the three points: two above 0.5 and one below (or vice versa), all closest to 0.5
     let idxs = [];
     for (let i = 0; i < y.length - 1; i++) {
-      // Look for a crossing
       if ((y[i] >= 0.5 && y[i + 1] < 0.5) || (y[i] < 0.5 && y[i + 1] >= 0.5)) {
-        // Collect all indices and their values above and below 0.5
         const above = [];
         const below = [];
         for (let j = 0; j < y.length; j++) {
@@ -178,38 +178,24 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
             below.push({ idx: j, diff: Math.abs(y[j] - 0.5) });
           }
         }
-        // Sort by closeness to 0.5
         above.sort((a, b) => a.diff - b.diff);
         below.sort((a, b) => a.diff - b.diff);
 
-        // Try to get two above and one below
         if (above.length >= 2 && below.length >= 1) {
-          idxs = [
-            above[0].idx,
-            above[1].idx,
-            below[0].idx
-          ];
+          idxs = [above[0].idx, above[1].idx, below[0].idx];
         } else if (below.length >= 2 && above.length >= 1) {
-          // Or two below and one above
-          idxs = [
-            below[0].idx,
-            below[1].idx,
-            above[0].idx
-          ];
+          idxs = [below[0].idx, below[1].idx, above[0].idx];
         } else {
-          // Fallback: just three closest to 0.5
           idxs = y
             .map((val, idx) => ({ idx, diff: Math.abs(val - 0.5) }))
             .sort((a, b) => a.diff - b.diff)
             .slice(0, 3)
             .map(obj => obj.idx);
         }
-        // Sort indices for consistent order
         idxs = idxs.sort((a, b) => a - b);
         break;
       }
     }
-    // If not found, fallback to three closest to 0.5
     if (idxs.length !== 3 && y.length >= 3) {
       idxs = y
         .map((val, idx) => ({ idx, diff: Math.abs(val - 0.5) }))
@@ -235,18 +221,23 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
     let fit = null;
     let fitPoints = [];
     let r2 = null;
-    if (xFit.length === 3) {
-      fit = poly2Regression(xFit, yFit);
-      fitPoints = xFit.map((xi, i) => ({
+    if (x.length >= 3) {
+      // Fit quadratic to ALL points
+      fit = poly2Regression(x, y);
+      fitPoints = x.map((xi, i) => ({
         logDil: xi,
         od: fit.a * xi * xi + fit.b * xi + fit.c
       }));
-      const root = solvePoly2(fit.a, fit.b, fit.c, 0.5);
-      if (root && isFinite(root)) {
-        const dilutionAt05 = Math.pow(10, root);
-        titer = Math.round(dilutionAt05).toLocaleString();
+      // Still use the three closest points for titer calculation
+      if (xFit.length === 3) {
+        const tFit = poly2Regression(xFit, yFit);
+        const root = solvePoly2(tFit.a, tFit.b, tFit.c, 0.5);
+        if (root && isFinite(root)) {
+          const dilutionAt05 = Math.pow(10, root);
+          titer = Math.round(dilutionAt05).toLocaleString();
+        }
       }
-      r2 = calculateR2(xFit, yFit, fit);
+      r2 = calculateR2(x, y, fit); // R² with all points
     }
     if (!titer) {
       if (y[0] < 0.5) titer = "<1,000";
@@ -254,17 +245,17 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
       else titer = "N/A";
     }
     titers.push({ titer, r2 });
-    trendlineData.push({ xFit, yFit, fit, fitPoints, r2 });
+    trendlineData.push({ x, y, fit, fitPoints, r2 });
   }
 
   function renderPlotly(sampleIdx) {
-    const { xFit, yFit, fit } = trendlineData[sampleIdx];
-    if (!fit || !xFit.length) return null;
+    const { x, y, fit } = trendlineData[sampleIdx];
+    if (!fit || !x.length) return null;
 
     // Generate smooth curve for the fit
     const xSmooth = [];
     const ySmooth = [];
-    const minX = Math.min(...xFit), maxX = Math.max(...xFit);
+    const minX = Math.min(...x), maxX = Math.max(...x);
     for (let i = 0; i <= 40; i++) {
       const xi = minX + (maxX - minX) * (i / 40);
       xSmooth.push(xi);
@@ -275,11 +266,11 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
       <Plot
         data={[
           {
-            x: xFit,
-            y: yFit,
+            x: x,
+            y: y,
             mode: 'markers',
             marker: { color: '#1976d2', size: 12 },
-            name: 'Fit Points'
+            name: 'Data Points'
           },
           {
             x: xSmooth,
@@ -289,7 +280,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
             name: 'Quadratic Fit'
           },
           {
-            x: [Math.min(...xFit), Math.max(...xFit)],
+            x: [Math.min(...x), Math.max(...x)],
             y: [0.5, 0.5],
             mode: 'lines',
             line: { color: '#e55', dash: 'dash', width: 2 },
@@ -302,11 +293,11 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
           margin: { l: 60, r: 30, t: 30, b: 60 },
           xaxis: {
             title: { text: 'log₁₀(Dilution)' },
-            range: [Math.min(...xFit) - 0.1, Math.max(...xFit) + 0.1]
+            range: [Math.min(...x) - 0.1, Math.max(...x) + 0.1]
           },
           yaxis: {
             title: { text: 'OD' },
-            range: [0, Math.max(...yFit, 1.2) + 0.1]
+            range: [0, Math.max(...y, 1.2) + 0.1]
           },
           showlegend: true
         }}
@@ -319,7 +310,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
     <div className="summary-card">
       <div className="card-header">
         <div className="card-title">
-          <h2>OD 0.5 Titer (Polynomial Fit, 3-point, BG subtracted)</h2>
+          <h2>OD 0.5 Titer (Polynomial Fit, BG subtracted)</h2>
         </div>
       </div>
       <div className="sheet-summary">
@@ -365,10 +356,10 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
                   </tr>
                 </thead>
                 <tbody>
-                  {data.xFit.map((xi, i) => (
+                  {data.x.map((xi, i) => (
                     <tr key={i}>
                       <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{xi.toFixed(3)}</td>
-                      <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{data.yFit[i].toFixed(3)}</td>
+                      <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{data.y[i].toFixed(3)}</td>
                       <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>
                         {data.fit ? (data.fit.a * xi * xi + data.fit.b * xi + data.fit.c).toFixed(3) : ""}
                       </td>

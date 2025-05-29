@@ -5,6 +5,8 @@ import './TiterAnalysis.css';
 import PercentCVCard from './percentCV';
 import SummaryCard from './dupBG';
 import ODTiterCard from './odAVG';
+import FinSumCardodAVG from './odAVG';
+
 
 
 // New RawTableCard component
