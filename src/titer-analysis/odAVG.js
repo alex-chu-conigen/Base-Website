@@ -86,7 +86,7 @@ function calculateR2(x, y, fit) {
   return 1 - ssRes / ssTot;
 }
 
-function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
+function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
   if (!summary || !summary.columns || !summary.preview) return null;
 
   const sampleCount = Math.floor((summary.columns.length - 1) / 2);
@@ -111,13 +111,18 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
     }
   }
 
+  // Helper for exclusion key
+  const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+  const isExcluded = (rowIdx, sampleIdx, dupIdx) =>
+    excludedCells && excludedCells.has(getCellKey(rowIdx, sampleIdx, dupIdx));
+
   // Prepare averaged data: for each row, for each pair, take average and subtract global background
   const averagedRows = summary && summary.preview
     ? summary.preview.map((row, rowIdx) => {
         const newRow = [];
-        for (let i = 1; i < row.length - 1; i += 2) {
-          const n1 = parseFloat(row[i]);
-          const n2 = parseFloat(row[i + 1]);
+        for (let i = 1, sampleIdx = 0; i < row.length - 1; i += 2, sampleIdx++) {
+          const n1 = isExcluded(rowIdx, sampleIdx, 0) ? NaN : parseFloat(row[i]);
+          const n2 = isExcluded(rowIdx, sampleIdx, 1) ? NaN : parseFloat(row[i + 1]);
           let avg = '';
           if (!isNaN(n1) && !isNaN(n2)) {
             avg = ((n1 + n2) / 2) - background;
@@ -157,8 +162,6 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
         y.push(ods[i]);
       }
     }
-
-    // ...existing code...
 
     // Find the three points: two above 0.5 and one below (or vice versa), all closest to 0.5
     let idxs = [];
@@ -215,10 +218,45 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
         .map(obj => obj.idx)
         .sort((a, b) => a - b);
     }
-    
 
+    let xFit = [], yFit = [];
+    if (idxs.length === 3) {
+      xFit = idxs.map(i => x[i]);
+      yFit = idxs.map(i => y[i]);
+    } else if (y.length >= 3) {
+      xFit = x.slice(-3);
+      yFit = y.slice(-3);
+    } else {
+      xFit = x;
+      yFit = y;
+    }
+
+    let titer = '';
+    let fit = null;
+    let fitPoints = [];
+    let r2 = null;
+    if (xFit.length === 3) {
+      fit = poly2Regression(xFit, yFit);
+      fitPoints = xFit.map((xi, i) => ({
+        logDil: xi,
+        od: fit.a * xi * xi + fit.b * xi + fit.c
+      }));
+      const root = solvePoly2(fit.a, fit.b, fit.c, 0.5);
+      if (root && isFinite(root)) {
+        const dilutionAt05 = Math.pow(10, root);
+        titer = Math.round(dilutionAt05).toLocaleString();
+      }
+      r2 = calculateR2(xFit, yFit, fit);
+    }
+    if (!titer) {
+      if (y[0] < 0.5) titer = "<1,000";
+      else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
+      else titer = "N/A";
+    }
+    titers.push({ titer, r2 });
+    trendlineData.push({ xFit, yFit, fit, fitPoints, r2 });
   }
-  
+
   function renderPlotly(sampleIdx) {
     const { xFit, yFit, fit } = trendlineData[sampleIdx];
     if (!fit || !xFit.length) return null;
@@ -345,6 +383,5 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber }) {
     </div>
   );
 }
-
 
 export default ODTiterCard;

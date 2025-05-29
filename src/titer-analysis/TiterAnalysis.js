@@ -185,15 +185,15 @@ function TiterAnalysis() {
   const DEFAULT_RANGE = 'B25:N33';
   const MULTI_FILE_RANGE = 'A7:M15';
 
-  // const getCellColor = (value, rowKey, colKey) => {
-  //   if (value === '') return '';
-  //   const numValue = parseFloat(value);
-  //   if (isNaN(numValue)) return '';
-  //   const location = `${rowKey}${colKey}`;
-  //   if (excludedCells.has(location)) return 'excluded-cell';
-  //   if (numValue >= 0.5) return 'highlight-green';
-  //   if (numValue < 0.5) return 'highlight-yellow';
-  // };
+  const getCellColor = (value, rowKey, colKey) => {
+    if (value === '') return '';
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return '';
+    const location = `${rowKey}${colKey}`;
+    if (excludedCells.has(location)) return 'excluded-cell';
+    if (numValue >= 0.5) return 'highlight-green';
+    if (numValue < 0.5) return 'highlight-yellow';
+  };
 
   const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
 
@@ -506,6 +506,8 @@ function TiterAnalysis() {
             <SummaryCard
               summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
               fileIndex={activeTab.file}
+              getCellColor={getCellColor}
+
               excelSummaries={excelSummaries}
               customName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
               onNameChange={(newName) => handleNameChange(activeTab.file, newName)}
