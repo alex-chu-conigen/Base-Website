@@ -376,3 +376,134 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
 }
 
 export default ODTiterCard;
+
+// ...existing code above...
+
+export function FinSumCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
+  if (!summary || !summary.columns || !summary.preview) return null;
+
+  const sampleCount = Math.floor((summary.columns.length - 1) / 2);
+  const dilutions = [
+    1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000
+  ];
+
+  // Calculate background ONCE: last row, last two columns of the entire table
+  let background = 0;
+  let lastRow = [];
+  if (summary && summary.preview && summary.preview.length > 0) {
+    lastRow = summary.preview[summary.preview.length - 1];
+    const bg1 = parseFloat(lastRow[lastRow.length - 2]);
+    const bg2 = parseFloat(lastRow[lastRow.length - 1]);
+    if (!isNaN(bg1) && !isNaN(bg2)) {
+      background = (bg1 + bg2) / 2;
+    } else if (!isNaN(bg1)) {
+      background = bg1;
+    } else if (!isNaN(bg2)) {
+      background = bg2;
+    }
+  }
+
+  // Helper for exclusion key
+  const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+  const isExcluded = (rowIdx, sampleIdx, dupIdx) =>
+    excludedCells && excludedCells.has(getCellKey(rowIdx, sampleIdx, dupIdx));
+
+  // Prepare averaged data: for each row, for each pair, take average and subtract global background
+  const averagedRows = summary && summary.preview
+    ? summary.preview.map((row, rowIdx) => {
+        const newRow = [];
+        for (let i = 1, sampleIdx = 0; i < row.length - 1; i += 2, sampleIdx++) {
+          const n1 = isExcluded(rowIdx, sampleIdx, 0) ? NaN : parseFloat(row[i]);
+          const n2 = isExcluded(rowIdx, sampleIdx, 1) ? NaN : parseFloat(row[i + 1]);
+          let avg = '';
+          if (!isNaN(n1) && !isNaN(n2)) {
+            avg = ((n1 + n2) / 2) - background;
+            avg = avg.toFixed(3);
+          } else if (!isNaN(n1)) {
+            avg = n1 - background;
+            avg = avg.toFixed(3);
+          } else if (!isNaN(n2)) {
+            avg = n2 - background;
+            avg = avg.toFixed(3);
+          }
+          newRow.push(avg);
+        }
+        // For the last row, ensure the last value is 0.000
+        if (rowIdx === summary.preview.length - 1) {
+          newRow[newRow.length - 1] = "0.000";
+        }
+        // First column is label, then averaged values
+        return [row[0], ...newRow];
+      })
+    : [];
+
+  // For each sample, fit quadratic to all points and solve for dilution at OD=0.5
+  const titers = [];
+  for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+    const ods = averagedRows.map(row => {
+      const v = parseFloat(row[1 + sampleIdx]);
+      return !isNaN(v) ? v : NaN;
+    });
+
+    const x = [];
+    const y = [];
+    for (let i = 0; i < ods.length && i < dilutions.length; i++) {
+      if (!isNaN(ods[i])) {
+        x.push(Math.log10(dilutions[i]));
+        y.push(ods[i]);
+      }
+    }
+
+    let titer = '';
+    if (x.length >= 3) {
+      // Fit quadratic to all points
+      const fit = poly2Regression(x, y);
+      // Solve for log10(dilution) at OD=0.5
+      const root = solvePoly2(fit.a, fit.b, fit.c, 0.5);
+      if (root && isFinite(root)) {
+        const dilutionAt05 = Math.pow(10, root);
+        titer = Math.round(dilutionAt05).toLocaleString();
+      } else {
+        titer = "N/A";
+      }
+    } else {
+      titer = "N/A";
+    }
+    titers.push(titer);
+  }
+
+  return (
+    <div className="summary-card">
+      <div className="card-header">
+        <div className="card-title">
+          <h2>Final Titer (OD=0.5 from Trendline)</h2>
+        </div>
+      </div>
+      <div className="sheet-summary">
+        <h3>Plate #{plateNumber}</h3>
+        <div className="preview-table">
+          <table>
+            <thead>
+              <tr>
+                {Array.from({ length: sampleCount }).map((_, idx) => (
+                  <th key={idx} style={{ textAlign: 'center' }}>
+                    {sampleNames[idx] || `Sample ${idx + 1}`}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {titers.map((titer, idx) => (
+                  <td key={idx} style={{ fontWeight: 600, fontSize: 18 }}>
+                    {titer}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
