@@ -357,13 +357,32 @@ const downloadExcel = async (fileName) => {
       });
       currentRow++;
 
-      sheet.preview.forEach((row, rowIndex) => {
-        const rowData = [dilutionFactors[rowIndex] || ''];
-        for (let i = 0; i < sampleCount; i++) {
-          rowData.push(row[1 + i * 2], row[2 + i * 2]);
-        }
-        ws.addRow(rowData);
-      });
+sheet.preview.forEach((row, rowIndex) => {
+  const rowData = [dilutionFactors[rowIndex] || ''];
+  for (let i = 0; i < sampleCount; i++) {
+    rowData.push(row[1 + i * 2], row[2 + i * 2]);
+  }
+  const excelRow = ws.addRow(rowData);
+  excelRow.eachCell((cell, colNumber) => {
+    // Alternating row background
+    cell.fill = ((rowIndex % 2) === 0)
+      ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F7F7" } }
+      : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+
+    // Cross out excluded cells (strikethrough)
+    if (colNumber > 1) {
+      // Calculate sampleIdx and dupIdx from colNumber
+      const zeroBased = colNumber - 2;
+      const sampleIdx = Math.floor(zeroBased / 2);
+      const dupIdx = zeroBased % 2;
+      const key = `r${rowIndex}s${sampleIdx}d${dupIdx}`;
+      if (excludedCells.has(key)) {
+        cell.font = { ...cell.font, strike: true, color: { argb: "FF888888" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8D7DA" } }; // light red for excluded
+      }
+    }
+  });
+});
 
       for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
         ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
