@@ -185,12 +185,13 @@ function calculateR2(x, y, fit) {
   const yMean = y.reduce((a, b) => a + b, 0) / y.length;
   let ssTot = 0, ssRes = 0;
   for (let i = 0; i < x.length; i++) {
-    const yPred = fit.a * x[i] * x[i] + fit.b * x[i] + fit.c;
+    const yPred = fit.a * x[i] * x[i] * x[i] + fit.b * x[i] * x[i] + fit.c * x[i] + fit.d;
     ssTot += (y[i] - yMean) ** 2;
     ssRes += (y[i] - yPred) ** 2;
   }
   return 1 - ssRes / ssTot;
 }
+
 
 function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
   if (!summary || !summary.columns || !summary.preview) return null;
@@ -331,23 +332,18 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
       // fit = poly2Regression(x, y);
 
       fit = poly3Regression(x, y);
-      fitPoints = x.map((xi, i) => ({
-        logDil: xi,
-        od: fit.a * xi * xi + fit.b * xi + fit.c
-      }));
-      // Still use the three closest points for titer calculation
-      if (xFit.length === 3) {
-        // const tFit = poly2Regression(xFit, yFit);
-        // const root = solvePoly2(tFit.a, tFit.b, tFit.c, 0.5);
-
-        const tFit = poly3Regression(xFit, yFit);
-        const root = solvePoly3(tFit.a, tFit.b, tFit.c, 0.5);
-
-        if (root && isFinite(root)) {
-          const dilutionAt05 = Math.pow(10, root);
-          titer = Math.round(dilutionAt05).toLocaleString();
-        }
-      }
+fitPoints = x.map((xi, i) => ({
+  logDil: xi,
+  od: fit.a * xi * xi * xi + fit.b * xi * xi + fit.c * xi + fit.d
+}));
+if (xFit.length === 3) {
+  const tFit = poly3Regression(xFit, yFit);
+  const root = solvePoly3(tFit.a, tFit.b, tFit.c, tFit.d, 0.5);
+  if (root && isFinite(root)) {
+    const dilutionAt05 = Math.pow(10, root);
+    titer = Math.round(dilutionAt05).toLocaleString();
+  }
+}
       r2 = calculateR2(x, y, fit); // R² with all points
     }
     if (!titer) {
@@ -388,7 +384,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
             y: ySmooth,
             mode: 'lines',
             line: { color: '#43a047', width: 3 },
-            name: 'Quadratic Fit'
+            name: 'Cubics Fit'
           },
           {
             x: [Math.min(...x), Math.max(...x)],
@@ -472,7 +468,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
                       <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{xi.toFixed(3)}</td>
                       <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{data.y[i].toFixed(3)}</td>
                       <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>
-                        {data.fit ? (data.fit.a * xi * xi + data.fit.b * xi + data.fit.c).toFixed(3) : ""}
+{data.fit ? (data.fit.a * xi * xi * xi + data.fit.b * xi * xi + data.fit.c * xi + data.fit.d).toFixed(3) : ""}
                       </td>
                     </tr>
                   ))}
@@ -549,39 +545,54 @@ export function FinSumCard({ summary, sampleNames = [], plateNumber, excludedCel
     : [];
 
   // For each sample, fit quadratic to all points and solve for dilution at OD=0.5
-  const titers = [];
-  for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-    const ods = averagedRows.map(row => {
-      const v = parseFloat(row[1 + sampleIdx]);
-      return !isNaN(v) ? v : NaN;
-    });
+  // Replace the for loop in FinSumCard with this fixed version:
 
-    const x = [];
-    const y = [];
-    for (let i = 0; i < ods.length && i < dilutions.length; i++) {
-      if (!isNaN(ods[i])) {
-        x.push(Math.log10(dilutions[i]));
-        y.push(ods[i]);
-      }
-    }
+const titers = [];
+for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+  const ods = averagedRows.map(row => {
+    const v = parseFloat(row[1 + sampleIdx]);
+    return !isNaN(v) ? v : NaN;
+  });
 
-    let titer = '';
-    if (x.length >= 3) {
-      // Fit quadratic to all points
-      const fit = poly3Regression(x, y);
-      // Solve for log10(dilution) at OD=0.5
-      const root = solvePoly3(fit.a, fit.b, fit.c, 0.5);
-      if (root && isFinite(root)) {
-        const dilutionAt05 = Math.pow(10, root);
-        titer = Math.round(dilutionAt05).toLocaleString();
-      } else {
-        titer = "N/A";
-      }
-    } else {
-      titer = "N/A";
+  const x = [];
+  const y = [];
+  for (let i = 0; i < ods.length && i < dilutions.length; i++) {
+    if (!isNaN(ods[i])) {
+      x.push(Math.log10(dilutions[i]));
+      y.push(ods[i]);
     }
-    titers.push(titer);
   }
+
+  let titer = "N/A";
+  if (x.length >= 4) {
+    const fit = poly3Regression(x, y);
+
+    // Bisection method in data range
+    const f = xi => fit.a * xi ** 3 + fit.b * xi ** 2 + fit.c * xi + fit.d - 0.5;
+    let minX = Math.min(...x), maxX = Math.max(...x);
+    let left = minX, right = maxX, mid, fLeft = f(left), fRight = f(right);
+    let found = false;
+    if (fLeft * fRight < 0) {
+      for (let i = 0; i < 50; i++) {
+        mid = (left + right) / 2;
+        let fMid = f(mid);
+        if (Math.abs(fMid) < 1e-6) { found = true; break; }
+        if (fLeft * fMid < 0) {
+          right = mid;
+          fRight = fMid;
+        } else {
+          left = mid;
+          fLeft = fMid;
+        }
+      }
+      if (found || Math.abs(f(mid)) < 1e-3) {
+        const dilutionAt05 = Math.pow(10, mid);
+        titer = Math.round(dilutionAt05).toLocaleString();
+      }
+    }
+  }
+  titers.push(titer);
+}
 
   return (
     <div className="summary-card">
