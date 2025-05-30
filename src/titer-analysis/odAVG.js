@@ -384,7 +384,7 @@ if (xFit.length === 3) {
             y: ySmooth,
             mode: 'lines',
             line: { color: '#43a047', width: 3 },
-            name: 'Cubics Fit'
+            name: 'Cubic Fit'
           },
           {
             x: [Math.min(...x), Math.max(...x)],
@@ -422,32 +422,7 @@ if (xFit.length === 3) {
       </div>
       <div className="sheet-summary">
         <h3>Plate #{plateNumber}</h3>
-        <div className="preview-table">
-          <table>
-            <thead>
-              <tr>
-                {Array.from({ length: sampleCount }).map((_, idx) => (
-                  <th key={idx} style={{ textAlign: 'center' }}>
-                    {sampleNames[idx] || `Sample ${idx + 1}`}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                {titers.map((t, idx) => (
-                  <td key={idx}>
-                    {t.titer}
-                    <br />
-                    <span style={{ fontSize: 12, color: t.r2 >= 0.7 ? "#43a047" : "#e55" }}>
-                      R²: {t.r2 !== null ? t.r2.toFixed(3) : "N/A"}
-                    </span>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+       
         {/* Show trendline data and plot for each sample */}
         {trendlineData.map((data, idx) => (
           <div key={idx} style={{ margin: "24px 0" }}>
@@ -483,8 +458,6 @@ if (xFit.length === 3) {
 }
 
 export default ODTiterCard;
-
-// ...existing code above...
 
 export function FinSumCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
   if (!summary || !summary.columns || !summary.preview) return null;
@@ -548,6 +521,7 @@ export function FinSumCard({ summary, sampleNames = [], plateNumber, excludedCel
   // Replace the for loop in FinSumCard with this fixed version:
 
 const titers = [];
+const r2s = [];
 for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
   const ods = averagedRows.map(row => {
     const v = parseFloat(row[1 + sampleIdx]);
@@ -564,9 +538,10 @@ for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
   }
 
   let titer = "N/A";
+  let r2 = null;
   if (x.length >= 4) {
     const fit = poly3Regression(x, y);
-
+    r2 = calculateR2(x, y, fit);
     // Bisection method in data range
     const f = xi => fit.a * xi ** 3 + fit.b * xi ** 2 + fit.c * xi + fit.d - 0.5;
     let minX = Math.min(...x), maxX = Math.max(...x);
@@ -592,6 +567,7 @@ for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
     }
   }
   titers.push(titer);
+  r2s.push(r2);
 }
 
   return (
@@ -619,6 +595,10 @@ for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
                 {titers.map((titer, idx) => (
                   <td key={idx} style={{ fontWeight: 600, fontSize: 18 }}>
                     {titer}
+                    <br />
+                    <span style={{ fontSize: 12, color: r2s[idx] >= 0.7 ? "#43a047" : "#e55" }}>
+                      R²: {r2s[idx] !== null ? r2s[idx].toFixed(3) : "N/A"}
+                    </span>
                   </td>
                 ))}
               </tr>
