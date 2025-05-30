@@ -284,9 +284,16 @@ function TiterAnalysis() {
     }
   };
 
-  const handleDownloadClick = () => {
-    setShowFileNameInput(true);
-  };
+const handleDownloadClick = () => {
+  // Get the current file name (custom or original) for the active tab
+  const currentCustomName = customNames[activeTab.file];
+  const defaultName =
+    currentCustomName ||
+    excelSummaries[activeTab.file]?.fileName ||
+    "TiterAnalysis";
+  setFileName(defaultName);
+  setShowFileNameInput(true);
+};
 
   const handleFileNameChange = (e) => {
     setFileName(e.target.value);
@@ -358,7 +365,7 @@ const downloadExcel = async (fileName) => {
         ws.addRow(rowData);
       });
 
-      for (let r = currentRow + 1; r <= currentRow + sheet.preview.length; r++) {
+      for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
         ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
       }
       currentRow += sheet.preview.length;
@@ -421,125 +428,162 @@ const downloadExcel = async (fileName) => {
         return ((stdev / avg) * 100).toFixed(2);
       };
 
-      sheet.preview.forEach((row, rowIdx) => {
-        const rowData = [dilutionFactors[rowIdx] || ''];
-        for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-          const v1 = row[1 + sampleIdx * 2];
-          const v2 = row[2 + sampleIdx * 2];
-          let cv = '';
-          if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
-            cv = '';
-          } else if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) || excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
-            cv = '0.00';
-          } else {
-            cv = calcCV(v1, v2);
+sheet.preview.forEach((row, rowIdx) => {
+  const rowData = [dilutionFactors[rowIdx] || ''];
+  for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+    const v1 = row[1 + sampleIdx * 2];
+    const v2 = row[2 + sampleIdx * 2];
+    let cv = '';
+    if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
+      cv = '';
+    } else if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) || excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
+      cv = '0.00';
+    } else {
+      cv = calcCV(v1, v2);
+    }
+    rowData.push(cv !== '' ? `${cv}%` : '');
+  }
+  const excelRow = ws.addRow(rowData);
+  excelRow.eachCell((cell, colNumber) => {
+    // Set alternating row background
+    cell.fill = ((rowIdx % 2) === 0)
+      ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F7F7" } }
+      : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+    // Only highlight data columns (not the first/dilution column)
+    if (colNumber > 1) {
+      const value = parseFloat(cell.value);
+      if (!isNaN(value) && value >= 20) {
+        // Override with green if over 20
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'ffabffea' } // Green
+        };
+      }
+    }
+  });
+});
+
+for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
+  ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
+}
+currentRow += sheet.preview.length;
+
+// Border for Percent CV table
+for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+  ws.getRow(r).eachCell((cell, colNumber) => {
+    cell.border = {
+      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      left: { style: colNumber === 1 ? "thick" : "thin" },
+      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+      right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
+    };
+  });
+}
+      currentRow++;
+
+// --- MEAN OF DUPLICATE - BG TABLE ---
+ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
+ws.getCell(currentRow, 1).value = "Mean of Duplicate - BG";
+ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+ws.getCell(currentRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCCE7FF" } };
+ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
+currentRow++;
+
+const meanSampleNameRow = ["Dilution Factor"];
+for (let i = 0; i < sampleCount; i++) {
+  const name =
+    (sampleNames[fileIndex] &&
+      sampleNames[fileIndex][sheetIndex] &&
+      sampleNames[fileIndex][sheetIndex][i]) ||
+    `Sample ${i + 1}`;
+  meanSampleNameRow.push(name);
+}
+ws.addRow(meanSampleNameRow);
+ws.getRow(currentRow).eachCell(cell => {
+  cell.font = { italic: true };
+  cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5F0FF" } };
+  cell.alignment = { horizontal: "center", vertical: "middle" };
+});
+ws.getRow(currentRow).height = 22;
+ws.columns.forEach((col, idx) => {
+  ws.getColumn(idx + 1).width = 24;
+});
+currentRow++;
+
+// Calculate background (average of last row's last two columns)
+let background = 0;
+const lastRow = sheet.preview[sheet.preview.length - 1] || [];
+const bg1 = parseFloat(lastRow[lastRow.length - 2]);
+const bg2 = parseFloat(lastRow[lastRow.length - 1]);
+if (!isNaN(bg1) && !isNaN(bg2)) {
+  background = (bg1 + bg2) / 2;
+} else if (!isNaN(bg1)) {
+  background = bg1;
+} else if (!isNaN(bg2)) {
+  background = bg2;
+}
+
+// Add mean-bg rows
+sheet.preview.forEach((row, rowIdx) => {
+  const rowData = [dilutionFactors[rowIdx] || ''];
+  for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+    const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? '' : parseFloat(row[1 + sampleIdx * 2]);
+    const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? '' : parseFloat(row[2 + sampleIdx * 2]);
+    let avg = '';
+    if (n1 !== '' && n2 !== '' && !isNaN(n1) && !isNaN(n2)) {
+      avg = ((n1 + n2) / 2) - background;
+      avg = avg.toFixed(3);
+    } else if (n1 !== '' && !isNaN(n1)) {
+      avg = n1 - background;
+      avg = avg.toFixed(3);
+    } else if (n2 !== '' && !isNaN(n2)) {
+      avg = n2 - background;
+      avg = avg.toFixed(3);
+    }
+    rowData.push(avg);
+  }
+  // For the last row, ensure the last value is 0.000
+  if (rowIdx === sheet.preview.length - 1) {
+    rowData[rowData.length - 1] = "0.000";
+  }
+  const excelRow = ws.addRow(rowData);
+  excelRow.eachCell((cell, colNumber) => {
+    // Only highlight data columns (not the first/dilution column)
+    if (colNumber > 1) {
+      const value = parseFloat(cell.value);
+      if (!isNaN(value)) {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: {
+            argb: value >= 0.5 ? 'FFD4EDDA' : // Green
+                  value < 0.5 ? 'FFFFF3CD' : // Yellow
+                  'FFFFFFFF' // White
           }
-          rowData.push(cv !== '' ? `${cv}%` : '');
-        }
-        ws.addRow(rowData);
-      });
-      for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
-        ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
+        };
       }
-      currentRow += sheet.preview.length;
+    }
+  });
+});
+for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
+  ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
+}
+currentRow += sheet.preview.length;
 
-      // Border for Percent CV table
-      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-        ws.getRow(r).eachCell((cell, colNumber) => {
-          cell.border = {
-            top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
-            left: { style: colNumber === 1 ? "thick" : "thin" },
-            bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
-            right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
-          };
-        });
-        ws.getRow(r).eachCell(cell => {
-          cell.fill = cell.fill || {};
-          cell.fill = ((r - (currentRow - sheet.preview.length)) % 2 === 0)
-            ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F7F7" } }
-            : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
-        });
-      }
-      currentRow++;
+// Border for Mean BG table
+for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+  ws.getRow(r).eachCell((cell, colNumber) => {
+    cell.border = {
+      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      left: { style: colNumber === 1 ? "thick" : "thin" },
+      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+      right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
+    };
+  });
+}
+currentRow++;
 
-      // --- MEAN OF DUPLICATE - BG TABLE ---
-      ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
-      ws.getCell(currentRow, 1).value = "Mean of Duplicate - BG";
-      ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
-      ws.getCell(currentRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCCE7FF" } };
-      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow++;
-
-      const meanSampleNameRow = ["Dilution Factor"];
-      for (let i = 0; i < sampleCount; i++) {
-        const name =
-          (sampleNames[fileIndex] &&
-            sampleNames[fileIndex][sheetIndex] &&
-            sampleNames[fileIndex][sheetIndex][i]) ||
-          `Sample ${i + 1}`;
-        meanSampleNameRow.push(name);
-      }
-      ws.addRow(meanSampleNameRow);
-      ws.getRow(currentRow).eachCell(cell => {
-        cell.font = { italic: true };
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5F0FF" } };
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
-      ws.getRow(currentRow).height = 22;
-      ws.columns.forEach((col, idx) => {
-        ws.getColumn(idx + 1).width = 24;
-      });
-      currentRow++;
-
-      const calcMean = (v1, v2) => {
-        const n1 = parseFloat(v1);
-        const n2 = parseFloat(v2);
-        if (isNaN(n1) || isNaN(n2)) return '';
-        return ((n1 + n2) / 2).toFixed(2);
-      };
-
-      sheet.preview.forEach((row, rowIdx) => {
-        const rowData = [dilutionFactors[rowIdx] || ''];
-        for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-          const v1 = row[1 + sampleIdx * 2];
-          const v2 = row[2 + sampleIdx * 2];
-          let mean = '';
-          if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
-            mean = '';
-          } else if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) || excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
-            mean = v1 || v2 || '';
-          } else {
-            mean = calcMean(v1, v2);
-          }
-          rowData.push(mean);
-        }
-        ws.addRow(rowData);
-      });
-      for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
-        ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
-      }
-      currentRow += sheet.preview.length;
-
-      // Border for Mean BG table
-      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-        ws.getRow(r).eachCell((cell, colNumber) => {
-          cell.border = {
-            top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
-            left: { style: colNumber === 1 ? "thick" : "thin" },
-            bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
-            right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
-          };
-        });
-        ws.getRow(r).eachCell(cell => {
-          cell.fill = cell.fill || {};
-          cell.fill = ((r - (currentRow - sheet.preview.length)) % 2 === 0)
-            ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F8FF" } }
-            : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
-        });
-      }
-      currentRow++;
-
-      // --- FINAL SUMMARY TABLE ---
       // --- FINAL TITER TABLE ---
 ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
 ws.getCell(currentRow, 1).value = "Final Titer (OD=0.5)";
@@ -742,8 +786,13 @@ for (let r = currentRow - 2; r < currentRow; r++) {
       bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
       right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
     };
-    cell.alignment = { horizontal: "center", vertical: "middle" };
-  });
+    });
+        ws.getRow(r).eachCell(cell => {
+          cell.fill = cell.fill || {};
+          cell.fill = ((r - (currentRow - sheet.preview.length)) % 2 === 0)
+            ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F7F7" } }
+            : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+        });
 }
 currentRow++;
 
