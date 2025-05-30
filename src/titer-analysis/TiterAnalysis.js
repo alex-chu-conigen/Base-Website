@@ -6,6 +6,8 @@ import PercentCVCard from './percentCV';
 import SummaryCard from './dupBG';
 import ODTiterCard from './odAVG';
 import { FinSumCard } from './odAVG';
+import { saveAs } from 'file-saver';
+
 
 
 // New RawTableCard component
@@ -302,33 +304,26 @@ function TiterAnalysis() {
     }
   };
 
-  const downloadExcel = async (fileName) => {
+const downloadExcel = async (fileName) => {
   const wb = new ExcelJS.Workbook();
 
   excelSummaries.forEach((summary, fileIndex) => {
     summary.sheets.forEach((sheet, sheetIndex) => {
-      // Create one worksheet per plate
       const ws = wb.addWorksheet(`Plate ${sheetIndex + 1}`);
 
       let currentRow = 1;
       const dilutionFactors = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
       const sampleCount = Math.floor((sheet.columns.length - 1) / 2);
-      const totalCols = 1 + (sampleCount * 2); // 1 for dilution, 2 cols per sample
+      const totalCols = 1 + sampleCount * 2;
 
       // --- RAW DATA TABLE ---
-      // Table title row (merged, bold, orange pastel)
       ws.mergeCells(currentRow, 1, currentRow, totalCols);
       ws.getCell(currentRow, 1).value = "Raw Data";
       ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
-      ws.getCell(currentRow, 1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFE5B4" } // Light pastel orange
-      };
+      ws.getCell(currentRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFE5B4" } };
       ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow += 1;
+      currentRow++;
 
-      // Sample names row (merge 2 columns for each sample, pastel bg)
       const sampleNameRow = ["Dilution Factor"];
       for (let i = 0; i < sampleCount; i++) {
         const name =
@@ -339,32 +334,22 @@ function TiterAnalysis() {
         sampleNameRow.push(name, "");
       }
       ws.addRow(sampleNameRow);
-      // Merge 2 columns for each sample name
+
       for (let i = 0; i < sampleCount; i++) {
         const startCol = 2 + i * 2;
         ws.mergeCells(currentRow, startCol, currentRow, startCol + 1);
         ws.getCell(currentRow, startCol).alignment = { horizontal: "center", vertical: "middle" };
         ws.getCell(currentRow, startCol).font = { italic: true };
-        ws.getCell(currentRow, startCol).fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFFF6E0" } // Lighter pastel orange
-        };
+        ws.getCell(currentRow, startCol).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF6E0" } };
       }
-      // Axis bg color for dilution factor
-      ws.getCell(currentRow, 1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFF6E0" }
-      };
+      ws.getCell(currentRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF6E0" } };
       ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       ws.getRow(currentRow).height = 22;
       ws.columns.forEach((col, idx) => {
         ws.getColumn(idx + 1).width = 24;
       });
-      currentRow += 1;
+      currentRow++;
 
-      // Data rows (no col labels, just dilution + data)
       sheet.preview.forEach((row, rowIndex) => {
         const rowData = [dilutionFactors[rowIndex] || ''];
         for (let i = 0; i < sampleCount; i++) {
@@ -372,57 +357,39 @@ function TiterAnalysis() {
         }
         ws.addRow(rowData);
       });
+
       for (let r = currentRow + 1; r <= currentRow + sheet.preview.length; r++) {
         ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
       }
       currentRow += sheet.preview.length;
 
-      // Add border to RAW DATA table
-for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-  ws.getRow(r).eachCell((cell, colNumber) => {
-    // Thicker border for outer edges
-    cell.border = {
-      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
-      left: { style: colNumber === 1 ? "thick" : "thin" },
-      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
-      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
-    };
-  });
-  // Alternate row color
-  ws.getRow(r).eachCell(cell => {
-    cell.fill = cell.fill || {};
-    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF7F7F7" } // light gray
-      };
-    } else {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFFFFF" } // white
-      };
-    }
-  });
-}
-
-      // Leave a blank row
-      currentRow += 1;
+      // Border for RAW DATA table
+      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+        ws.getRow(r).eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+            left: { style: colNumber === 1 ? "thick" : "thin" },
+            bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+            right: { style: colNumber === totalCols ? "thick" : "thin" }
+          };
+        });
+        ws.getRow(r).eachCell(cell => {
+          cell.fill = cell.fill || {};
+          cell.fill = ((r - (currentRow - sheet.preview.length)) % 2 === 0)
+            ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F7F7" } }
+            : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+        });
+      }
+      currentRow++;
 
       // --- PERCENT CV TABLE ---
       ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
       ws.getCell(currentRow, 1).value = "Percent CV";
       ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
-      ws.getCell(currentRow, 1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFE5E5" } // Light pastel red
-      };
+      ws.getCell(currentRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFE5E5" } };
       ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow += 1;
+      currentRow++;
 
-      // Sample names row (pastel)
       const cvSampleNameRow = ["Dilution Factor"];
       for (let i = 0; i < sampleCount; i++) {
         const name =
@@ -435,20 +402,15 @@ for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
       ws.addRow(cvSampleNameRow);
       ws.getRow(currentRow).eachCell(cell => {
         cell.font = { italic: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFFFF6F6" } // Lighter pastel red
-        };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF6F6" } };
         cell.alignment = { horizontal: "center", vertical: "middle" };
       });
       ws.getRow(currentRow).height = 22;
       ws.columns.forEach((col, idx) => {
         ws.getColumn(idx + 1).width = 24;
       });
-      currentRow += 1;
+      currentRow++;
 
-      // Percent CV rows
       const calcCV = (v1, v2) => {
         const n1 = parseFloat(v1);
         const n2 = parseFloat(v2);
@@ -458,6 +420,7 @@ for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
         if (avg === 0) return '';
         return ((stdev / avg) * 100).toFixed(2);
       };
+
       sheet.preview.forEach((row, rowIdx) => {
         const rowData = [dilutionFactors[rowIdx] || ''];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
@@ -480,327 +443,318 @@ for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
       }
       currentRow += sheet.preview.length;
 
-      // Add border to Percent CV table
-for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-  ws.getRow(r).eachCell((cell, colNumber) => {
-    cell.border = {
-      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
-      left: { style: colNumber === 1 ? "thick" : "thin" },
-      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
-      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
-    };
-    cell.fill = cell.fill || {};
-    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF7F7F7" }
-      };
-    } else {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFFFFF" }
-      };
-    }
-  });
-}
-
-      // Leave a blank row
-      currentRow += 1;
+      // Border for Percent CV table
+      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+        ws.getRow(r).eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+            left: { style: colNumber === 1 ? "thick" : "thin" },
+            bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+            right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
+          };
+        });
+        ws.getRow(r).eachCell(cell => {
+          cell.fill = cell.fill || {};
+          cell.fill = ((r - (currentRow - sheet.preview.length)) % 2 === 0)
+            ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF7F7F7" } }
+            : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+        });
+      }
+      currentRow++;
 
       // --- MEAN OF DUPLICATE - BG TABLE ---
       ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
       ws.getCell(currentRow, 1).value = "Mean of Duplicate - BG";
       ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
-      ws.getCell(currentRow, 1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFD6ECFF" } // Light pastel blue
-      };
+      ws.getCell(currentRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCCE7FF" } };
       ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow += 1;
+      currentRow++;
 
-      // Sample names row (pastel)
-      const meanBGSampleNameRow = ["Dilution Factor"];
+      const meanSampleNameRow = ["Dilution Factor"];
       for (let i = 0; i < sampleCount; i++) {
         const name =
           (sampleNames[fileIndex] &&
             sampleNames[fileIndex][sheetIndex] &&
             sampleNames[fileIndex][sheetIndex][i]) ||
           `Sample ${i + 1}`;
-        meanBGSampleNameRow.push(name);
+        meanSampleNameRow.push(name);
       }
-      ws.addRow(meanBGSampleNameRow);
+      ws.addRow(meanSampleNameRow);
       ws.getRow(currentRow).eachCell(cell => {
         cell.font = { italic: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFF6FAFF" } // Lighter pastel blue
-        };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5F0FF" } };
         cell.alignment = { horizontal: "center", vertical: "middle" };
       });
       ws.getRow(currentRow).height = 22;
       ws.columns.forEach((col, idx) => {
         ws.getColumn(idx + 1).width = 24;
       });
-      currentRow += 1;
+      currentRow++;
 
-      // Calculate background (last row, last two columns)
-      let background = 0;
-      if (sheet.preview.length > 0) {
-        const lastRow = sheet.preview[sheet.preview.length - 1];
-        const bg1 = parseFloat(lastRow[lastRow.length - 2]);
-        const bg2 = parseFloat(lastRow[lastRow.length - 1]);
-        if (!isNaN(bg1) && !isNaN(bg2)) background = (bg1 + bg2) / 2;
-        else if (!isNaN(bg1)) background = bg1;
-        else if (!isNaN(bg2)) background = bg2;
-      }
+      const calcMean = (v1, v2) => {
+        const n1 = parseFloat(v1);
+        const n2 = parseFloat(v2);
+        if (isNaN(n1) || isNaN(n2)) return '';
+        return ((n1 + n2) / 2).toFixed(2);
+      };
 
       sheet.preview.forEach((row, rowIdx) => {
         const rowData = [dilutionFactors[rowIdx] || ''];
-        let avgValues = [];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-          const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
-          const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? NaN : parseFloat(row[2 + sampleIdx * 2]);
-          let avg = '';
-          if (!isNaN(n1) && !isNaN(n2)) avg = ((n1 + n2) / 2) - background;
-          else if (!isNaN(n1)) avg = n1 - background;
-          else if (!isNaN(n2)) avg = n2 - background;
-          avgValues.push(avg);
-          rowData.push(avg !== '' && !isNaN(avg) ? avg.toFixed(3) : '');
-        }
-        const addedRow = ws.addRow(rowData);
-        for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-          const colIdx = 2 + sampleIdx;
-          const avg = avgValues[sampleIdx];
-          const cell = addedRow.getCell(colIdx);
-          const isExcluded = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`);
-          if (isExcluded) {
-            cell.fill = {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FFF8D7DA" }
-            };
-            cell.font = { color: { argb: "FF888888" }, italic: true };
-          } else if (avg !== '' && !isNaN(avg)) {
-            if (avg >= 0.5) {
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FFD4EDDA" }
-              };
-            } else {
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FFFFF3CD" }
-              };
-            }
+          const v1 = row[1 + sampleIdx * 2];
+          const v2 = row[2 + sampleIdx * 2];
+          let mean = '';
+          if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
+            mean = '';
+          } else if (excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) || excludedCells.has(`r${rowIdx}s${sampleIdx}d1`)) {
+            mean = v1 || v2 || '';
+          } else {
+            mean = calcMean(v1, v2);
           }
-          cell.alignment = { horizontal: "center", vertical: "middle" };
+          rowData.push(mean);
         }
-        addedRow.alignment = { horizontal: "center", vertical: "middle" };
-        addedRow.commit();
+        ws.addRow(rowData);
       });
-      for (let r = currentRow + 1; r <= currentRow + sheet.preview.length; r++) {
+      for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
         ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
       }
       currentRow += sheet.preview.length;
 
-      // Add border to Mean BG table
-for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-  ws.getRow(r).eachCell((cell, colNumber) => {
-    // Thicker border for outer edges
-    cell.border = {
-      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
-      left: { style: colNumber === 1 ? "thick" : "thin" },
-      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
-      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
-    };
-  });
-  // Alternate row color
-  ws.getRow(r).eachCell(cell => {
-    cell.fill = cell.fill || {};
-    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF7F7F7" } // light gray
-      };
-    } else {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFFFFF" } // white
-      };
-    }
-  });
-}
+      // Border for Mean BG table
+      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+        ws.getRow(r).eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+            left: { style: colNumber === 1 ? "thick" : "thin" },
+            bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+            right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
+          };
+        });
+        ws.getRow(r).eachCell(cell => {
+          cell.fill = cell.fill || {};
+          cell.fill = ((r - (currentRow - sheet.preview.length)) % 2 === 0)
+            ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F8FF" } }
+            : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+        });
+      }
+      currentRow++;
 
-      // Leave a blank row
-      currentRow += 1;
-
+      // --- FINAL SUMMARY TABLE ---
       // --- FINAL TITER TABLE ---
-      ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
-      ws.getCell(currentRow, 1).value = "Final Titer (OD=0.5)";
-      ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
-      ws.getCell(currentRow, 1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFC8E6C9" } // Light pastel green
-      };
-      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow += 1;
+ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
+ws.getCell(currentRow, 1).value = "Final Titer (OD=0.5)";
+ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+ws.getCell(currentRow, 1).fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FFC8E6C9" }
+};
+ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
+currentRow += 1;
 
-      // Sample names row (pastel)
-      const titerSampleNameRow = [""];
-      for (let i = 0; i < sampleCount; i++) {
-        const name =
-          (sampleNames[fileIndex] &&
-            sampleNames[fileIndex][sheetIndex] &&
-            sampleNames[fileIndex][sheetIndex][i]) ||
-          `Sample ${i + 1}`;
-        titerSampleNameRow.push(name);
+// Sample names row (pastel)
+const titerSampleNameRow = ["Dilution"];
+for (let i = 0; i < sampleCount; i++) {
+  const name =
+    (sampleNames[fileIndex] &&
+      sampleNames[fileIndex][sheetIndex] &&
+      sampleNames[fileIndex][sheetIndex][i]) ||
+    `Sample ${i + 1}`;
+  titerSampleNameRow.push(name);
+}
+ws.addRow(titerSampleNameRow);
+ws.getRow(currentRow).eachCell(cell => {
+  cell.font = { italic: true };
+  cell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE8F5E9" }
+  };
+  cell.alignment = { horizontal: "center", vertical: "middle" };
+});
+ws.getRow(currentRow).height = 22;
+ws.columns.forEach((col, idx) => {
+  ws.getColumn(idx + 1).width = 24;
+});
+currentRow += 1;
+
+// Calculate titers and R2 using cubic regression (poly3Regression)
+const averagedRows = sheet.preview.map((row, rowIdx) => {
+  const newRow = [];
+  for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+    const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
+    const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? NaN : parseFloat(row[2 + sampleIdx * 2]);
+    let avg = '';
+    if (!isNaN(n1) && !isNaN(n2)) avg = ((n1 + n2) / 2);
+    else if (!isNaN(n1)) avg = n1;
+    else if (!isNaN(n2)) avg = n2;
+    newRow.push(avg !== '' && !isNaN(avg) ? avg : '');
+  }
+  return newRow;
+});
+
+// Poly3 regression helper (copy from odAVG.js)
+function poly3Regression(x, y) {
+  const n = x.length;
+  let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0, sumX5 = 0, sumX6 = 0;
+  let sumY = 0, sumXY = 0, sumX2Y = 0, sumX3Y = 0;
+  for (let i = 0; i < n; i++) {
+    const xi = x[i], yi = y[i];
+    const xi2 = xi * xi, xi3 = xi2 * xi, xi4 = xi3 * xi, xi5 = xi4 * xi, xi6 = xi5 * xi;
+    sumX += xi;
+    sumX2 += xi2;
+    sumX3 += xi3;
+    sumX4 += xi4;
+    sumX5 += xi5;
+    sumX6 += xi6;
+    sumY += yi;
+    sumXY += xi * yi;
+    sumX2Y += xi2 * yi;
+    sumX3Y += xi3 * yi;
+  }
+  const A = [
+    [n, sumX, sumX2, sumX3],
+    [sumX, sumX2, sumX3, sumX4],
+    [sumX2, sumX3, sumX4, sumX5],
+    [sumX3, sumX4, sumX5, sumX6]
+  ];
+  const B = [sumY, sumXY, sumX2Y, sumX3Y];
+  function gauss(A, B) {
+    const n = B.length;
+    for (let i = 0; i < n; i++) {
+      let maxEl = Math.abs(A[i][i]);
+      let maxRow = i;
+      for (let k = i + 1; k < n; k++) {
+        if (Math.abs(A[k][i]) > maxEl) {
+          maxEl = Math.abs(A[k][i]);
+          maxRow = k;
+        }
       }
-      ws.addRow(titerSampleNameRow);
-      ws.getRow(currentRow).eachCell(cell => {
-        cell.font = { italic: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFE8F5E9" } // Lighter pastel green
-        };
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
-      ws.getRow(currentRow).height = 22;
-      ws.columns.forEach((col, idx) => {
-        ws.getColumn(idx + 1).width = 24;
-      });
-      currentRow += 1;
-
-      // Calculate titers and R2 using linear interpolation
-      const averagedRows = sheet.preview.map((row, rowIdx) => {
-        const newRow = [];
-        for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-          const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
-          const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? NaN : parseFloat(row[2 + sampleIdx * 2]);
-          let avg = '';
-          if (!isNaN(n1) && !isNaN(n2)) avg = ((n1 + n2) / 2) - background;
-          else if (!isNaN(n1)) avg = n1 - background;
-          else if (!isNaN(n2)) avg = n2 - background;
-          newRow.push(avg !== '' && !isNaN(avg) ? avg : '');
-        }
-        return newRow;
-      });
-
-      function calculateR2(x, y, fitY) {
-        const yMean = y.reduce((a, b) => a + b, 0) / y.length;
-        let ssTot = 0, ssRes = 0;
-        for (let i = 0; i < y.length; i++) {
-          ssTot += (y[i] - yMean) ** 2;
-          ssRes += (y[i] - fitY[i]) ** 2;
-        }
-        return 1 - ssRes / ssTot;
+      for (let k = i; k < n; k++) {
+        let tmp = A[maxRow][k];
+        A[maxRow][k] = A[i][k];
+        A[i][k] = tmp;
       }
-
-      const titers = [];
-      const r2s = [];
-      for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-        const ods = averagedRows.map(row => parseFloat(row[sampleIdx]));
-        const x = [];
-        const y = [];
-        for (let i = 0; i < ods.length && i < dilutionFactors.length; i++) {
-          if (!isNaN(ods[i])) {
-            x.push(dilutionFactors[i]);
-            y.push(ods[i]);
+      let tmp = B[maxRow];
+      B[maxRow] = B[i];
+      B[i] = tmp;
+      for (let k = i + 1; k < n; k++) {
+        let c = -A[k][i] / A[i][i];
+        for (let j = i; j < n; j++) {
+          if (i === j) {
+            A[k][j] = 0;
+          } else {
+            A[k][j] += c * A[i][j];
           }
         }
-        let titer = "N/A";
-        let r2 = "";
-        if (x.length >= 4) {
-          // Linear interpolation for titer
-          let found = false;
-          for (let i = 0; i < y.length - 1; i++) {
-            if ((y[i] >= 0.5 && y[i + 1] < 0.5) || (y[i] < 0.5 && y[i + 1] >= 0.5)) {
-              const x1 = x[i], x2 = x[i + 1];
-              const y1 = y[i], y2 = y[i + 1];
-              const xAt05 = x1 + ((0.5 - y1) * (x2 - x1)) / (y2 - y1);
-              titer = Math.round(xAt05).toLocaleString();
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            if (y[0] < 0.5) titer = "<1,000";
-            else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
-          }
-          // Calculate R2 for linear fit
-          if (y.length > 1) {
-            const fitY = [];
-            const slope = (y[y.length - 1] - y[0]) / (x[x.length - 1] - x[0]);
-            const intercept = y[0] - slope * x[0];
-            for (let i = 0; i < x.length; i++) {
-              fitY.push(slope * x[i] + intercept);
-            }
-            r2 = calculateR2(x, y, fitY).toFixed(3);
-          }
+        B[k] += c * B[i];
+      }
+    }
+    const x = Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+      x[i] = B[i] / A[i][i];
+      for (let k = i - 1; k >= 0; k--) {
+        B[k] -= A[k][i] * x[i];
+      }
+    }
+    return x;
+  }
+  const [d, c, b, a] = gauss(A, B);
+  return { a, b, c, d };
+}
+
+// R2 for cubic fit
+function calculateR2(x, y, fit) {
+  const yMean = y.reduce((a, b) => a + b, 0) / y.length;
+  let ssTot = 0, ssRes = 0;
+  for (let i = 0; i < x.length; i++) {
+    const yPred = fit.a * x[i] * x[i] * x[i] + fit.b * x[i] * x[i] + fit.c * x[i] + fit.d;
+    ssTot += (y[i] - yMean) ** 2;
+    ssRes += (y[i] - yPred) ** 2;
+  }
+  return 1 - ssRes / ssTot;
+}
+
+const titers = [];
+const r2s = [];
+for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+  const ods = averagedRows.map(row => parseFloat(row[sampleIdx]));
+  const x = [];
+  const y = [];
+  for (let i = 0; i < ods.length && i < dilutionFactors.length; i++) {
+    if (!isNaN(ods[i])) {
+      x.push(Math.log10(dilutionFactors[i]));
+      y.push(ods[i]);
+    }
+  }
+  let titer = "N/A";
+  let r2 = "";
+  if (x.length >= 4) {
+    const fit = poly3Regression(x, y);
+    r2 = calculateR2(x, y, fit);
+    // Bisection method to find log10(dilution) at OD=0.5
+    const f = xi => fit.a * xi ** 3 + fit.b * xi ** 2 + fit.c * xi + fit.d - 0.5;
+    let minX = Math.min(...x), maxX = Math.max(...x);
+    let left = minX, right = maxX, mid, fLeft = f(left), fRight = f(right);
+    let found = false;
+    if (fLeft * fRight < 0) {
+      for (let i = 0; i < 50; i++) {
+        mid = (left + right) / 2;
+        let fMid = f(mid);
+        if (Math.abs(fMid) < 1e-6) { found = true; break; }
+        if (fLeft * fMid < 0) {
+          right = mid;
+          fRight = fMid;
         } else {
-          if (y[0] < 0.5) titer = "<1,000";
-          else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
+          left = mid;
+          fLeft = fMid;
         }
-        titers.push(titer);
-        r2s.push(r2);
       }
-      ws.addRow(["Dilution", ...titers]);
-      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow += 1;
-      ws.addRow(["R²", ...r2s]);
-      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
-      currentRow += 1;
+      if (found || Math.abs(f(mid)) < 1e-3) {
+        const dilutionAt05 = Math.pow(10, mid);
+        titer = Math.round(dilutionAt05).toLocaleString();
+      }
+    }
+    if (titer === "N/A" || titer === "0") {
+      if (y[0] < 0.5) titer = "<1,000";
+      else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
+    }
+  } else {
+    if (y[0] < 0.5) titer = "<1,000";
+    else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
+  }
+  titers.push(titer);
+  r2s.push(r2);
+}
+ws.addRow(["Dilution", ...titers]);
+ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
+currentRow += 1;
+ws.addRow(["R^2", ...r2s.map(r2 => (r2 !== "" && r2 !== null ? Number(r2).toFixed(3) : ""))]);
+ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
+currentRow += 1;
 
-      // Add border to Final Titer table (both rows)
-for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+// Border for Final Titer table
+for (let r = currentRow - 2; r < currentRow; r++) {
   ws.getRow(r).eachCell((cell, colNumber) => {
-    // Thicker border for outer edges
     cell.border = {
-      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      top: { style: r === currentRow - 2 ? "thick" : "thin" },
       left: { style: colNumber === 1 ? "thick" : "thin" },
       bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
-      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
+      right: { style: colNumber === sampleCount + 1 ? "thick" : "thin" }
     };
-  });
-  // Alternate row color
-  ws.getRow(r).eachCell(cell => {
-    cell.fill = cell.fill || {};
-    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFF7F7F7" } // light gray
-      };
-    } else {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFFFFF" } // white
-      };
-    }
+    cell.alignment = { horizontal: "center", vertical: "middle" };
   });
 }
+currentRow++;
+
     });
   });
 
   const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${fileName}.xlsx`;
-  link.click();
-  window.URL.revokeObjectURL(url);
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, fileName);
 };
+
 
   const handlePrint = () => {
     window.print();
