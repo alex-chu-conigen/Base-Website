@@ -311,19 +311,25 @@ function TiterAnalysis() {
       const ws = wb.addWorksheet(`Plate ${sheetIndex + 1}`);
 
       let currentRow = 1;
+      const dilutionFactors = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
+      const sampleCount = Math.floor((sheet.columns.length - 1) / 2);
+      const totalCols = 1 + (sampleCount * 2); // 1 for dilution, 2 cols per sample
 
       // --- RAW DATA TABLE ---
+      // Table title row (merged, bold, orange pastel)
+      ws.mergeCells(currentRow, 1, currentRow, totalCols);
       ws.getCell(currentRow, 1).value = "Raw Data";
+      ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      ws.getCell(currentRow, 1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFE5B4" } // Light pastel orange
+      };
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       currentRow += 1;
 
-      // Dilution factor as first column, then all other columns except the last (which is dilution factor in preview)
-      const columnsWithDilution = ["Dilution Factor", ...sheet.columns.slice(0, -1)];
-      ws.addRow(columnsWithDilution).commit();
-      currentRow += 1;
-
-      // Add sample names row (after header)
-      const sampleCount = Math.floor((sheet.columns.length - 1) / 2);
-      const sampleNameRow = [""];
+      // Sample names row (merge 2 columns for each sample, pastel bg)
+      const sampleNameRow = ["Dilution Factor"];
       for (let i = 0; i < sampleCount; i++) {
         const name =
           (sampleNames[fileIndex] &&
@@ -332,51 +338,114 @@ function TiterAnalysis() {
           `Sample ${i + 1}`;
         sampleNameRow.push(name, "");
       }
-      ws.addRow(sampleNameRow).commit();
-      currentRow += 1;
-
-      // Merge cells for sample names (span 2 columns each)
+      ws.addRow(sampleNameRow);
+      // Merge 2 columns for each sample name
       for (let i = 0; i < sampleCount; i++) {
         const startCol = 2 + i * 2;
         ws.mergeCells(currentRow, startCol, currentRow, startCol + 1);
         ws.getCell(currentRow, startCol).alignment = { horizontal: "center", vertical: "middle" };
         ws.getCell(currentRow, startCol).font = { italic: true };
+        ws.getCell(currentRow, startCol).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFF6E0" } // Lighter pastel orange
+        };
       }
+      // Axis bg color for dilution factor
+      ws.getCell(currentRow, 1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFF6E0" }
+      };
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
+      ws.getRow(currentRow).height = 22;
+      ws.columns.forEach((col, idx) => {
+        ws.getColumn(idx + 1).width = 24;
+      });
+      currentRow += 1;
 
-      // Add data rows (dilution factor first)
-      const dilutionFactors = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
+      // Data rows (no col labels, just dilution + data)
       sheet.preview.forEach((row, rowIndex) => {
         const rowData = [dilutionFactors[rowIndex] || ''];
-        for (let i = 0; i < sheet.columns.length - 1; i++) {
-          rowData.push(row[i]);
+        for (let i = 0; i < sampleCount; i++) {
+          rowData.push(row[1 + i * 2], row[2 + i * 2]);
         }
-        ws.addRow(rowData).commit();
+        ws.addRow(rowData);
       });
+      for (let r = currentRow + 1; r <= currentRow + sheet.preview.length; r++) {
+        ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
+      }
       currentRow += sheet.preview.length;
 
       // Add border to RAW DATA table
-      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-        ws.getRow(r).eachCell(cell => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" }
-          };
-        });
-      }
+for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+  ws.getRow(r).eachCell((cell, colNumber) => {
+    // Thicker border for outer edges
+    cell.border = {
+      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      left: { style: colNumber === 1 ? "thick" : "thin" },
+      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
+    };
+  });
+  // Alternate row color
+  ws.getRow(r).eachCell(cell => {
+    cell.fill = cell.fill || {};
+    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF7F7F7" } // light gray
+      };
+    } else {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFFFFF" } // white
+      };
+    }
+  });
+}
 
       // Leave a blank row
       currentRow += 1;
 
       // --- PERCENT CV TABLE ---
+      ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
       ws.getCell(currentRow, 1).value = "Percent CV";
       ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      ws.getCell(currentRow, 1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFE5E5" } // Light pastel red
+      };
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       currentRow += 1;
 
-      // Percent CV header (dilution factor first)
-      const cvHeader = ["Dilution Factor", sheet.columns[0], ...Array.from({ length: sampleCount }, (_, i) => sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`)];
-      ws.addRow(cvHeader).commit();
+      // Sample names row (pastel)
+      const cvSampleNameRow = ["Dilution Factor"];
+      for (let i = 0; i < sampleCount; i++) {
+        const name =
+          (sampleNames[fileIndex] &&
+            sampleNames[fileIndex][sheetIndex] &&
+            sampleNames[fileIndex][sheetIndex][i]) ||
+          `Sample ${i + 1}`;
+        cvSampleNameRow.push(name);
+      }
+      ws.addRow(cvSampleNameRow);
+      ws.getRow(currentRow).eachCell(cell => {
+        cell.font = { italic: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFF6F6" } // Lighter pastel red
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      });
+      ws.getRow(currentRow).height = 22;
+      ws.columns.forEach((col, idx) => {
+        ws.getColumn(idx + 1).width = 24;
+      });
       currentRow += 1;
 
       // Percent CV rows
@@ -390,7 +459,7 @@ function TiterAnalysis() {
         return ((stdev / avg) * 100).toFixed(2);
       };
       sheet.preview.forEach((row, rowIdx) => {
-        const rowData = [dilutionFactors[rowIdx] || '', row[0]];
+        const rowData = [dilutionFactors[rowIdx] || ''];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
           const v1 = row[1 + sampleIdx * 2];
           const v2 = row[2 + sampleIdx * 2];
@@ -404,32 +473,78 @@ function TiterAnalysis() {
           }
           rowData.push(cv !== '' ? `${cv}%` : '');
         }
-        ws.addRow(rowData).commit();
+        ws.addRow(rowData);
       });
+      for (let r = currentRow; r <= currentRow + sheet.preview.length; r++) {
+        ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
+      }
       currentRow += sheet.preview.length;
 
       // Add border to Percent CV table
-      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-        ws.getRow(r).eachCell(cell => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" }
-          };
-        });
-      }
+for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+  ws.getRow(r).eachCell((cell, colNumber) => {
+    cell.border = {
+      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      left: { style: colNumber === 1 ? "thick" : "thin" },
+      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
+    };
+    cell.fill = cell.fill || {};
+    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF7F7F7" }
+      };
+    } else {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFFFFF" }
+      };
+    }
+  });
+}
 
       // Leave a blank row
       currentRow += 1;
 
       // --- MEAN OF DUPLICATE - BG TABLE ---
+      ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
       ws.getCell(currentRow, 1).value = "Mean of Duplicate - BG";
       ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      ws.getCell(currentRow, 1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD6ECFF" } // Light pastel blue
+      };
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       currentRow += 1;
 
-      const meanBGHeader = ["Dilution Factor", sheet.columns[0], ...Array.from({ length: sampleCount }, (_, i) => sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`)];
-      ws.addRow(meanBGHeader).commit();
+      // Sample names row (pastel)
+      const meanBGSampleNameRow = ["Dilution Factor"];
+      for (let i = 0; i < sampleCount; i++) {
+        const name =
+          (sampleNames[fileIndex] &&
+            sampleNames[fileIndex][sheetIndex] &&
+            sampleNames[fileIndex][sheetIndex][i]) ||
+          `Sample ${i + 1}`;
+        meanBGSampleNameRow.push(name);
+      }
+      ws.addRow(meanBGSampleNameRow);
+      ws.getRow(currentRow).eachCell(cell => {
+        cell.font = { italic: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF6FAFF" } // Lighter pastel blue
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      });
+      ws.getRow(currentRow).height = 22;
+      ws.columns.forEach((col, idx) => {
+        ws.getColumn(idx + 1).width = 24;
+      });
       currentRow += 1;
 
       // Calculate background (last row, last two columns)
@@ -444,7 +559,7 @@ function TiterAnalysis() {
       }
 
       sheet.preview.forEach((row, rowIdx) => {
-        const rowData = [dilutionFactors[rowIdx] || '', row[0]];
+        const rowData = [dilutionFactors[rowIdx] || ''];
         let avgValues = [];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
           const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
@@ -457,9 +572,8 @@ function TiterAnalysis() {
           rowData.push(avg !== '' && !isNaN(avg) ? avg.toFixed(3) : '');
         }
         const addedRow = ws.addRow(rowData);
-        // Color coding for mean BG table
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-          const colIdx = 3 + sampleIdx; // 1: dilution, 2: label, 3+: samples
+          const colIdx = 2 + sampleIdx;
           const avg = avgValues[sampleIdx];
           const cell = addedRow.getCell(colIdx);
           const isExcluded = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`);
@@ -485,34 +599,85 @@ function TiterAnalysis() {
               };
             }
           }
+          cell.alignment = { horizontal: "center", vertical: "middle" };
         }
+        addedRow.alignment = { horizontal: "center", vertical: "middle" };
         addedRow.commit();
       });
+      for (let r = currentRow + 1; r <= currentRow + sheet.preview.length; r++) {
+        ws.getRow(r).alignment = { horizontal: "center", vertical: "middle" };
+      }
       currentRow += sheet.preview.length;
 
       // Add border to Mean BG table
-      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
-        ws.getRow(r).eachCell(cell => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" }
-          };
-        });
-      }
+for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+  ws.getRow(r).eachCell((cell, colNumber) => {
+    // Thicker border for outer edges
+    cell.border = {
+      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      left: { style: colNumber === 1 ? "thick" : "thin" },
+      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
+    };
+  });
+  // Alternate row color
+  ws.getRow(r).eachCell(cell => {
+    cell.fill = cell.fill || {};
+    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF7F7F7" } // light gray
+      };
+    } else {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFFFFF" } // white
+      };
+    }
+  });
+}
 
       // Leave a blank row
       currentRow += 1;
 
       // --- FINAL TITER TABLE ---
+      ws.mergeCells(currentRow, 1, currentRow, sampleCount + 1);
       ws.getCell(currentRow, 1).value = "Final Titer (OD=0.5)";
       ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      ws.getCell(currentRow, 1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFC8E6C9" } // Light pastel green
+      };
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       currentRow += 1;
 
-      // Header: Sample Names (no dilution factor for titer summary row)
-      const titerHeader = ["", ...Array.from({ length: sampleCount }, (_, i) => sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`)];
-      ws.addRow(titerHeader).commit();
+      // Sample names row (pastel)
+      const titerSampleNameRow = [""];
+      for (let i = 0; i < sampleCount; i++) {
+        const name =
+          (sampleNames[fileIndex] &&
+            sampleNames[fileIndex][sheetIndex] &&
+            sampleNames[fileIndex][sheetIndex][i]) ||
+          `Sample ${i + 1}`;
+        titerSampleNameRow.push(name);
+      }
+      ws.addRow(titerSampleNameRow);
+      ws.getRow(currentRow).eachCell(cell => {
+        cell.font = { italic: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFE8F5E9" } // Lighter pastel green
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      });
+      ws.getRow(currentRow).height = 22;
+      ws.columns.forEach((col, idx) => {
+        ws.getColumn(idx + 1).width = 24;
+      });
       currentRow += 1;
 
       // Calculate titers and R2 using linear interpolation
@@ -588,22 +753,42 @@ function TiterAnalysis() {
         titers.push(titer);
         r2s.push(r2);
       }
-      ws.addRow(["", ...titers]).commit();
+      ws.addRow(["Dilution", ...titers]);
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       currentRow += 1;
-      ws.addRow(["R²", ...r2s]).commit();
+      ws.addRow(["R²", ...r2s]);
+      ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
       currentRow += 1;
 
       // Add border to Final Titer table (both rows)
-      for (let r = currentRow - 2; r < currentRow; r++) {
-        ws.getRow(r).eachCell(cell => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" }
-          };
-        });
-      }
+for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+  ws.getRow(r).eachCell((cell, colNumber) => {
+    // Thicker border for outer edges
+    cell.border = {
+      top: { style: r === currentRow - sheet.preview.length ? "thick" : "thin" },
+      left: { style: colNumber === 1 ? "thick" : "thin" },
+      bottom: { style: r === currentRow - 1 ? "thick" : "thin" },
+      right: { style: colNumber === ws.columnCount ? "thick" : "thin" }
+    };
+  });
+  // Alternate row color
+  ws.getRow(r).eachCell(cell => {
+    cell.fill = cell.fill || {};
+    if ((r - (currentRow - sheet.preview.length)) % 2 === 0) {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF7F7F7" } // light gray
+      };
+    } else {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFFFFFF" } // white
+      };
+    }
+  });
+}
     });
   });
 
