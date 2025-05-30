@@ -11,7 +11,7 @@ function SummaryCard({
   onNameChange,
   plateNumber,
   sampleNames = [],
-  excludedCells = new Set(), // <-- add this
+  excludedCells = new Set(),
 
 }) {
   const [isEditing, setIsEditing] = useState(false);
