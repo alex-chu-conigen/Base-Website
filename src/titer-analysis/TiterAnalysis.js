@@ -302,156 +302,84 @@ function TiterAnalysis() {
     }
   };
 
-  // ...existing code...
-
-const downloadExcel = async (fileName) => {
+  const downloadExcel = async (fileName) => {
   const wb = new ExcelJS.Workbook();
 
   excelSummaries.forEach((summary, fileIndex) => {
     summary.sheets.forEach((sheet, sheetIndex) => {
-      // --- RAW TABLE SHEET ---
-      const rawSheetName = `Plate ${sheetIndex + 1} - Raw Data`;
-      const wsRaw = wb.addWorksheet(rawSheetName);
+      // Create one worksheet per plate
+      const ws = wb.addWorksheet(`Plate ${sheetIndex + 1}`);
 
-      // Prepare columns: add "Dilution Factor" as the last column
-      const columnsWithDilution = [...sheet.columns, "Dilution Factor"];
-      wsRaw.columns = columnsWithDilution.map(header => ({
-        header,
-        key: header,
-        width: 15
-      }));
+      let currentRow = 1;
+
+      // --- RAW DATA TABLE ---
+      ws.getCell(currentRow, 1).value = "Raw Data";
+      currentRow += 1;
+
+      // Dilution factor as first column, then all other columns except the last (which is dilution factor in preview)
+      const columnsWithDilution = ["Dilution Factor", ...sheet.columns.slice(0, -1)];
+      ws.addRow(columnsWithDilution).commit();
+      currentRow += 1;
 
       // Add sample names row (after header)
       const sampleCount = Math.floor((sheet.columns.length - 1) / 2);
-      const sampleNameRow = [sheet.columns[0]];
+      const sampleNameRow = [""];
       for (let i = 0; i < sampleCount; i++) {
         const name =
           (sampleNames[fileIndex] &&
             sampleNames[fileIndex][sheetIndex] &&
             sampleNames[fileIndex][sheetIndex][i]) ||
           `Sample ${i + 1}`;
-        sampleNameRow.push(name, ""); // span 2 columns
+        sampleNameRow.push(name, "");
       }
-      sampleNameRow.push(""); // for dilution factor col
-      wsRaw.addRow(sampleNameRow);
+      ws.addRow(sampleNameRow).commit();
+      currentRow += 1;
 
       // Merge cells for sample names (span 2 columns each)
       for (let i = 0; i < sampleCount; i++) {
         const startCol = 2 + i * 2;
-        wsRaw.mergeCells(2, startCol, 2, startCol + 1);
-        wsRaw.getCell(2, startCol).alignment = { horizontal: "center", vertical: "middle" };
-        wsRaw.getCell(2, startCol).font = { bold: true };
+        ws.mergeCells(currentRow, startCol, currentRow, startCol + 1);
+        ws.getCell(currentRow, startCol).alignment = { horizontal: "center", vertical: "middle" };
+        ws.getCell(currentRow, startCol).font = { italic: true };
       }
 
-      // Style header row
-      wsRaw.getRow(1).font = { bold: true };
-      wsRaw.getRow(1).alignment = { horizontal: "center", vertical: "middle" };
-      wsRaw.getRow(1).border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-
-      // Style sample name row
-      wsRaw.getRow(2).font = { italic: true };
-      wsRaw.getRow(2).alignment = { horizontal: "center", vertical: "middle" };
-      wsRaw.getRow(2).border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-
-      // Add data rows, append dilution factor as last column
+      // Add data rows (dilution factor first)
+      const dilutionFactors = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
       sheet.preview.forEach((row, rowIndex) => {
-        const rowData = {};
-        sheet.columns.forEach((col, colIndex) => {
-          if (colIndex === 0) {
-            if (rowIndex === 0) {
-              rowData[col] = row[colIndex] || '';
-            } else {
-              rowData[col] = String.fromCharCode(65 + (rowIndex - 1));
-            }
-          } else {
-            rowData[col] = row[colIndex] || '';
-          }
-        });
-        // Add dilution factor (last column of the row)
-        rowData["Dilution Factor"] = row[sheet.columns.length - 1] || '';
-        wsRaw.addRow(rowData);
+        const rowData = [dilutionFactors[rowIndex] || ''];
+        for (let i = 0; i < sheet.columns.length - 1; i++) {
+          rowData.push(row[i]);
+        }
+        ws.addRow(rowData).commit();
       });
+      currentRow += sheet.preview.length;
 
-      // Style data rows and apply color coding, borders
-      for (let r = 3; r < 3 + sheet.preview.length; r++) {
-        const excelRow = wsRaw.getRow(r);
-        excelRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      // Add border to RAW DATA table
+      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+        ws.getRow(r).eachCell(cell => {
           cell.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },
             right: { style: "thin" }
           };
-          cell.alignment = { horizontal: "center", vertical: "middle" };
-          // Color coding for data cells (not label or dilution factor column)
-          if (colNumber > 1 && colNumber < wsRaw.columnCount && r > 2) {
-            const value = parseFloat(cell.value);
-            if (!isNaN(value)) {
-              const rowIdx = r - 3;
-              const sampleIdx = Math.floor((colNumber - 2) / 2);
-              const dupIdx = (colNumber - 2) % 2;
-              const key = `r${rowIdx}s${sampleIdx}d${dupIdx}`;
-              if (excludedCells.has(key)) {
-                cell.fill = {
-                  type: "pattern",
-                  pattern: "solid",
-                  fgColor: { argb: "FFF8D7DA" }
-                };
-                cell.font = { color: { argb: "FF888888" }, italic: true };
-              } else if (value >= 0.5) {
-                cell.fill = {
-                  type: "pattern",
-                  pattern: "solid",
-                  fgColor: { argb: "FFD4EDDA" }
-                };
-              } else if (value < 0.5) {
-                cell.fill = {
-                  type: "pattern",
-                  pattern: "solid",
-                  fgColor: { argb: "FFFFF3CD" }
-                };
-              }
-            }
-          }
         });
       }
 
-      // Add a thick border around the whole table
-      const lastRow = 2 + sheet.preview.length + 1;
-      const lastCol = wsRaw.columnCount;
-      for (let r = 1; r <= lastRow; r++) {
-        for (let c = 1; c <= lastCol; c++) {
-          const cell = wsRaw.getCell(r, c);
-          if (r === 1) cell.border = { ...cell.border, top: { style: "thick" } };
-          if (r === lastRow) cell.border = { ...cell.border, bottom: { style: "thick" } };
-          if (c === 1) cell.border = { ...cell.border, left: { style: "thick" } };
-          if (c === lastCol) cell.border = { ...cell.border, right: { style: "thick" } };
-        }
-      }
+      // Leave a blank row
+      currentRow += 1;
 
-      // --- PERCENT CV SHEET ---
-      const wsCV = wb.addWorksheet(`Plate ${sheetIndex + 1} - Percent CV`);
-      wsCV.columns = [
-        { header: sheet.columns[0], key: sheet.columns[0], width: 12 },
-        ...Array.from({ length: sampleCount }, (_, i) => ({
-          header: sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`,
-          key: `Sample${i + 1}`,
-          width: 15
-        })),
-        { header: "Dilution Factor", key: "Dilution Factor", width: 18 }
-      ];
+      // --- PERCENT CV TABLE ---
+      ws.getCell(currentRow, 1).value = "Percent CV";
+      ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      currentRow += 1;
 
-      // Calculate percent CV for each row/sample
+      // Percent CV header (dilution factor first)
+      const cvHeader = ["Dilution Factor", sheet.columns[0], ...Array.from({ length: sampleCount }, (_, i) => sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`)];
+      ws.addRow(cvHeader).commit();
+      currentRow += 1;
+
+      // Percent CV rows
       const calcCV = (v1, v2) => {
         const n1 = parseFloat(v1);
         const n2 = parseFloat(v2);
@@ -461,10 +389,8 @@ const downloadExcel = async (fileName) => {
         if (avg === 0) return '';
         return ((stdev / avg) * 100).toFixed(2);
       };
-
       sheet.preview.forEach((row, rowIdx) => {
-        const rowData = {};
-        rowData[sheet.columns[0]] = row[0];
+        const rowData = [dilutionFactors[rowIdx] || '', row[0]];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
           const v1 = row[1 + sampleIdx * 2];
           const v2 = row[2 + sampleIdx * 2];
@@ -476,70 +402,35 @@ const downloadExcel = async (fileName) => {
           } else {
             cv = calcCV(v1, v2);
           }
-          rowData[`Sample${sampleIdx + 1}`] = cv !== '' ? `${cv}%` : '';
+          rowData.push(cv !== '' ? `${cv}%` : '');
         }
-        rowData["Dilution Factor"] = row[sheet.columns.length - 1] || '';
-        wsCV.addRow(rowData);
+        ws.addRow(rowData).commit();
       });
+      currentRow += sheet.preview.length;
 
-      // Style Percent CV sheet
-      wsCV.getRow(1).font = { bold: true };
-      wsCV.getRow(1).alignment = { horizontal: "center", vertical: "middle" };
-      wsCV.getRow(1).border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-      for (let r = 2; r <= 1 + sheet.preview.length; r++) {
-        const excelRow = wsCV.getRow(r);
-        excelRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      // Add border to Percent CV table
+      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+        ws.getRow(r).eachCell(cell => {
           cell.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },
             right: { style: "thin" }
           };
-          cell.alignment = { horizontal: "center", vertical: "middle" };
-          // Highlight high CV
-          if (colNumber > 1 && colNumber <= sampleCount + 1) {
-            const value = parseFloat(cell.value);
-            if (!isNaN(value) && value > 20) {
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FFFFF3CD" }
-              };
-              cell.font = { bold: true };
-            }
-          }
         });
       }
 
-      // Add thick border
-      const lastRowCV = 1 + sheet.preview.length;
-      const lastColCV = wsCV.columnCount;
-      for (let r = 1; r <= lastRowCV; r++) {
-        for (let c = 1; c <= lastColCV; c++) {
-          const cell = wsCV.getCell(r, c);
-          if (r === 1) cell.border = { ...cell.border, top: { style: "thick" } };
-          if (r === lastRowCV) cell.border = { ...cell.border, bottom: { style: "thick" } };
-          if (c === 1) cell.border = { ...cell.border, left: { style: "thick" } };
-          if (c === lastColCV) cell.border = { ...cell.border, right: { style: "thick" } };
-        }
-      }
+      // Leave a blank row
+      currentRow += 1;
 
-      // --- MEAN OF DUPLICATE - BG SHEET ---
-      const wsBG = wb.addWorksheet(`Plate ${sheetIndex + 1} - Mean BG Subtracted`);
-      wsBG.columns = [
-        { header: sheet.columns[0], key: sheet.columns[0], width: 12 },
-        ...Array.from({ length: sampleCount }, (_, i) => ({
-          header: sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`,
-          key: `Sample${i + 1}`,
-          width: 15
-        })),
-        { header: "Dilution Factor", key: "Dilution Factor", width: 18 }
-      ];
+      // --- MEAN OF DUPLICATE - BG TABLE ---
+      ws.getCell(currentRow, 1).value = "Mean of Duplicate - BG";
+      ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      currentRow += 1;
+
+      const meanBGHeader = ["Dilution Factor", sheet.columns[0], ...Array.from({ length: sampleCount }, (_, i) => sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`)];
+      ws.addRow(meanBGHeader).commit();
+      currentRow += 1;
 
       // Calculate background (last row, last two columns)
       let background = 0;
@@ -552,10 +443,9 @@ const downloadExcel = async (fileName) => {
         else if (!isNaN(bg2)) background = bg2;
       }
 
-      // Add mean-of-duplicate minus background rows
       sheet.preview.forEach((row, rowIdx) => {
-        const rowData = {};
-        rowData[sheet.columns[0]] = row[0];
+        const rowData = [dilutionFactors[rowIdx] || '', row[0]];
+        let avgValues = [];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
           const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
           const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? NaN : parseFloat(row[2 + sampleIdx * 2]);
@@ -563,59 +453,69 @@ const downloadExcel = async (fileName) => {
           if (!isNaN(n1) && !isNaN(n2)) avg = ((n1 + n2) / 2) - background;
           else if (!isNaN(n1)) avg = n1 - background;
           else if (!isNaN(n2)) avg = n2 - background;
-          rowData[`Sample${sampleIdx + 1}`] = avg !== '' && !isNaN(avg) ? avg.toFixed(3) : '';
+          avgValues.push(avg);
+          rowData.push(avg !== '' && !isNaN(avg) ? avg.toFixed(3) : '');
         }
-        rowData["Dilution Factor"] = row[sheet.columns.length - 1] || '';
-        wsBG.addRow(rowData);
+        const addedRow = ws.addRow(rowData);
+        // Color coding for mean BG table
+        for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+          const colIdx = 3 + sampleIdx; // 1: dilution, 2: label, 3+: samples
+          const avg = avgValues[sampleIdx];
+          const cell = addedRow.getCell(colIdx);
+          const isExcluded = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) && excludedCells.has(`r${rowIdx}s${sampleIdx}d1`);
+          if (isExcluded) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFF8D7DA" }
+            };
+            cell.font = { color: { argb: "FF888888" }, italic: true };
+          } else if (avg !== '' && !isNaN(avg)) {
+            if (avg >= 0.5) {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFD4EDDA" }
+              };
+            } else {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFFF3CD" }
+              };
+            }
+          }
+        }
+        addedRow.commit();
       });
+      currentRow += sheet.preview.length;
 
-      // Style Mean BG sheet
-      wsBG.getRow(1).font = { bold: true };
-      wsBG.getRow(1).alignment = { horizontal: "center", vertical: "middle" };
-      wsBG.getRow(1).border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-      for (let r = 2; r <= 1 + sheet.preview.length; r++) {
-        const excelRow = wsBG.getRow(r);
-        excelRow.eachCell({ includeEmpty: true }, (cell) => {
+      // Add border to Mean BG table
+      for (let r = currentRow - sheet.preview.length; r < currentRow; r++) {
+        ws.getRow(r).eachCell(cell => {
           cell.border = {
             top: { style: "thin" },
             left: { style: "thin" },
             bottom: { style: "thin" },
             right: { style: "thin" }
           };
-          cell.alignment = { horizontal: "center", vertical: "middle" };
         });
       }
-      // Add thick border
-      const lastRowBG = 1 + sheet.preview.length;
-      const lastColBG = wsBG.columnCount;
-      for (let r = 1; r <= lastRowBG; r++) {
-        for (let c = 1; c <= lastColBG; c++) {
-          const cell = wsBG.getCell(r, c);
-          if (r === 1) cell.border = { ...cell.border, top: { style: "thick" } };
-          if (r === lastRowBG) cell.border = { ...cell.border, bottom: { style: "thick" } };
-          if (c === 1) cell.border = { ...cell.border, left: { style: "thick" } };
-          if (c === lastColBG) cell.border = { ...cell.border, right: { style: "thick" } };
-        }
-      }
 
-      // --- FINAL SUMMARY SHEET (TITER) ---
-      const wsTiter = wb.addWorksheet(`Plate ${sheetIndex + 1} - Final Titer`);
-      wsTiter.columns = [
-        ...Array.from({ length: sampleCount }, (_, i) => ({
-          header: sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`,
-          key: `Sample${i + 1}`,
-          width: 18
-        }))
-      ];
+      // Leave a blank row
+      currentRow += 1;
 
-      // Calculate titers using cubic fit (same as FinSumCard)
-      const dilutions = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
-      // Prepare averagedRows as in Mean BG
+      // --- FINAL TITER TABLE ---
+      ws.getCell(currentRow, 1).value = "Final Titer (OD=0.5)";
+      ws.getCell(currentRow, 1).font = { bold: true, size: 14 };
+      currentRow += 1;
+
+      // Header: Sample Names (no dilution factor for titer summary row)
+      const titerHeader = ["", ...Array.from({ length: sampleCount }, (_, i) => sampleNames[fileIndex]?.[sheetIndex]?.[i] || `Sample ${i + 1}`)];
+      ws.addRow(titerHeader).commit();
+      currentRow += 1;
+
+      // Calculate titers and R2 using linear interpolation
       const averagedRows = sheet.preview.map((row, rowIdx) => {
         const newRow = [];
         for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
@@ -630,36 +530,39 @@ const downloadExcel = async (fileName) => {
         return newRow;
       });
 
-      // For each sample, fit cubic and solve for OD=0.5
+      function calculateR2(x, y, fitY) {
+        const yMean = y.reduce((a, b) => a + b, 0) / y.length;
+        let ssTot = 0, ssRes = 0;
+        for (let i = 0; i < y.length; i++) {
+          ssTot += (y[i] - yMean) ** 2;
+          ssRes += (y[i] - fitY[i]) ** 2;
+        }
+        return 1 - ssRes / ssTot;
+      }
+
       const titers = [];
+      const r2s = [];
       for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
         const ods = averagedRows.map(row => parseFloat(row[sampleIdx]));
         const x = [];
         const y = [];
-        for (let i = 0; i < ods.length && i < dilutions.length; i++) {
+        for (let i = 0; i < ods.length && i < dilutionFactors.length; i++) {
           if (!isNaN(ods[i])) {
-            x.push(Math.log10(dilutions[i]));
+            x.push(dilutionFactors[i]);
             y.push(ods[i]);
           }
         }
         let titer = "N/A";
+        let r2 = "";
         if (x.length >= 4) {
-          // Cubic regression
-          // (see odAVG.js for poly3Regression and root finding)
-          // For brevity, use a simple bisection in the data range
-          // a*x^3 + b*x^2 + c*x + d = y
-          // We'll use a quadratic fit for simplicity here
-          // You can replace with your poly3Regression if needed
-          // Fallback: linear interpolation between points
+          // Linear interpolation for titer
           let found = false;
           for (let i = 0; i < y.length - 1; i++) {
             if ((y[i] >= 0.5 && y[i + 1] < 0.5) || (y[i] < 0.5 && y[i + 1] >= 0.5)) {
-              // Linear interpolation
               const x1 = x[i], x2 = x[i + 1];
               const y1 = y[i], y2 = y[i + 1];
               const xAt05 = x1 + ((0.5 - y1) * (x2 - x1)) / (y2 - y1);
-              const dilutionAt05 = Math.pow(10, xAt05);
-              titer = Math.round(dilutionAt05).toLocaleString();
+              titer = Math.round(xAt05).toLocaleString();
               found = true;
               break;
             }
@@ -668,42 +571,38 @@ const downloadExcel = async (fileName) => {
             if (y[0] < 0.5) titer = "<1,000";
             else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
           }
+          // Calculate R2 for linear fit
+          if (y.length > 1) {
+            const fitY = [];
+            const slope = (y[y.length - 1] - y[0]) / (x[x.length - 1] - x[0]);
+            const intercept = y[0] - slope * x[0];
+            for (let i = 0; i < x.length; i++) {
+              fitY.push(slope * x[i] + intercept);
+            }
+            r2 = calculateR2(x, y, fitY).toFixed(3);
+          }
         } else {
           if (y[0] < 0.5) titer = "<1,000";
           else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
         }
         titers.push(titer);
+        r2s.push(r2);
       }
-      wsTiter.addRow(titers);
+      ws.addRow(["", ...titers]).commit();
+      currentRow += 1;
+      ws.addRow(["R²", ...r2s]).commit();
+      currentRow += 1;
 
-      // Style Final Titer sheet
-      wsTiter.getRow(1).font = { bold: true };
-      wsTiter.getRow(1).alignment = { horizontal: "center", vertical: "middle" };
-      wsTiter.getRow(1).border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-      wsTiter.getRow(2).font = { bold: true, size: 14 };
-      wsTiter.getRow(2).alignment = { horizontal: "center", vertical: "middle" };
-      wsTiter.getRow(2).border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" }
-      };
-      // Add thick border
-      const lastRowTiter = 2;
-      const lastColTiter = wsTiter.columnCount;
-      for (let r = 1; r <= lastRowTiter; r++) {
-        for (let c = 1; c <= lastColTiter; c++) {
-          const cell = wsTiter.getCell(r, c);
-          if (r === 1) cell.border = { ...cell.border, top: { style: "thick" } };
-          if (r === lastRowTiter) cell.border = { ...cell.border, bottom: { style: "thick" } };
-          if (c === 1) cell.border = { ...cell.border, left: { style: "thick" } };
-          if (c === lastColTiter) cell.border = { ...cell.border, right: { style: "thick" } };
-        }
+      // Add border to Final Titer table (both rows)
+      for (let r = currentRow - 2; r < currentRow; r++) {
+        ws.getRow(r).eachCell(cell => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" }
+          };
+        });
       }
     });
   });
@@ -717,7 +616,6 @@ const downloadExcel = async (fileName) => {
   link.click();
   window.URL.revokeObjectURL(url);
 };
-// ...existing code...
 
   const handlePrint = () => {
     window.print();
