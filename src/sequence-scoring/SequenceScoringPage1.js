@@ -78,6 +78,10 @@ function SequenceScoringPage1() {
                 <a href="http://tools.iedb.org/bcell/" target="_blank" rel="noopener noreferrer">
                     http://tools.iedb.org/bcell/
                 </a>
+                <br />
+                <a href="http://tools.iedb.org/mhcii/" target="_blank" rel="noopener noreferrer">
+                    http://tools.iedb.org/mhcii/
+                </a>
             </div>
             <div id="outputs1" className="outputs1-section">
                 <div id="legends1" className="legends1-row">
