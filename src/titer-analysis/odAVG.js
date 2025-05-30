@@ -440,8 +440,9 @@ if (xFit.length === 3) {
                 <tbody>
                   {data.x.map((xi, i) => (
                     <tr key={i}>
-                      <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{xi.toFixed(3)}</td>
-                      <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{data.y[i].toFixed(3)}</td>
+<td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>
+  {Math.pow(10, xi).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+</td>                      <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>{data.y[i].toFixed(3)}</td>
                       <td style={{ border: "1px solid #ccc", padding: "2px 6px" }}>
 {data.fit ? (data.fit.a * xi * xi * xi + data.fit.b * xi * xi + data.fit.c * xi + data.fit.d).toFixed(3) : ""}
                       </td>
@@ -537,35 +538,51 @@ for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
     }
   }
 
-  let titer = "N/A";
-  let r2 = null;
-  if (x.length >= 4) {
-    const fit = poly3Regression(x, y);
-    r2 = calculateR2(x, y, fit);
-    // Bisection method in data range
-    const f = xi => fit.a * xi ** 3 + fit.b * xi ** 2 + fit.c * xi + fit.d - 0.5;
-    let minX = Math.min(...x), maxX = Math.max(...x);
-    let left = minX, right = maxX, mid, fLeft = f(left), fRight = f(right);
-    let found = false;
-    if (fLeft * fRight < 0) {
-      for (let i = 0; i < 50; i++) {
-        mid = (left + right) / 2;
-        let fMid = f(mid);
-        if (Math.abs(fMid) < 1e-6) { found = true; break; }
-        if (fLeft * fMid < 0) {
-          right = mid;
-          fRight = fMid;
-        } else {
-          left = mid;
-          fLeft = fMid;
-        }
-      }
-      if (found || Math.abs(f(mid)) < 1e-3) {
-        const dilutionAt05 = Math.pow(10, mid);
-        titer = Math.round(dilutionAt05).toLocaleString();
+let titer = "N/A";
+let r2 = null;
+if (x.length >= 4) {
+  const fit = poly3Regression(x, y);
+  r2 = calculateR2(x, y, fit);
+  // Bisection method in data range
+  const f = xi => fit.a * xi ** 3 + fit.b * xi ** 2 + fit.c * xi + fit.d - 0.5;
+  let minX = Math.min(...x), maxX = Math.max(...x);
+  let left = minX, right = maxX, mid, fLeft = f(left), fRight = f(right);
+  let found = false;
+  if (fLeft * fRight < 0) {
+    for (let i = 0; i < 50; i++) {
+      mid = (left + right) / 2;
+      let fMid = f(mid);
+      if (Math.abs(fMid) < 1e-6) { found = true; break; }
+      if (fLeft * fMid < 0) {
+        right = mid;
+        fRight = fMid;
+      } else {
+        left = mid;
+        fLeft = fMid;
       }
     }
+    if (found || Math.abs(f(mid)) < 1e-3) {
+      const dilutionAt05 = Math.pow(10, mid);
+      titer = Math.round(dilutionAt05).toLocaleString();
+    }
   }
+  // Add these checks for "<1,000" and ">2,187,000"
+  if (titer === "N/A" || titer === "0") {
+    if (y[0] < 0.5) {
+      titer = "<1,000";
+    } else if (y[y.length - 1] >= 0.5) {
+      titer = ">2,187,000";
+    }
+  }
+}
+else {
+  // Not enough points for fit, but still check edge cases
+  if (y[0] < 0.5) {
+    titer = "<1,000";
+  } else if (y[y.length - 1] >= 0.5) {
+    titer = ">2,187,000";
+  }
+}
   titers.push(titer);
   r2s.push(r2);
 }
