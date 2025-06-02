@@ -26,18 +26,27 @@ function getDOM(xmlContent) {
         dtype.push(f.attributes.description.value);
         dstart.push(f.childNodes[1]?.childNodes[1]?.attributes.position.value);
         dend.push(f.childNodes[1]?.childNodes[3]?.attributes.position.value);
+    }
+
+    // Sequence
+    const seqNodes = doc.getElementsByTagName("sequence");
+    const sequence = seqNodes[seqNodes.length - 1]?.firstChild?.nodeValue;
+    return [name, dtype, dstart, dend, sequence];
 }
-}
     
     
-    
+//  Main Scoring Page Component
 function SequenceScoringPage1() {
     const [input1Type, setInput1Type] = useState('file');
     const [input1Value, setInput1Value] = useState('');
     const [csv1File, setCsv1File] = useState(null);
     const [csv2File, setCsv2File] = useState(null);
     const [onlyExtracellular, setOnlyExtracellular] = useState(false);
+    const [legend, setLegend] = useState('');
+    const [tableHTML, setTableHTML] = useState('');
 
+
+    // Switch input type between file and text
     const handleSwitchInput1 = () => {
         setInput1Type((prev) => (prev === 'file' ? 'text' : 'file'));
         setInput1Value('');
@@ -45,6 +54,26 @@ function SequenceScoringPage1() {
 
     const handlePrint = () => window.print();
 
+    // Runs Script
+    const handleRunScript = async () => {
+        setLegend('');
+        setTableHTML('');
+
+        let id = '';
+        let xmlContent1 = null;
+        let dom = null;
+        let sequence = '';
+        let rows3 = [];
+        let rows5 = [];
+
+        // Helper: read file as text
+        const readFile = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsText(file);
+        });
+    }
     return (
         <div className="page scoring-page1">
             <div id="inputs1" className="inputs1-section">
