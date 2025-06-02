@@ -152,7 +152,7 @@ function RawTableCard({
             <td
               key={colIdx}
               style={{
-                background: isExcluded ? '#f8d7da' : undefined,
+                background: isExcluded ? '#ffb3b3 ' : undefined,
                 cursor: 'pointer',
                 textDecoration: isExcluded ? 'line-through' : undefined,
                 color: isExcluded ? '#888' : undefined,
@@ -872,7 +872,17 @@ currentRow++;
 )}
 
     <div className="excel-processor">
-      <h1>Titer Analysis</h1>
+        <h1 className="titer-header">Titer Analysis</h1>
+  <div className="instructions-card">
+    <h2>Instructions</h2>
+    <ol>
+      <li>Upload one or more Excel files (.xlsx or .xls) using the file input below.</li>
+      <li>Click on the tabs to view and edit each plate.</li>
+      <li>Edit file and sample names by clicking the ✎ icon.</li>
+      <li>Click on table cells to exclude/include data points (strikethrough = excluded).</li>
+      <li>Download your summary when finished.</li>
+    </ol>
+  </div>
       <div className="upload-section">
         <div className="file-controls">
           <input
@@ -883,7 +893,7 @@ currentRow++;
             className="file-input"
           />
           {excelSummaries.length > 0 && (
-            <div className="download-section">
+            <div className="download-section1">
               {showFileNameInput ? (
                 <form onSubmit={handleFileNameSubmit} className="file-name-form">
                   <input
@@ -1029,11 +1039,7 @@ currentRow++;
           )}
 
 
-        <div style={{ marginTop: 24 }}>
-          <button onClick={handlePrint} className="print-button">
-            Print Page
-          </button>
-        </div>
+
       </div>
     </div>
     </>
