@@ -25,15 +25,14 @@ function getDOM(xmlContent) {
         const f = features[i];
         if (f.attributes.type.value !== "topological domain" && f.attributes.type.value !== "transmembrane region") continue;
         dtype.push(f.attributes.description.value);
-        dstart.push(f.childNodes[1]?.childNodes[1]?.attributes.position.value);
-        dend.push(f.childNodes[1]?.childNodes[3]?.attributes.position.value);
+        dstart.push(Number(f.childNodes[1]?.childNodes[1]?.attributes.position.value));
+        dend.push(Number(f.childNodes[1]?.childNodes[3]?.attributes.position.value));
     }
     // Sequence
     const seqNodes = doc.getElementsByTagName("sequence");
     const sequence = seqNodes[seqNodes.length - 1]?.firstChild?.nodeValue;
     return [name, dtype, dend, sequence, dstart];
 }
-
 // Main component
 function SequenceScoringPage1() {
     const [input1Type, setInput1Type] = useState('file');
@@ -115,7 +114,7 @@ function SequenceScoringPage1() {
             </div>
         );
 
-        // 4. Generate table
+        // 4. Parse MHCII CSV for score ranges
         let b = [], d = [], k = [];
         for (let i = 0; i < rows5.length; i++) {
             let columns1 = rows5[i].split(",");
@@ -126,106 +125,117 @@ function SequenceScoringPage1() {
             else if (columns1[0] === "H2-IAd") d.push(ans);
         }
 
+        // 5. Build tables for each 25 characters
         let c3 = 1, i1 = 0;
         let o3 = input1Type === 'file' ? sequence : dom[3];
         let dtype1 = dom[1], dend1 = dom[2], dstart1 = dom[4];
-
-        // Build table rows
         let tables = [];
-       for (let i = 0; i < o3.length; i += 25) {
-            let headerRow = [<td key="header-blank"></td>];
-            let seqRow = [<td key="label">Sample 1</td>];
-            let bcellRow = [<td key="bcell-label">B Cell Scores</td>];
-            let mhcIAbRow = [<td key="mhcIAb-label">Mouse MHCII H2-IAb</td>];
-            let mhcIAdRow = [<td key="mhcIAd-label">Mouse MHCII H2-IAd</td>];
-            let mhcIAkRow = [<td key="mhcIAk-label">Mouse MHCII H2-IAk</td>];
 
-            let localC3 = c3;
-            let localI1 = i1;
+for (let i = 0; i < o3.length; i += 25) {
+    let headerRow = [<td key="header-blank"></td>];
+    let seqRow = [<td key="label">Sample 1</td>];
+    let bcellRow = [<td key="bcell-label">B Cell Scores</td>];
+    let mhcIAbRow = [<td key="mhcIAb-label">Mouse MHCII H2-IAb</td>];
+    let mhcIAdRow = [<td key="mhcIAd-label">Mouse MHCII H2-IAd</td>];
+    let mhcIAkRow = [<td key="mhcIAk-label">Mouse MHCII H2-IAk</td>];
 
-            for (let j = i; j < i + 25 && j < o3.length; j++) {
-                // Only Extracellular filter
-                if (onlyExtracellular && dtype1[localI1] !== "Extracellular") {
-                    if (localC3 >= dend1[localI1]) localI1++;
-                    localC3++;
-                    continue;
-                }
+    for (let j = i; j < i + 25 && j < o3.length; j++) {
+        const pos = j + 1; // 1-based position
 
-                // Header
-                headerRow.push(<td key={`header-${j}`}>{j + 1}</td>);
-
-                // Sequence cell with coloring
-                let seqStyle = {};
-                if (dtype1[localI1] && localC3 >= dstart1[localI1]) {
-                    if (dtype1[localI1] === "Extracellular") seqStyle.backgroundColor = "#ADD8E6";
-                    else if (dtype1[localI1].startsWith("Helical")) seqStyle.backgroundColor = "#FF7F7F";
-                    else if (dtype1[localI1] === "Cytoplasmic") seqStyle.backgroundColor = "#90EE90";
-                }
-                seqRow.push(<td key={`seq-${j}`} style={seqStyle}>{o3[j]}</td>);
-
-                // B Cell Scores
-                let bcellScore = "";
-                let bcellStyle = {};
-                let row3 = rows3[localC3];
-                if (row3) {
-                    let columns1 = row3.split(",");
-                    bcellScore = columns1[2];
-                    let threshold1 = columns1[3];
-                    if (threshold1) threshold1 = threshold1.replace(/[\r\n]+/gm, "");
-                    if (threshold1 === "E") bcellStyle.backgroundColor = "#FADA5E";
-                }
-                bcellRow.push(<td key={`bcell-${j}`} style={bcellStyle}>{bcellScore}</td>);
-
-                // MHCII H2-IAb
-                let mhcIAbScore = "";
-                for (let y = 0; y < b.length; y++) {
-                    let [start, end, score] = b[y];
-                    if (localC3 >= start && localC3 <= end) {
-                        mhcIAbScore = score;
-                        break;
-                    }
-                }
-                mhcIAbRow.push(<td key={`mhcIAb-${j}`}>{mhcIAbScore}</td>);
-
-                // MHCII H2-IAd
-                let mhcIAdScore = "";
-                for (let y = 0; y < d.length; y++) {
-                    let [start, end, score] = d[y];
-                    if (localC3 >= start && localC3 <= end) {
-                        mhcIAdScore = score;
-                        break;
-                    }
-                }
-                mhcIAdRow.push(<td key={`mhcIAd-${j}`}>{mhcIAdScore}</td>);
-
-                // MHCII H2-IAk
-                let mhcIAkScore = "";
-                for (let y = 0; y < k.length; y++) {
-                    let [start, end, score] = k[y];
-                    if (localC3 >= start && localC3 <= end) {
-                        mhcIAkScore = score;
-                        break;
-                    }
-                }
-                mhcIAkRow.push(<td key={`mhcIAk-${j}`}>{mhcIAkScore}</td>);
-
-                if (localC3 >= dend1[localI1]) localI1++;
-                localC3++;
+        // Find which domain this residue belongs to
+        let domainIdx = -1;
+        for (let d = 0; d < dtype1.length; d++) {
+            if (pos >= dstart1[d] && pos <= dend1[d]) {
+                domainIdx = d;
+                break;
             }
-
-            tables.push(
-                <table key={`table-${i}`}>
-                    <tbody>
-                        <tr>{headerRow}</tr>
-                        <tr>{seqRow}</tr>
-                        <tr>{bcellRow}</tr>
-                        <tr>{mhcIAbRow}</tr>
-                        <tr>{mhcIAdRow}</tr>
-                        <tr>{mhcIAkRow}</tr>
-                    </tbody>
-                </table>
-            );
         }
+        const domainType = domainIdx !== -1 ? dtype1[domainIdx] : null;
+
+        // Only Extracellular filter
+        let skip = false;
+        if (onlyExtracellular && domainType !== "Extracellular") {
+            skip = true;
+        }
+
+        // Header
+        headerRow.push(<td key={`header-${j}`}>{pos}</td>);
+
+        // Sequence cell with coloring
+        let seqStyle = {};
+        if (!skip && domainType) {
+            if (domainType === "Extracellular") seqStyle.backgroundColor = "#ADD8E6";
+            else if (domainType.startsWith("Helical")) seqStyle.backgroundColor = "#FF7F7F";
+            else if (domainType === "Cytoplasmic") seqStyle.backgroundColor = "#90EE90";
+        }
+        seqRow.push(<td key={`seq-${j}`} style={seqStyle}>{!skip ? o3[j] : ""}</td>);
+
+        // B Cell Scores
+        let bcellScore = "";
+        let bcellStyle = {};
+        let row3 = rows3[pos];
+        if (!skip && row3) {
+            let columns1 = row3.split(",");
+            bcellScore = columns1[2];
+            let threshold1 = columns1[3];
+            if (threshold1) threshold1 = threshold1.replace(/[\r\n]+/gm, "");
+            if (threshold1 === "E") bcellStyle.backgroundColor = "#FADA5E";
+        }
+        bcellRow.push(<td key={`bcell-${j}`} style={bcellStyle}>{!skip ? bcellScore : ""}</td>);
+
+        // MHCII H2-IAb
+        let mhcIAbScore = "";
+        if (!skip) {
+            for (let y = 0; y < b.length; y++) {
+                let [start, end, score] = b[y];
+                if (pos >= start && pos <= end) {
+                    mhcIAbScore = score;
+                    break;
+                }
+            }
+        }
+        mhcIAbRow.push(<td key={`mhcIAb-${j}`}>{!skip ? mhcIAbScore : ""}</td>);
+
+        // MHCII H2-IAd
+        let mhcIAdScore = "";
+        if (!skip) {
+            for (let y = 0; y < d.length; y++) {
+                let [start, end, score] = d[y];
+                if (pos >= start && pos <= end) {
+                    mhcIAdScore = score;
+                    break;
+                }
+            }
+        }
+        mhcIAdRow.push(<td key={`mhcIAd-${j}`}>{!skip ? mhcIAdScore : ""}</td>);
+
+        // MHCII H2-IAk
+        let mhcIAkScore = "";
+        if (!skip) {
+            for (let y = 0; y < k.length; y++) {
+                let [start, end, score] = k[y];
+                if (pos >= start && pos <= end) {
+                    mhcIAkScore = score;
+                    break;
+                }
+            }
+        }
+        mhcIAkRow.push(<td key={`mhcIAk-${j}`}>{!skip ? mhcIAkScore : ""}</td>);
+    }
+
+    tables.push(
+        <table key={`table-${i}`}>
+            <tbody>
+                <tr>{headerRow}</tr>
+                <tr>{seqRow}</tr>
+                <tr>{bcellRow}</tr>
+                <tr>{mhcIAbRow}</tr>
+                <tr>{mhcIAdRow}</tr>
+                <tr>{mhcIAkRow}</tr>
+            </tbody>
+        </table>
+    );
+}
         setTableHtml(<div>{tables}</div>);
     };
 
