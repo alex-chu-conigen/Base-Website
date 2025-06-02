@@ -433,7 +433,7 @@ tr:hover {
 
 .sheet-tabs-sticky {
   position: sticky;
-  top: 0;
+  top: 5rem;
   z-index: 1000;
   background: #fff;
   padding: 8px 0 4px 0;

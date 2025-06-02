@@ -850,6 +850,27 @@ currentRow++;
   const [activeTab, setActiveTab] = useState({ file: 0, sheet: 0 });
 
   return (
+    <>
+    {excelSummaries.length > 0 && (
+  <div className="sheet-tabs sheet-tabs-sticky">
+    {excelSummaries.map((summary, fileIndex) =>
+      summary.sheets.map((sheet, sheetIndex) => {
+        const tabLabel = `Plate ${sheetIndex + 1}`;
+        const isActive = activeTab.file === fileIndex && activeTab.sheet === sheetIndex;
+        return (
+          <button
+            key={`${fileIndex}-${sheetIndex}`}
+            className={`sheet-tab${isActive ? ' active' : ''}`}
+            onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
+          >
+            {tabLabel}
+          </button>
+        );
+      })
+    )}
+  </div>
+)}
+
     <div className="excel-processor">
       <h1>Titer Analysis</h1>
       <div className="upload-section">
@@ -896,25 +917,7 @@ currentRow++;
             </div>
           )}
         </div>
-{excelSummaries.length > 0 && (
-  <div className="sheet-tabs sheet-tabs-sticky">
-    {excelSummaries.map((summary, fileIndex) =>
-      summary.sheets.map((sheet, sheetIndex) => {
-        const tabLabel = `Plate ${sheetIndex + 1}`;
-        const isActive = activeTab.file === fileIndex && activeTab.sheet === sheetIndex;
-        return (
-          <button
-            key={`${fileIndex}-${sheetIndex}`}
-            className={`sheet-tab${isActive ? ' active' : ''}`}
-            onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
-          >
-            {tabLabel}
-          </button>
-        );
-      })
-    )}
-  </div>
-)}
+
 
       </div>
 
@@ -1033,6 +1036,7 @@ currentRow++;
         </div>
       </div>
     </div>
+    </>
   );
 }
 
