@@ -94,8 +94,73 @@ function SequenceScoringPage1() {
         } else {
             return;
         }
+        if (!xmlContent1) return;
+        dom = getDOM(xmlContent1);
+
+        // Read CSV files
+        if (!csv1File || !csv2File) return
+        const csv1Content = await readFile(csv1File);
+        const csv2Content = await readFile(csv2File);
+        rows3 = csv1Content.split('\n');
+        rows5 = csv2Content.split('\n');
         
-    }
+        // Prepare legend
+        setLegend(
+            <div>
+                <h3>Sample 1: {dom[0]?.textContent} ({id})</h3>
+                <div>
+                    <span className="extracellular">Extracellular</span>
+                    <span className="helical">Helical</span>
+                    <span className="cytoplasmic">Cytoplasmic</span>
+                    <span className="threshold">Above Score Threshold</span>
+                </div>
+            </div>
+        );
+
+        // Generate table
+                let c3 = 1, i1 = 0;
+        let o3 = input1Type === 'file' ? sequence : dom[3];
+        let dtype1 = dom[1], dend1 = dom[2], dstart1 = dom[4];
+        let b = [], d = [], k = [];
+        for (let i = 0; i < rows5.length; i++) {
+            let columns1 = rows5[i].split(",");
+            if (columns1[8] > 10) break;
+            let ans = [columns1[2], columns1[3], columns1[7]];
+            if (columns1[0] === "H2-IAk") k.push(ans);
+            else if (columns1[0] === "H2-IAb") b.push(ans);
+            else if (columns1[0] === "H2-IAd") d.push(ans);
+        }
+        // Build table rows
+        let tables = [];
+        for (let i = 0; i < o3.length; i += 25) {
+            let rows = [];
+            // Header row
+            rows.push(
+                <tr key={`header-${i}`}>
+                    <td></td>
+                    {[...Array(25)].map((_, j) => <td key={j}>{i + j + 1}</td>)}
+                </tr>
+            );
+            // Sequence row
+            let seqRow = [<td key="label">Sample 1</td>];
+            for (let j = i; j < i + 25 && j < o3.length; j++) {
+                let style = {};
+                if (dtype1[i1] && c3 >= dstart1[i1]) {
+                    if (dtype1[i1] === "Extracellular") style.backgroundColor = "#ADD8E6";
+                    else if (dtype1[i1].startsWith("Helical")) style.backgroundColor = "#FF7F7F";
+                    else if (dtype1[i1] === "Cytoplasmic") style.backgroundColor = "#90EE90";
+                }
+                seqRow.push(<td key={j} style={style}>{o3[j]}</td>);
+                if (c3 >= dend1[i1]) i1++;
+                c3++;
+            }
+            rows.push(<tr key={`seq-${i}`}>{seqRow}</tr>);
+            // Add more rows for scores as in original if needed...
+            tables.push(<table key={i}>{rows}</table>);
+        }
+        setTableHTML(<div>{tables}</div>);
+    };
+    
     return (
         <div className="page scoring-page1">
             <div id="inputs1" className="inputs1-section">
@@ -152,7 +217,7 @@ function SequenceScoringPage1() {
             </div>
             <div id="buttons1" className="buttons-section">
                 <button className="add-input-btn" onClick={handleSwitchInput1}>Switch Inputs</button>
-                <button className="run-script-btn">Run Script</button>
+                <button className="run-script-btn" onClick={handleRunScript}>Run Script</button>
                 <button className="print-btn" onClick={handlePrint}>Print this page</button>
             </div>
             <br />
