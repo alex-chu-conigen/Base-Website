@@ -252,8 +252,6 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
       })
     : [];
 
- // ...existing code...
-
   const titers = [];
   const trendlineData = [];
   for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
