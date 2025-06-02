@@ -203,18 +203,6 @@
   background-color: #d4edda;
 }
 
-.global-threshold-summary {
-  width: 300px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
-}
-
 .summary-header {
   display: flex;
   justify-content: space-between;
@@ -442,3 +430,12 @@ tr:hover {
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 } 
+
+.sheet-tabs-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #fff;
+  padding: 8px 0 4px 0;
+  border-bottom: 1px solid #ddd;
+}

@@ -896,25 +896,25 @@ currentRow++;
             </div>
           )}
         </div>
-        {excelSummaries.length > 0 && (
-          <div className="sheet-tabs">
-            {excelSummaries.map((summary, fileIndex) =>
-              summary.sheets.map((sheet, sheetIndex) => {
-                const tabLabel = `Plate ${sheetIndex + 1}`;
-                const isActive = activeTab.file === fileIndex && activeTab.sheet === sheetIndex;
-                return (
-                  <button
-                    key={`${fileIndex}-${sheetIndex}`}
-                    className={`sheet-tab${isActive ? ' active' : ''}`}
-                    onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
-                  >
-                    {tabLabel}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        )}
+{excelSummaries.length > 0 && (
+  <div className="sheet-tabs sheet-tabs-sticky">
+    {excelSummaries.map((summary, fileIndex) =>
+      summary.sheets.map((sheet, sheetIndex) => {
+        const tabLabel = `Plate ${sheetIndex + 1}`;
+        const isActive = activeTab.file === fileIndex && activeTab.sheet === sheetIndex;
+        return (
+          <button
+            key={`${fileIndex}-${sheetIndex}`}
+            className={`sheet-tab${isActive ? ' active' : ''}`}
+            onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
+          >
+            {tabLabel}
+          </button>
+        );
+      })
+    )}
+  </div>
+)}
 
       </div>
 
