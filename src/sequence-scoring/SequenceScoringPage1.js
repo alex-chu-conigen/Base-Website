@@ -1,5 +1,36 @@
 import React, { useState } from 'react';
 
+// Helper: fetch XML content from UniProt
+async function getXMLContent(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch XML file. Status code: ${response.status}`);
+        return await response.text();
+    } catch (error) {
+        console.error("Error fetching XML file:", error);
+        return null;
+    }
+}
+
+function getDOM(xmlContent) {
+    const parser = new window.DOMParser();
+    const doc = parser.parseFromString(xmlContent, "text/xml");
+    // Name
+    const name = doc.getElementsByTagName("name")[0]?.firstChild;
+    // Domnains
+    const features = doc.getElementsByTagName("feature");
+    const dtype = [], dend = [], dstart = [];
+    for (let i = 1; i < features.length; i++) {
+        const f = features[i];
+        if (f.attributes.type.value !== "topological domain" && f.attributes.type.value !== "transmembrane region") continue;
+        dtype.push(f.attributes.description.value);
+        dstart.push(f.childNodes[1]?.childNodes[1]?.attributes.position.value);
+        dend.push(f.childNodes[1]?.childNodes[3]?.attributes.position.value);
+}
+}
+    
+    
+    
 function SequenceScoringPage1() {
     const [input1Type, setInput1Type] = useState('file');
     const [input1Value, setInput1Value] = useState('');
