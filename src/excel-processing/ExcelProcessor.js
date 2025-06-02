@@ -593,7 +593,7 @@ function ExcelProcessor() {
         </div>
       )}
 
-      <div className="main-content">
+      <div className="main-content2">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
