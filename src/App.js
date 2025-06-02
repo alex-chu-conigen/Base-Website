@@ -24,7 +24,7 @@ function App() {
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
             <Link to="/titer-analysis" className="nav-link">Titer Analysis</Link>
             <Link to="/sequence-scoring" className="nav-link">Sequence Scoring</Link>
-                        <Link to="/comp-text" className="nav-link">CompText</Link>
+            <Link to="/comp-text" className="nav-link">CompText</Link>
 
 
           </div>

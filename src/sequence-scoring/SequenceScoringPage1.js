@@ -73,6 +73,28 @@ function SequenceScoringPage1() {
             reader.onerror = reject;
             reader.readAsText(file);
         });
+
+        // Get UniProt ID and XML content
+        if (input1Type === 'text'){
+            id = input1Value.trim();
+            if (!id) return;
+            const url = 'https://rest.uniprot.org/uniprotkb/${id}.xml';
+            xmlContent1 = await getXMLContent(url);
+        } else if (input1Value) {
+             // File input: extract ID from first line
+            const fileContent = await readFile(input1Value);
+            const firstLine = fileContent.slice(0, fileContent.indexOf("\n"));
+            id = firstLine.substring(4, 10);
+            const url = `https://rest.uniprot.org/uniprotkb/${id}.xml`;
+            xmlContent1 = await getXMLContent(url);
+            sequence = fileContent
+                .substring(fileContent.indexOf('\n') + 1)
+                .trim()
+                .replace(/[\n\r\s]+/g, '');
+        } else {
+            return;
+        }
+        
     }
     return (
         <div className="page scoring-page1">
