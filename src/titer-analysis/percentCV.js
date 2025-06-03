@@ -97,7 +97,9 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
           <td
             key={sampleIdx}
             style={{
-              background: !isNaN(cvNum) && cvNum > 20 ? '#fff3cd' : undefined,
+              background: !isNaN(cvNum) && cvNum > 20 ? '#baf7f4' : undefined,
+              color: !isNaN(cvNum) && cvNum > 20 ? '#508582' : undefined,
+
               fontWeight: !isNaN(cvNum) && cvNum > 20 ? 600 : undefined,
             }}
           >
@@ -152,14 +154,28 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
                           key={colIdx}
                           style={{
                             background: isExcluded
-                              ? '#f8d7da'
+                              ? '#ffa1c5'
                               : highlight
-                              ? '#fff3cd'
+                              ? '#baf7f4'
                               : undefined,
                             textDecoration: isExcluded ? 'line-through' : undefined,
-                            color: isExcluded ? '#888' : undefined,
+                            color: isExcluded ? '#888' : highlight ? '#508582': undefined,
+                            fontWeight: isExcluded ? 600 : highlight ? 600 : undefined,
                             cursor: 'pointer',
-                            position: 'relative'
+                            position: 'relative',
+
+                            border: isExcluded
+                              ? '1.5px solid #c93059'   // solid red border when excluded
+                              : highlight
+                              ? '1.5px solid #32bab2'      // white border when highlighted
+                              : undefined,
+
+                            boxShadow: isExcluded
+                              ? '0 0 8px #ff4d4d, 0 0 15px #ff1a1a, 0 0 20px #ff1a1a, 0 0 30px #ff0000'  // red glow layers
+                              : highlight
+                              ? '0 0 8px #00ffff, 0 0 15px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff'  // cyan glow layers
+                              : undefined,
+
                           }}
                           title={
                             isExcluded

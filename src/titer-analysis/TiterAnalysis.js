@@ -194,7 +194,7 @@ function RawTableCard({
             <td
               key={colIdx}
               style={{
-                background: isExcluded ? '#ffb3b3 ' : undefined,
+                background: isExcluded ? '#ff5c40 ' : undefined,
                 cursor: 'pointer',
                 textDecoration: isExcluded ? 'line-through' : undefined,
                 color: isExcluded ? '#888' : undefined,
@@ -425,7 +425,7 @@ sheet.preview.forEach((row, rowIndex) => {
       const key = `r${rowIndex}s${sampleIdx}d${dupIdx}`;
       if (excludedCells.has(key)) {
         cell.font = { ...cell.font, strike: true, color: { argb: "FF888888" } };
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8D7DA" } }; // light red for excluded
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { rgb: "f5a4c3" } }; // light red for excluded
       }
     }
   });

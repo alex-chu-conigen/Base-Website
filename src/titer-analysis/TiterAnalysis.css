@@ -132,11 +132,11 @@ td {
 
 .preview-table td:hover,
 tr:hover td {
-  background: #ffe0b2;
+  background: #ffffff;
 }
 
-.highlight-yellow { background: #f2da78 !important; }
-.highlight-green { background: #83d6b6 !important; }
+.highlight-yellow { background: #ffeeac !important; }
+.highlight-green { background: #cbf1c7 !important; }
 
 .excluded-cell {
   background: #ffb3b3 !important; /* Brighter pastel red for excluded cells */
@@ -260,5 +260,12 @@ button.sheet-tab {
     margin-right: 0;
     border-radius: 8px;
     font-size: 1.05rem;
+  }
+}
+
+@media screen and (min-width: 1600px) {
+  .preview-table td,
+td{
+     font-size: 20px;
   }
 }
