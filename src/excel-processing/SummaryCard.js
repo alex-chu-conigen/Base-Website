@@ -36,7 +36,7 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
     <div 
       ref={setNodeRef}
       style={style}
-      className="summary-card"
+      className="summary-card1"
     >
       <div className="drag-handle" {...attributes} {...listeners}>☰</div>
       <div className="card-header">
@@ -63,7 +63,7 @@ function SummaryCard({ summary, fileIndex, excelSummaries, getCellColor, toggleC
       {summary.sheets.map((sheet, sheetIndex) => (
         <div key={sheetIndex} className="sheet-summary">
           {excelSummaries.length === 1 && <h3>Sheet: {sheet.sheetName}</h3>}
-          <div className="preview-table">
+          <div className="preview-table1">
             <table>
               <thead>
                 <tr>

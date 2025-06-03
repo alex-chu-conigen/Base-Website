@@ -93,6 +93,7 @@
   display: flex;
   gap: 2rem;
   margin-top: 1rem;
+  justify-content: center;
 }
 
 .tables-container {
@@ -104,11 +105,12 @@
   padding-right: 2rem;
 }
 
-.summary-card {
+.summary-card1 {
   background: white;
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-bottom: 1rem;
+  width: 60vw;
   padding: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
@@ -195,14 +197,15 @@
 }
 
 .global-threshold-summary1 {
-  width: 300px;
+  width: 20%;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   position: sticky;
   display: inline;
-  top: 1rem;
+  float: right;
+  top: 3rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
 }
@@ -436,3 +439,17 @@ tr:hover {
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 } 
+
+.preview-table1 td,
+td {
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: normal;      
+  overflow: visible;        
+  text-overflow: unset;     
+  max-width: 400px;         
+  word-break: break-word;
+  font-size: 1vw;
+}
