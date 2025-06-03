@@ -160,6 +160,19 @@ tr:hover td {
 
 }
 
+button.sheet-tab {
+  background: #ffe0b2;           /* Pastel orange */
+  color: #a15c00;
+  border: 1px solid #ffd6a0;
+  border-radius: 8px 8px 0 0;
+  /* padding: 0.5rem 1.2rem; */
+  margin-right: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
 /* Misc */
 .loading {
   color: #d97706;
@@ -180,6 +193,29 @@ tr:hover td {
   cursor: pointer;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(44, 130, 87, 0.07);
+  padding-right: 3em; /* Add extra space for the edit icon */
+  position: relative;
+  overflow: hidden;
+}
+
+.sheet-tab .edit-button {
+  position: absolute;
+  right: 0.7em;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 0;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.9em;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+.sheet-tab:hover .edit-button {
+  opacity: 1;
 }
 
 .sheet-tab:hover,

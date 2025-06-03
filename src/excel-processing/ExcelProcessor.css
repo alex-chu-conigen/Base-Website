@@ -1,6 +1,6 @@
 .excel-processor {
   padding: 1rem;
-  max-width: 1800px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -90,10 +90,10 @@
 }
 
 .main-content2 {
-  display: flex;
-  gap: 2rem;
+  display: inline-flex;
+  gap: 5.15rem;
   margin-top: 1rem;
-  justify-content: center;
+  /* justify-content: center; */
 }
 
 .tables-container {
@@ -102,7 +102,7 @@
   gap: 1rem;
   flex: 1;
   max-width: 60%;
-  padding-right: 2rem;
+  padding-right: 3rem;
 }
 
 .summary-card1 {
@@ -110,7 +110,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-bottom: 1rem;
-  width: 60vw;
+  width: 50.5rem;
   padding: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.2s ease;
@@ -161,8 +161,7 @@
   font-size: 0.85rem;
 }
 
-.preview-table th,
-.preview-table td {
+.preview-table th {
   padding: 4px 6px;
   border: 1px solid #ddd;
   text-align: left;
@@ -203,8 +202,10 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   position: sticky;
-  display: inline;
-  float: right;
+  display: block;
+  float: left;
+  /* float: right; */
+  margin-right: 0;
   top: 3rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
@@ -452,4 +453,11 @@ td {
   max-width: 400px;         
   word-break: break-word;
   font-size: 1vw;
+}
+
+@media screen and (min-width: 1400px) {
+  .preview-table1 td,
+td{
+     font-size: 15px;
+  }
 }

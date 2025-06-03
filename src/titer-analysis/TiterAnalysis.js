@@ -13,10 +13,11 @@ import { saveAs } from 'file-saver';
 // New RawTableCard component
 function RawTableCard({
   summary,
-  fileIndex,
-  sheetIndex,
+
   customFileName,
   onFileNameChange,
+  plateName,
+  onPlateNameChange,
   sampleNames,
   onSampleNameChange,
 }) {
@@ -25,6 +26,22 @@ function RawTableCard({
   const [editFileNameValue, setEditFileNameValue] = useState(customFileName || summary.fileName || '');
   const [editingSampleIdx, setEditingSampleIdx] = useState(null);
   const [editSampleValue, setEditSampleValue] = useState('');
+  const [isEditingPlateName, setIsEditingPlateName] = useState(false);
+  const [editPlateNameValue, setEditPlateNameValue] = useState(plateName);
+
+  const handlePlateNameEdit = () => {
+    setEditPlateNameValue(plateName);
+    setIsEditingPlateName(true);
+  };
+  const handlePlateNameEditSubmit = (e) => {
+    e.preventDefault();
+    onPlateNameChange(editPlateNameValue);
+    setIsEditingPlateName(false);
+  };
+  const handlePlateNameEditCancel = () => {
+    setIsEditingPlateName(false);
+    setEditPlateNameValue(plateName);
+  };
 
   // For sample names, every two columns (excluding the first label column) is a sample
   const sampleCount = Math.floor((summary.columns.length - 1) / 2);
@@ -94,7 +111,32 @@ function RawTableCard({
           )}
         </div>
         <div style={{ fontSize: "0.95rem", marginTop: 4, color: "#666" }}>
-          <h3>Plate #{sheetIndex + 1}</h3>
+            <div style={{ fontSize: "0.95rem", marginTop: 4, color: "#666" }}>
+    {isEditingPlateName ? (
+      <form onSubmit={handlePlateNameEditSubmit} style={{ display: "inline-block" }}>
+        <input
+          type="text"
+          value={editPlateNameValue}
+          onChange={e => setEditPlateNameValue(e.target.value)}
+          className="name-edit-input"
+          autoFocus
+          style={{ fontSize: "1rem" }}
+        />
+        <button type="submit" className="save-button" style={{ marginLeft: 2, fontSize: "0.9rem" }}>Save</button>
+        <button type="button" className="cancel-button" onClick={handlePlateNameEditCancel} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Cancel</button>
+      </form>
+    ) : (
+      <>
+        <h3 style={{ display: "inline" }}>{plateName}</h3>
+        <button
+          onClick={handlePlateNameEdit}
+          className="edit-button"
+          style={{ marginLeft: 4, fontSize: "0.9rem" }}
+          title="Edit plate name"
+        >✎</button>
+      </>
+    )}
+  </div>
         </div>
       </div>
       <div className="sheet-summary">
@@ -177,6 +219,8 @@ function RawTableCard({
 }
 
 function TiterAnalysis() {
+    const [editingTab, setEditingTab] = useState({ file: null, sheet: null });
+  const [editingTabValue, setEditingTabValue] = useState('');
   const [excelSummaries, setExcelSummaries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFileNameInput, setShowFileNameInput] = useState(false);
@@ -316,7 +360,10 @@ const downloadExcel = async (fileName) => {
 
   excelSummaries.forEach((summary, fileIndex) => {
     summary.sheets.forEach((sheet, sheetIndex) => {
-      const ws = wb.addWorksheet(`Plate ${sheetIndex + 1}`);
+      const ws = wb.addWorksheet(
+      (plateNames[fileIndex] && plateNames[fileIndex][sheetIndex]) ||
+      `Plate ${sheetIndex + 1}`
+     );
 
       let currentRow = 1;
       const dilutionFactors = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
@@ -823,10 +870,16 @@ currentRow++;
   saveAs(blob, fileName);
 };
 
-
-  const handlePrint = () => {
-    window.print();
-  };
+const [plateNames, setPlateNames] = useState({});
+const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
+  setPlateNames(prev => ({
+    ...prev,
+    [fileIdx]: {
+      ...(prev[fileIdx] || {}),
+      [sheetIdx]: newName.trim()
+    }
+  }));
+};
 
   const handleNameChange = (fileIndex, newName) => {
     setCustomNames(prev => ({
@@ -852,23 +905,82 @@ currentRow++;
   return (
     <>
     {excelSummaries.length > 0 && (
-  <div className="sheet-tabs sheet-tabs-sticky">
-    {excelSummaries.map((summary, fileIndex) =>
-      summary.sheets.map((sheet, sheetIndex) => {
-        const tabLabel = `Plate ${sheetIndex + 1}`;
-        const isActive = activeTab.file === fileIndex && activeTab.sheet === sheetIndex;
-        return (
-          <button
-            key={`${fileIndex}-${sheetIndex}`}
-            className={`sheet-tab${isActive ? ' active' : ''}`}
-            onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
-          >
-            {tabLabel}
-          </button>
-        );
-      })
-    )}
-  </div>
+<div className="sheet-tabs sheet-tabs-sticky">
+  
+  {excelSummaries.map((summary, fileIndex) =>
+    summary.sheets.map((sheet, sheetIndex) => {
+      const tabLabel =
+        (plateNames[fileIndex] && plateNames[fileIndex][sheetIndex]) ||
+        `Plate ${sheetIndex + 1}`;
+      const isActive = activeTab.file === fileIndex && activeTab.sheet === sheetIndex;
+      const isEditing = editingTab.file === fileIndex && editingTab.sheet === sheetIndex;
+
+      return (
+        <span key={`${fileIndex}-${sheetIndex}`} style={{ display: 'inline-block', position: 'relative' }}>
+          {isEditing ? (
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                handlePlateNameChange(fileIndex, sheetIndex, editingTabValue);
+                setEditingTab({ file: null, sheet: null });
+                setEditingTabValue('');
+              }}
+              style={{ display: 'inline' }}
+            >
+              <input
+                type="text"
+                value={editingTabValue}
+                onChange={e => setEditingTabValue(e.target.value)}
+                className="name-edit-input"
+                style={{ width: '90px', fontSize: '1rem' }}
+                autoFocus
+                onBlur={() => {
+                  setEditingTab({ file: null, sheet: null });
+                  setEditingTabValue('');
+                }}
+              />
+            </form>
+          ) : (
+            <button
+              className={`sheet-tab${isActive ? ' active' : ''}`}
+              onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
+              onDoubleClick={() => {
+                setEditingTab({ file: fileIndex, sheet: sheetIndex });
+                setEditingTabValue(tabLabel);
+              }}
+              title="Double-click to edit plate name"
+              style={{ position: 'relative' }}
+            >
+              {tabLabel}
+              <span
+                className="edit-button"
+                style={{
+                  marginLeft: 6,
+                  fontSize: '0.9em',
+                  cursor: 'pointer',
+                  color: '#888',
+                  background: 'none',
+                  border: 'none',
+                  position: 'absolute',
+                  right: 6,
+                  top: '50%',
+                  transform: 'translateY(-50%)'
+                }}
+                onClick={e => {
+                  e.stopPropagation();
+                  setEditingTab({ file: fileIndex, sheet: sheetIndex });
+                  setEditingTabValue(tabLabel);
+                }}
+                title="Edit plate name"
+                tabIndex={-1}
+              >✎</span>
+            </button>
+          )}
+        </span>
+      );
+    })
+  )}
+</div>
 )}
 
     <div className="excel-processor">
@@ -878,7 +990,7 @@ currentRow++;
     <ol>
       <li>Upload one or more Excel files (.xlsx or .xls) using the file input below.</li>
       <li>Click on the tabs to view and edit each plate.</li>
-      <li>Edit file and sample names by clicking the ✎ icon.</li>
+      <li>Edit file, plate, and sample names by clicking the ✎ icon.</li>
       <li>Click on table cells to exclude/include data points (strikethrough = excluded).</li>
       <li>Download your summary when finished.</li>
     </ol>
@@ -942,23 +1054,28 @@ currentRow++;
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
           excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
-            <RawTableCard
-              summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
-              fileIndex={activeTab.file}
-              sheetIndex={activeTab.sheet}
-              customFileName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
-              onFileNameChange={newName => handleNameChange(activeTab.file, newName)}
-              sampleNames={
-                (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
-                  ? sampleNames[activeTab.file][activeTab.sheet]
-                  : []
-              }
-              onSampleNameChange={(sampleIdx, newName) =>
-                handleSampleNameChange(activeTab.file, activeTab.sheet, sampleIdx, newName)
-              }
-              excludedCells={excludedCells}
-              toggleCellExclusion={toggleCellExclusion}
-            />
+        <RawTableCard
+          summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
+          fileIndex={activeTab.file}
+          sheetIndex={activeTab.sheet}
+          customFileName={customNames[activeTab.file] || excelSummaries[activeTab.file]?.fileName}
+          onFileNameChange={newName => handleNameChange(activeTab.file, newName)}
+          plateName={
+            (plateNames[activeTab.file] && plateNames[activeTab.file][activeTab.sheet]) ||
+            `Plate ${activeTab.sheet + 1}`
+          }
+          onPlateNameChange={newName => handlePlateNameChange(activeTab.file, activeTab.sheet, newName)}  // <-- Add this line
+          sampleNames={
+            (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
+              ? sampleNames[activeTab.file][activeTab.sheet]
+              : []
+          }
+          onSampleNameChange={(sampleIdx, newName) =>
+            handleSampleNameChange(activeTab.file, activeTab.sheet, sampleIdx, newName)
+          }
+          excludedCells={excludedCells}
+          toggleCellExclusion={toggleCellExclusion}
+        />
           )}
 
           {/* Percent CV Card */}
@@ -968,6 +1085,8 @@ currentRow++;
             <PercentCVCard
               summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
               plateNumber={activeTab.sheet + 1}
+              plateName={    (plateNames[activeTab.file] && plateNames[activeTab.file][activeTab.sheet]) ||
+    `Plate ${activeTab.sheet + 1}`}
               sampleNames={
                 (sampleNames[activeTab.file] && sampleNames[activeTab.file][activeTab.sheet])
                   ? sampleNames[activeTab.file][activeTab.sheet]
