@@ -194,21 +194,22 @@
   background-color: #d4edda;
 }
 
-.global-threshold-summary {
+.global-threshold-summary1 {
   width: 300px;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
+  padding: 2rem;
   position: sticky;
-  display: flex;
+  display: inline;
   top: 1rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
 }
 
-.summary-header {
+.summary-header1 {
   display: flex;
+  top: 0;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;

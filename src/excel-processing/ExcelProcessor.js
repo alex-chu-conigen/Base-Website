@@ -357,7 +357,7 @@ function ExcelProcessor() {
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     const tablesContent = document.querySelector('.tables-container').innerHTML;
-    const summaryContent = document.querySelector('.global-threshold-summary').innerHTML;
+    const summaryContent = document.querySelector('.global-threshold-summary1').innerHTML;
     printWindow.document.write(`
       <html>
         <head>
@@ -620,8 +620,8 @@ function ExcelProcessor() {
           </div>
         </DndContext>
         {excelSummaries.length > 0 && (
-          <div className="global-threshold-summary">
-            <div className="summary-header">
+          <div className="global-threshold-summary1">
+            <div className="summary-header1">
               <h4>Combined Threshold Summary</h4>
               <button onClick={handlePrint} className="print-button">
                 Print Summary
