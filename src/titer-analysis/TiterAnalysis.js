@@ -21,6 +21,8 @@ function RawTableCard({
   sampleNames,
   onSampleNameChange,
 }) {
+  const dilutionFactors = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
+
   const [excludedCells, setExcludedCells] = useState(new Set()); // Store excluded cell locations
   const [isEditingFileName, setIsEditingFileName] = useState(false);
   const [editFileNameValue, setEditFileNameValue] = useState(customFileName || summary.fileName || '');
@@ -144,10 +146,10 @@ function RawTableCard({
           <table>
             <thead>
               <tr>
-                <th>{summary.columns[0]}</th>
-                {Array.from({ length: sampleCount }).map((_, idx) => (
-                  <th key={idx} colSpan={2} style={{ textAlign: 'center' }}>
-                    {editingSampleIdx === idx ? (
+      <th>Dilution Factor</th>
+    {Array.from({ length: sampleCount }).map((_, idx) => (
+      <th key={idx} colSpan={2} style={{ textAlign: 'center' }}>
+        {editingSampleIdx === idx ? (
                       <form onSubmit={handleSampleEditSubmit} style={{ display: "inline-block" }}>
                         <input
                           type="text"
@@ -155,7 +157,7 @@ function RawTableCard({
                           onChange={e => setEditSampleValue(e.target.value)}
                           className="name-edit-input"
                           autoFocus
-                          style={{ fontSize: "1rem" }}
+                          style={{ fontSize: "0.5vw" }}
                         />
                         <button type="submit" className="save-button" style={{ marginLeft: 2, fontSize: "0.9rem" }}>Save</button>
                         <button type="button" className="cancel-button" onClick={handleSampleEditCancel} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Cancel</button>
@@ -175,42 +177,39 @@ function RawTableCard({
                 ))}
               </tr>
               <tr>
-                {summary.columns.map((col, colIdx) => (
-                  <th key={colIdx}>{col}</th>
-                ))}
               </tr>
             </thead>
-<tbody>
-  {summary.preview.map((row, rowIdx) => (
-    <tr key={rowIdx}>
-      <td>{row[0]}</td>
-      {Array.from({ length: sampleCount }).map((_, sampleIdx) =>
-        [0, 1].map(dupIdx => {
-          const colIdx = 1 + sampleIdx * 2 + dupIdx;
-          const key = `r${rowIdx}s${sampleIdx}d${dupIdx}`;
-          const value = row[colIdx];
-          const isExcluded = excludedCells && excludedCells.has(key);
-          return (
-            <td
-              key={colIdx}
-              style={{
-                background: isExcluded ? '#ff5c40 ' : undefined,
-                cursor: 'pointer',
-                textDecoration: isExcluded ? 'line-through' : undefined,
-                color: isExcluded ? '#888' : undefined,
-                position: 'relative'
-              }}
-              onClick={() => toggleCellExclusion(rowIdx, sampleIdx, dupIdx)}
-              title={isExcluded ? "Click to include this value" : "Click to exclude this value"}
-            >
-              {value}
-            </td>
-          );
-        })
-      )}
-    </tr>
-  ))}
-</tbody>
+            <tbody>
+              {summary.preview.map((row, rowIdx) => (
+                <tr key={rowIdx}>
+                  <td>{dilutionFactors[rowIdx] || ''}</td>
+                  {Array.from({ length: sampleCount }).map((_, sampleIdx) =>
+                    [0, 1].map(dupIdx => {
+                      const colIdx = 1 + sampleIdx * 2 + dupIdx;
+                      const key = `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+                      const value = row[colIdx];
+                      const isExcluded = excludedCells && excludedCells.has(key);
+                      return (
+                        <td
+                          key={colIdx}
+                          style={{
+                            background: isExcluded ? '#ff5c40 ' : undefined,
+                            cursor: 'pointer',
+                            textDecoration: isExcluded ? 'line-through' : undefined,
+                            color: isExcluded ? '#888' : undefined,
+                            position: 'relative'
+                          }}
+                          onClick={() => toggleCellExclusion(rowIdx, sampleIdx, dupIdx)}
+                          title={isExcluded ? "Click to include this value" : "Click to exclude this value"}
+                        >
+                          {value}
+                        </td>
+                      );
+                    })
+                  )}
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>
