@@ -1,0 +1,109 @@
+
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+}
+header {
+	background-color: #333;
+	color: #fff;
+	padding: 10px 0;
+	text-align: center;
+}
+nav {
+	display: inline-block;
+}
+nav a {
+	color: #fff;
+	text-decoration: none;
+	padding: 5px 10px;
+}
+.page {
+	display: none;
+	padding: 20px;
+}
+.page.active {
+	display: block;
+}
+
+
+
+table {
+	border-collapse: collapse;
+	margin-bottom: 20px;
+	table-layout: fixed;
+	position: relative;
+	page-break-inside: avoid;
+}
+tr:nth-child(4) {
+  font-size: 14px;
+}
+tr:nth-child(5) {
+  font-size: 14px;
+}
+tr:nth-child(6) {
+  font-size: 14px;
+}
+th, td {
+	border: 1px solid black;
+	padding: 4px;
+	/* max-width: 500px;  Adjust this value as needed */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: center;
+}
+th:first-child,
+td:first-child {
+	font-size: 13px
+}
+
+.legend {
+  display: inline-block;
+
+  padding: 1rem 1rem;
+  vertical-align: middle;
+}
+
+.extracellular { 
+  background-color: #ADD8E6; 
+  padding: 1rem 1rem;
+  float: left;
+}
+.helical { 
+  background-color: #FF7F7F; 
+  padding: 1rem 1rem;
+  float: left;
+}
+.cytoplasmic { 
+  background-color: #90EE90; 
+  padding: 1rem 1rem;
+  float: left;
+}
+.threshold { 
+  background-color: #FADA5E; 
+  padding: 1rem 1rem;
+  float: left;
+}
+.file-upload-container {
+	padding: 0.5rem 0.5rem;
+}
+
+.button-wrapper {text-align:left;display:inline-block; margin:10px;}
+@media print {
+  body {
+    visibility: hidden;
+  }
+  #outputs1 {
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  #outputs2 {
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}

@@ -1,0 +1,810 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Sequence Alignment</title>
+	<link rel=stylesheet href=style1.css>
+</head>
+<body>
+
+<header>
+    <nav>
+        <a href="#" onclick="showPage('page1')">Scoring</a>
+        <a href="#" onclick="showPage('page2')">Comparison</a>
+		<a href="#" onclick="showPage('page3')">Sequence Formatting</a>
+    </nav>
+</header>
+
+<div class="page" id="page1">
+    <div id="inputs1">
+		<div class="button-wrapper">
+			<h3>Submit Sequence</h3>
+			<input type="file" id="Input1" accept=".txt">
+		</div>
+		<div class="button-wrapper">
+			<h3>Submit CSV 1</h3>
+			<input type="file" id="csv1" accept=".csv">
+		</div>
+		<div class="button-wrapper">
+			<h3>Submit Second Type of CSV</h3>
+			<input type="file" id="csv2" accept=".csv">
+		</div>
+		<label for="myCheckbox">
+			<input type="checkbox" id="myCheckbox"> Only Extracellular
+		</label><br><br>
+	</div>
+	
+	<!-- Buttons -->
+	<div id = "buttons1">
+		<button id="switchInput1">Switch Inputs</button>
+		<button id="viewButton1">Run Script</button>
+		<button onClick="window.print()">Print this page</button>
+	</div>
+	<br />
+	<div><a href="http://tools.iedb.org/bcell/">http://tools.iedb.org/bcell/</a></div>
+	
+	<!-- Outputs -->
+	<!-- Create Legend, color code, two legends side by side, label as sample 1, sample 2, etc.-->
+	
+	<div id = "outputs1">
+		<div id="legends1">
+			<div class="legend" id="samples1"></div>
+			<div class="legend" id="table1"></div>
+		</div>
+		<div id="tableContainer1"></div>
+	</div>
+	<div hidden id="i"></div>
+</div>
+
+<div class="page" id="page2">
+    <div id="inputs2">
+		<div class="button-wrapper" id="upload-container">
+			<h3>Reference CSV</h3>
+			<input type="file" id="csv" accept=".csv">
+			<h3>Sequences</h3>
+			<div class="file-upload-container">
+				<input type="file" name="file-upload" class="upload-input" accept=".txt">
+				<button onclick="toggleInput(this)">Toggle Input</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Buttons -->
+	<div id = "buttons2">
+		<button id="addInput">Add New Input</button>
+		<button id="viewButton2">Run Script</button>
+		<button onClick="window.print()">Print this page</button>
+	</div>
+
+	<!-- Outputs -->
+	<div id = "outputs2">
+		<div id="legends2">
+			<div class="legend" id="samples2"></div>
+			<div class="legend" id="table2"></div>
+		</div>
+		<div id="tableContainer2"></div>
+		<div hidden id="output1"></div>
+		<div hidden id="output2"></div>
+	</div>
+</div>
+
+<div class="page" id="page3">
+	<h1>Remove Numbers and Whitespace</h1>
+    <form id="stringForm">
+        <label for="inputString">Enter a string:</label><br>
+        <input type="text" id="inputString" name="inputString"><br><br>
+        <button type="button" onclick="processString()">Submit</button>
+    </form>
+    <h2>Processed String:</h2>
+    <p id="outputString"></p>
+</div>
+
+<script src="diff.js"></script>
+<script>
+	//Switch between both pages
+	function showPage(pageId) {
+		var pages = document.querySelectorAll('.page');
+		for (var i = 0; i < pages.length; i++) {
+			pages[i].classList.remove('active');
+		}
+		document.getElementById(pageId).classList.add('active');
+	}
+	
+	//Retrieve XML Content
+	async function getXMLContent(url) {
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch XML file. Status code: ${response.status}`);
+			}
+			return await response.text(); // You can use response.text() for XML content
+		} catch (error) {
+			console.error("Error fetching XML file:", error);
+			return null;
+		}
+	}
+	
+	//Switch Inputs
+	document.getElementById("switchInput1").addEventListener("click", async function() {
+		const div = document.getElementById("inputs1");
+		const i = document.getElementById("Input1");
+		if (i.type == "file") {
+			div.innerHTML = '<div class="button-wrapper"><h3>Submit Sequence</h3><input type="text" id="Input1"></div><div class="button-wrapper"><h3>Submit CSV 1</h3><input type="file" id="csv1" accept=".csv"></div><div class="button-wrapper"><h3>Submit Second Type of CSV</h3><input type="file" id="csv2" accept=".csv"></div><label for="myCheckbox"><input type="checkbox" id="myCheckbox"> Only Extracellular</label><br><br>';
+		} else {
+			div.innerHTML = '<div class="button-wrapper"><h3>Submit Sequence</h3><input type="file" id="Input1" accept=".txt"></div><div class="button-wrapper"><h3>Submit CSV 1</h3><input type="file" id="csv1" accept=".csv"></div><div class="button-wrapper"><h3>Submit Second Type of CSV</h3><input type="file" id="csv2" accept=".csv"></div><label for="myCheckbox"><input type="checkbox" id="myCheckbox"> Only Extracellular</label><br><br>'
+		}
+	});
+	
+	//Add Inputs
+	document.getElementById("addInput").addEventListener("click", async function() {
+		var uploadContainer = document.getElementById('upload-container');
+
+		// Create a new file input element
+		var newInput = document.createElement('input');
+		newInput.type = 'file';
+		newInput.name = 'file-upload';
+		newInput.className = 'upload-input';
+		newInput.accept = '.txt';
+
+		// Create a toggle button
+		var toggleButton = document.createElement('button');
+		toggleButton.textContent = 'Toggle Input';
+		toggleButton.onclick = function() {
+			toggleInput(this);
+		};
+
+		// Create a new container for the file input and toggle button
+		var newUploadContainer = document.createElement('div');
+		newUploadContainer.className = 'file-upload-container';
+		newUploadContainer.appendChild(newInput);
+		newUploadContainer.appendChild(toggleButton);
+
+		// Append the new container to the upload container
+		uploadContainer.appendChild(newUploadContainer);
+	});
+	
+	//Change input type
+	function toggleInput(button) {
+		var container = button.parentElement;
+		var input = container.querySelector('.upload-input');
+
+		if (input.type === 'file') {
+			input.type = 'text';
+		} else {
+			input.type = 'file';
+		}
+	}
+	
+	//Compare two sequences
+	function difference (refSequence, childSequence) {
+		
+		var diff = Diff["diffChars"](refSequence, childSequence);
+		
+		var output1 = document.getElementById("output1");
+		output1.innerHTML = "";
+
+		var output2 = document.getElementById("output2");
+		output2.innerHTML = "";
+		
+		diff.forEach(function(part) {
+			var color = part.added ? 'green' :
+						part.removed ? 'red' : 'black';
+			if (!part.added) {
+				for (const c of part.value) {
+					var span = document.createElement('span');
+					span.style.color = color;
+					span.appendChild(document.createTextNode(c));
+					output1.appendChild(span);
+				}
+			}
+			if (!part.removed) {
+				for (const c of part.value) {
+					var span = document.createElement('span');
+					span.style.color = color;
+					span.appendChild(document.createTextNode(c));
+					output2.appendChild(span);
+				}
+			}
+		});
+		
+		// Compare characters from output1 and output2 and modify outputs accordingly
+		var span1 = output1.querySelectorAll('span');
+		var span2 = output2.querySelectorAll('span');
+		var counter1 = 0;
+		var counter2 = 0;
+		var o3 = "";
+		var o4 = "";
+		while (counter1 < span1.length && counter2 < span2.length) {
+			var char1 = span1[counter1].textContent;
+			var char2 = span2[counter2].textContent;
+			if (char1 === char2) {
+				// Characters are the same
+				o3+=char1;
+				o4+='.';
+				counter1++;
+				counter2++;
+
+			} else if (span1[counter1].style.color === 'red' && span2[counter2].style.color === 'green') {
+				// Both characters are red
+				o3+=char1;
+				o4+=char2;
+				counter1++;
+				counter2++;
+			} else if (span1[counter1].style.color === 'red' && span2[counter2].style.color != 'green') {
+				o3+=char1;
+				o4+='-';
+				counter1++;
+			} else if (span1[counter1].style.color != 'red' && span2[counter2].style.color === 'green') {
+				o3+='-';
+				o4+=char2;
+				counter2++;
+			}
+			else {
+				counter1++;
+				counter2++;
+			}
+		}
+		if (span1.length > span2.length) { 
+			for (let i = counter1; i < span1.length; i++) {
+				var char1 = span1[i].textContent;
+				o3+=char1;
+				o4+='-';
+			}
+		} else if (span2.length > span1.length) {
+			for (let i = counter2; i < span2.length; i++) {
+				var char2 = span2[i].textContent;
+				o3+='-';
+				o4+=char2;
+			}
+		}
+		result = [];
+		result.push(o3);
+		result.push(o4);
+		return result;
+	}
+
+	//Get Information from DOM (outputs array with [Name, dtype, dend, sequence]
+	function getDOM (xmlContent) {
+		result = [];
+		
+		//DOM Parser
+		var parser = new DOMParser();  
+		doc = parser.parseFromString(xmlContent, 'text/xml');
+
+		//Name
+		var x = doc.getElementsByTagName("name"); 
+		let name = x[0].firstChild;
+		result.push(name);
+		
+		//Domain Information
+		var y = doc.getElementsByTagName("feature");
+		
+		var dtype = []
+		var dend = []
+		var dstart = []
+		for (i = 1; i < y.length; i++) {
+			if (y[i].attributes.type.value != "topological domain" && y[i].attributes.type.value != "transmembrane region") { continue; }
+			dtype.push(y[i].attributes.description.value);
+			dstart.push(y[i].childNodes[1].childNodes[1].attributes.position.value);
+			dend.push(y[i].childNodes[1].childNodes[3].attributes.position.value);
+		}
+		result.push(dtype);
+		result.push(dend);
+		
+		var x = doc.getElementsByTagName("sequence");
+		var sequence = x[x.length - 1].firstChild.nodeValue;
+		result.push(sequence);
+		result.push(dstart);
+		return result;
+	}
+	
+	//Place name into Legend
+	function createLegend(name) {
+		const pid = document.getElementById("i").textContent;
+		const div = document.getElementById("samples1");
+		div.innerHTML = '<h3>Sample 1: ' + name + ' (' + pid + ')</h3>';
+		const div2 = document.getElementById("table1");
+		div2.innerHTML = '<p class="extracellular">Extracellular</p><p class="helical">Helical</p><p class="cytoplasmic">Cytoplasmic</p><p class="threshold">Above Score Threshold</p>';
+	}
+	
+	//Populate Table with results (one file)
+	function populateSmallTable(o3, n1, dtype1, dend1, dstart1, rows3, rows5) {
+		//Format Second CSV to only contain information we need (top 10% ranked)
+		let k = [];
+		let b = [];
+		let d = [];
+		if (rows5 != undefined) {
+			for (let i = 0; i < rows5.length; i++) {
+				let row1 = rows5[i];
+				let columns1 = row1.split(",");
+				if (columns1[8] > 10) {
+					break;
+				} else {
+					let ans = [];
+					ans.push(columns1[2]);
+					ans.push(columns1[3]);
+					ans.push(columns1[7]);
+					if (columns1[0] == "H2-IAk") {
+						k.push(ans);
+					} else if (columns1[0] == "H2-IAb") {
+						b.push(ans);
+					} else if (columns1[0] == "H2-IAd") {
+						d.push(ans);
+					}
+				}
+			}
+		}
+		
+		createLegend(n1.textContent);
+	
+		const tableContainer = document.getElementById('tableContainer1');
+		tableContainer.innerHTML = ''; // Clear previous tables if exist
+
+		// Create tables for each 50 characters
+		var c3 = 1;
+		var i1 = 0;
+		var extracellularCounter = 1;
+		for (let i = 0; i < o3.length; i += 25) {
+			const table = document.createElement('table');
+			const tr1 = document.createElement('tr');
+			const tr2 = document.createElement('tr');
+			const tr3 = document.createElement('tr');
+			const tr4 = document.createElement('tr');
+			const tr5 = document.createElement('tr');
+			const tr6 = document.createElement('tr');
+
+
+			// Populate rows
+			const f1 = document.createElement('td');
+			const f2 = document.createElement('td');
+			const f3 = document.createElement('td');
+			const f4 = document.createElement('td');
+			const f5 = document.createElement('td');
+			const f6 = document.createElement('td');
+			f2.textContent = "Sample 1";
+			f3.textContent = "B Cell Scores";
+			f4.textContent = "Mouse MHCII H2-IAb";
+			f5.textContent = "Mouse MHCII H2-IAd";
+			f6.textContent = "Mouse MHCII H2-IAk";
+
+			tr1.appendChild(f1);
+			tr2.appendChild(f2);
+			tr3.appendChild(f3);
+			tr4.appendChild(f4);
+			tr5.appendChild(f5);
+			tr6.appendChild(f6);
+			
+			for (let j = i; j < i + 25; j++) {
+				//Checks for end of sequence
+				if (j >= o3.length) { break; }
+				
+				let checkbox = document.getElementById('myCheckbox');
+				
+				if (checkbox.checked && dtype1[i1] != "Extracellular") {
+					if (c3 >= dend1[i1]) { i1++; }
+					c3++;
+					continue;
+					
+				}
+				
+				const td1 = document.createElement('td');
+				const td2 = document.createElement('td');
+				const td3 = document.createElement('td');
+				const td4 = document.createElement('td');
+				const td5 = document.createElement('td');
+				const td6 = document.createElement('td');
+				
+				td1.textContent = j + 1;
+				td2.textContent = o3[j];
+				
+				if (dtype1[i1] != undefined && c3 >= dstart1[i1]) {
+					if (dtype1[i1] === "Extracellular") {
+						td2.style.backgroundColor = "#ADD8E6";
+					}
+					else if (dtype1[i1].substring(0,7) === "Helical") {
+						td2.style.backgroundColor = "#FF7F7F";
+					}
+					else if (dtype1[i1] === "Cytoplasmic") {
+						td2.style.backgroundColor = "#90EE90";
+					}
+				}
+				
+				if (c3 >= dend1[i1]) { i1++; }
+				
+				let row1 = rows3[c3];
+				const columns1 = row1.split(",");
+				td3.textContent = columns1[2];
+				threshold1 = columns1[3];
+				if (threshold1 != undefined) {
+					threshold1 = threshold1.replace(/[\r\n]+/gm, "");
+				}
+				if (threshold1 == "E") { td3.style.backgroundColor = "#FADA5E"; }
+				
+				for (let y = 0; y < b.length; y++) {
+					let start = b[y][0];
+					let end = b[y][1];
+					let score = b[y][2];
+					if (c3 >= start && c3 <= end) {
+						td4.textContent = score;
+					}
+				}
+				
+				for (let y = 0; y < d.length; y++) {
+					let start = d[y][0];
+					let end = d[y][1];
+					let score = d[y][2];
+					if (c3 >= start && c3 <= end) {
+						td5.textContent = score;
+					}
+				}
+				
+				for (let y = 0; y < k.length; y++) {
+					let start = k[y][0];
+					let end = k[y][1];
+					let score = k[y][2];
+					if (c3 >= start && c3 <= end) {
+						td6.textContent = score;
+					}
+				}
+				
+				c3++;
+						
+				tr1.appendChild(td1);
+				tr2.appendChild(td2);
+				tr3.appendChild(td3);
+				tr4.appendChild(td4);
+				tr5.appendChild(td5);
+				tr6.appendChild(td6);
+
+			}
+
+			// Append rows to table
+			table.appendChild(tr1);
+			table.appendChild(tr2);
+			table.appendChild(tr3);
+			table.appendChild(tr4);
+			table.appendChild(tr5);
+			table.appendChild(tr6);
+
+			// Append table to container
+			tableContainer.appendChild(table);
+		}
+	}
+	
+	//Run Script
+	document.getElementById("viewButton1").addEventListener("click", async function() {
+		
+		const Inputs = [document.getElementById("Input1"), document.getElementById("csv1"), document.getElementById("csv2")];
+		
+		//If the input is text
+		if (Inputs[0].files == null) {
+			const promises = [];
+			const id = Inputs[0].value;
+			const reader = new FileReader();
+			promises.push(
+				new Promise((resolve, reject) => {
+					const div = document.getElementById("i");
+					div.innerHTML = id;
+					const url = ("https://rest.uniprot.org/uniprotkb/").concat(id, ".xml");
+					resolve(getXMLContent(url));
+				})
+			);
+			xmlContent = await Promise.all(promises);
+			xmlContent1 = xmlContent[0];
+			if (xmlContent1) {
+
+				let dom = getDOM(xmlContent1);
+				const file3 = Inputs[1].files[0];
+				const file5 = Inputs[2].files[0];
+				
+				const reader3 = new FileReader();
+					reader3.onload = function() {
+						let content3 = reader3.result;
+						const rows3 = content3.split("\n");
+						
+						const reader5 = new FileReader();
+						reader5.onload = function() {
+							let content5 = reader5.result;
+							
+							const rows5 = content5.split("\n");
+							var o3 = dom[3];
+							populateSmallTable(o3, dom[0], dom[1], dom[2], dom[4],  rows3, rows5); 
+						};
+						reader5.readAsText(file5);
+						
+					};
+				reader3.readAsText(file3);
+
+			} else {
+				// Display an error message if XML content could not be fetched
+
+			}	
+		} else {
+
+			const promises = [];
+			
+			//Retrieve XML data from database
+			const fileInput = Inputs[0];
+			const file = fileInput.files[0];
+			const reader = new FileReader();
+			promises.push(
+				new Promise((resolve, reject) => {
+					reader.onload = function(event) {
+						const fileContent = event.target.result;
+						var firstLine = fileContent.slice(0, fileContent.indexOf("\n"));
+						var id = firstLine.substring(4, 10);
+						const div = document.getElementById("i");
+						div.innerHTML = id;
+						const url = ("https://rest.uniprot.org/uniprotkb/").concat(id, ".xml");
+						resolve(getXMLContent(url));
+					};
+					reader.readAsText(file);
+				})
+			);
+			
+			xmlContent = await Promise.all(promises);
+			xmlContent1 = xmlContent[0];
+			if (xmlContent1) {
+
+				let dom = getDOM(xmlContent1);
+				
+				const file1 = Inputs[0].files[0];
+				const file3 = Inputs[1].files[0];
+				const file5 = Inputs[2].files[0];
+
+				const reader1 = new FileReader();
+				reader1.onload = function() {
+					let content1 = reader1.result;
+					// Remove first line
+					content1 = content1.substring(content1.indexOf('\n') + 1);
+					// Remove leading and trailing whitespace
+					content1 = content1.trim();
+					// Remove newlines and spaces
+					content1 = content1.replace(/[\n\r\s]+/g, '');
+
+					const reader3 = new FileReader();
+						reader3.onload = function() {
+							let content3 = reader3.result;
+							const rows3 = content3.split("\n");
+							const reader5 = new FileReader();
+							reader5.onload = function() {
+								
+								let content5 = reader5.result;
+								
+								const rows5 = content5.split("\n");
+								var o3 = content1;
+								
+								populateSmallTable(o3, dom[0], dom[1], dom[2], dom[4], rows3, rows5); 
+							};
+							reader5.readAsText(file5);
+							
+						};
+					reader3.readAsText(file3);
+				};
+				reader1.readAsText(file1);
+
+			} else {
+				// Display an error message if XML content could not be fetched
+
+			}
+		}
+		
+		
+	});
+
+	//Populate Table with results (multiple files)
+	function populateTable(finalresult, names, dtype, dend, rows, ids, dstart) {
+		const tableContainer = document.getElementById('tableContainer2');
+		tableContainer.innerHTML = ''; // Clear previous tables if exist
+		
+		
+		// Create tables for each 50 characters
+		createLegends(names, ids);
+		ccount = [];
+		icount = [];
+		for (let a = 0; a < finalresult.length; a++) {
+			ccount.push(1);
+			icount.push(0);
+		}
+		ccount.push(0);
+		for (let i = 0; i < finalresult[0].length; i += 25) {
+			//Numbers 1-25 with an extra space at the beginning for names
+			const table = document.createElement('table');
+			let tr = document.createElement('tr');
+			let td = document.createElement('td');
+			tr.appendChild(td);
+			for (let j = i; j < i + 25; j++) {
+				if (j >= finalresult[0].length) { break; }
+				const td = document.createElement('td');
+				td.textContent = j + 1;
+				tr.appendChild(td);
+			}
+			table.appendChild(tr);
+			
+			
+			for (let x = 0; x < finalresult.length; x++) {
+				let fr = finalresult[x];
+				
+				let tr = document.createElement('tr');
+				let dtype1 = dtype[x];
+				let dend1 = dend[x];
+				let dstart1 = dstart[x];
+				
+				//let n = names[x];
+				let td = document.createElement('td');
+				//td.textContent = n.textContent;
+				td.textContent = "Sample " + (x + 1);
+				tr.appendChild(td);
+				
+				for (let j = i; j < i + 25; j++) {
+					//Checks for end of sequence
+					if (j >= finalresult[0].length) { break; }
+					const td = document.createElement('td');
+					td.textContent = fr[j];
+					if (dtype1[icount[x]] != undefined && ccount[x] >= dstart1[icount[x]]) {
+						if (dtype1[icount[x]] === "Extracellular") {
+							td.style.backgroundColor = "#ADD8E6";
+						}
+						else if (dtype1[icount[x]].substring(0,7) === "Helical") {
+							td.style.backgroundColor = "#FF7F7F";
+						}
+						else if (dtype1[icount[x]] === "Cytoplasmic") {
+							td.style.backgroundColor = "#90EE90";
+						}
+					}
+					
+					
+					
+					
+					if (fr[j] != '-') {
+						ccount[x]++;
+					}
+					if (ccount[x] > dend1[icount[x]]) { icount[x]++; }
+					if (ccount[x] % 50 == 0 && fr[j] != '-') {
+						td.style.textDecoration = "underline";
+					}
+					
+					tr.appendChild(td);
+				}
+				
+				
+				
+				table.appendChild(tr);
+			}
+			let fr = finalresult[0];	
+			let tr1 = document.createElement('tr');
+			let ftd = document.createElement('td');
+			ftd.textContent = "Ref B Cell Scores";
+			tr1.appendChild(ftd);
+			for (let j = i; j < i + 25; j++) {
+				if (j >= finalresult[0].length) { break; }
+				const td1 = document.createElement('td');
+				
+				if (fr[j] != '-') {
+					ccount[finalresult.length]++;
+					let row = rows[ccount[finalresult.length]];
+					const columns = row.split(",");
+					td1.textContent = columns[2];
+					threshold1 = columns[3];
+					if (threshold1 != undefined) {
+						threshold1 = threshold1.replace(/[\r\n]+/gm, "");
+					}
+					if (threshold1 == "E") { td1.style.backgroundColor = "#FADA5E"; }
+				}
+				tr1.appendChild(td1);
+			}
+			table.appendChild(tr1);
+			tableContainer.appendChild(table);
+		}
+	}
+	
+	//Create Legend with Sample names
+	function createLegends(names, ids) {
+		let s = "";
+		for (let i = 0; i < names.length; i++) {
+			s = s.concat('<h3>Sample ' + (i+1) + ': ' + names[i].textContent + ' (' + ids[i] + ')</h3>');
+		}
+		const div = document.getElementById("samples2");
+		div.innerHTML = s;
+		
+		const div2 = document.getElementById("table2");
+		div2.innerHTML = '<p class="extracellular">Extracellular</p><p class="helical">Helical</p><p class="cytoplasmic">Cytoplasmic</p><p class="threshold">Above Score Threshold</p>';
+	}
+	
+	//Function to remove whitespace and newlines from string (format sequence)
+	function processString() {
+		// Get the input string
+		let input = document.getElementById('inputString').value;
+
+		// Remove numbers and whitespace
+		let processedString = input.replace(/[0-9\s]/g, '');
+
+		// Display the processed string
+		document.getElementById('outputString').innerText = processedString;
+	}
+	
+	//Run Script
+	document.getElementById("viewButton2").addEventListener("click", async function() {
+		
+		const promises = [];
+		
+		var ids = [];
+		
+		//Retrieve XML data from database
+		var inputs = document.querySelectorAll('.upload-input');
+		inputs.forEach(function(input) {
+			if (input.type === 'file') {
+				var file = input.files[0];
+				const reader = new FileReader();
+				promises.push(
+					new Promise((resolve, reject) => {
+						reader.onload = function(event) {
+							const fileContent = event.target.result;
+							var firstLine = fileContent.slice(0, fileContent.indexOf("\n"));
+							var id = firstLine.substring(4, 10);
+							const url = ("https://rest.uniprot.org/uniprotkb/").concat(id, ".xml");
+							ids.push(id);
+							resolve(getXMLContent(url));
+						};
+						reader.readAsText(file);
+					})
+				);
+			} else {
+				promises.push(
+					new Promise((resolve, reject) => {
+						var id = input.value;
+						const url = ("https://rest.uniprot.org/uniprotkb/").concat(id, ".xml");
+						ids.push(id);
+						resolve(getXMLContent(url));
+					})
+				);
+			}
+					
+		});
+	
+		xmlContent = await Promise.all(promises);
+
+		const csvfile = document.getElementById('csv').files[0];			
+		
+		const reader = new FileReader();
+		reader.onload = function() {
+			let content = reader.result;
+			const rows = content.split("\n");
+			input = [];
+			names = [];
+			dtype = [];
+			dend = [];
+			dstart = [];
+			const dom = getDOM(xmlContent[0]);
+			names.push(dom[0]);
+			dtype.push(dom[1]);
+			dend.push(dom[2]);
+			dstart.push(dom[4]);
+			r = dom[3];
+			for (let i = 1; i < xmlContent.length; i++) {
+				const dom = getDOM(xmlContent[i]);
+				names.push(dom[0]);
+				dtype.push(dom[1]);
+				dend.push(dom[2]);
+				input.push(dom[3]);
+				dstart.push(dom[4]);
+				result = difference(r, dom[3], i);
+				r = result[0];
+				if (i == xmlContent.length - 1) {
+					let finalresult = [];
+					finalresult.push(r);
+					for (let j = 0; j < input.length; j++) {
+						finalresult.push(difference(r, input[j])[1]);
+					}
+					populateTable(finalresult, names, dtype, dend, rows, ids, dstart);
+				}
+			}
+		};
+		reader.readAsText(csvfile);
+	});
+</script>
+
+</body>
+</html>
