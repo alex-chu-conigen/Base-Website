@@ -218,7 +218,8 @@ function RawTableCard({
 }
 
 function TiterAnalysis() {
-    const [editingTab, setEditingTab] = useState({ file: null, sheet: null });
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [editingTab, setEditingTab] = useState({ file: null, sheet: null });
   const [editingTabValue, setEditingTabValue] = useState('');
   const [excelSummaries, setExcelSummaries] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -301,6 +302,7 @@ function TiterAnalysis() {
   const handleFileUpload = async (event) => {
     const files = event.target.files;
     if (!files.length) return;
+    setShowInstructions(false);
     setIsLoading(true);
     try {
       const isMultiFile = files.length > 1;
@@ -984,16 +986,18 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
 
     <div className="excel-processor">
         <h1 className="titer-header">Titer Analysis</h1>
-  <div className="instructions-card">
-    <h2>Instructions</h2>
-    <ol>
-      <li>Upload one or more Excel files (.xlsx or .xls) using the file input below.</li>
-      <li>Click on the tabs to view and edit each plate.</li>
-      <li>Edit file, plate, and sample names by clicking the ✎ icon.</li>
-      <li>Click on table cells to exclude/include data points (strikethrough = excluded).</li>
-      <li>Download your summary when finished.</li>
-    </ol>
-  </div>
+      {showInstructions && (
+        <div className="instructions-card">
+          <h2>Instructions</h2>
+          <ol>
+            <li>Upload one or more Excel files (.xlsx or .xls) using the file input below.</li>
+            <li>Click on the tabs to view and edit each plate.</li>
+            <li>Edit file, plate, and sample names by clicking the ✎ icon.</li>
+            <li>Click on table cells to exclude/include data points (strikethrough = excluded).</li>
+            <li>Download your summary when finished.</li>
+          </ol>
+        </div>
+      )}
       <div className="upload-section">
         <div className="file-controls">
           <input

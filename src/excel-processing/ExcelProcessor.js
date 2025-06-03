@@ -285,33 +285,35 @@ function ExcelProcessor() {
         const ws = wb.addWorksheet(sheetName);
         
         // Add headers
-        ws.columns = sheet.columns.map(header => ({
-          header,
-          key: header,
-          width: 15
-        }));
+        ws.columns = [
+          { header: 'Row', key: 'row', width: 8 },
+          ...sheet.columns.slice(1).map((header, idx) => ({
+            header,
+            key: `col${idx + 1}`,
+            width: 15
+          }))
+        ];
 
         // Add data rows and apply conditional formatting
-        sheet.preview.forEach((row, rowIndex) => {
+          sheet.preview.forEach((row, rowIndex) => {
           const rowData = {};
-          
-          // Add data for each column
-          sheet.columns.forEach((col, colIndex) => {
-            // For the first column, use letters starting from 'A' at row 2
-            if (colIndex === 0) {
-              // If it's the first row, use the original header
-              if (rowIndex === 0) {
-                rowData[col] = row[colIndex] || '';
-              } else {
-                // For subsequent rows, use letters (A starts at row 2)
-                rowData[col] = String.fromCharCode(65 + (rowIndex - 1)); // 65 is ASCII for 'A'
-              }
-            } else {
-              rowData[col] = row[colIndex] || '';
+          rowData.row = String.fromCharCode(65 + rowIndex); // 'A', 'B', etc.
+
+            // // First column: row label (A, B, C, ...)
+            // if (rowIndex === 0) {
+            //   // Header row: keep as is
+            //   rowData[sheet.columns[0]] = row[0] || '';
+            // } else {
+            //   // Data rows: use letter label
+            //   rowData[sheet.columns[0]] = String.fromCharCode(65 + (rowIndex - 1));
+            // }
+
+            // Fill in the rest of the columns
+            for (let colIndex = 1; colIndex < row.length; colIndex++) {
+              rowData[`col${colIndex}`] = row[colIndex];
             }
-          });
-          
-          const excelRow = ws.addRow(rowData);
+
+            const excelRow = ws.addRow(rowData);
           
           // Apply conditional formatting to each cell
           row.forEach((cell, colIndex) => {
