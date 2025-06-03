@@ -81,7 +81,6 @@
 }
 
 .main-content {
-  padding-top: 6rem; /* Add extra space if needed */
   margin-top: 64px;  /* This ensures content never hides under the navbar */
   flex: 1;
   max-width: 1200px;

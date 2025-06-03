@@ -142,7 +142,7 @@ tr:hover td {
 /* Sticky Tabs */
 .sheet-tabs-sticky {
   position: sticky;
-  top: 5rem;
+  top: 4.5rem;
   z-index: 1000;
   background: #fff7f0;
   padding: 8px 0 4px 0;
@@ -186,13 +186,25 @@ tr:hover td {
 }
 
 /* Responsive: Match nav bar stacking and alignment */
-@media (max-width: 780px) {
+@media (max-width: 930px) {
   .sheet-tabs-sticky {
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    top: 10rem; /* Match your mobile nav bar height if it grows */
+    top: 7.4rem; /* Match your mobile nav bar height if it grows */
     padding: 4px 0 2px 0;
+  }
+
+  @media (max-width: 800px) {
+    .sheet-tabs-sticky {
+      top: 7.4rem; /* Adjust for smaller screens */
+    }
+
+    @media (max-width: 768px) {
+      .sheet-tabs-sticky {
+        top: 20rem; /* Further adjust for very small screens */
+      }
+    }
   }
   .sheet-tab {
     width: 100%;
