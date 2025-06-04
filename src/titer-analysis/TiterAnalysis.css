@@ -88,7 +88,7 @@ body, .excel-processor {
 /* Table & Card Styling */
 .summary-card,
 .sheet-summary,
-.preview-table,
+.preview-table-titer,
 .percent-cv-card,
 .card-header {
   background: #ffffff;
@@ -105,32 +105,32 @@ body, .excel-processor {
   color: #d97706;
 }
 
-.preview-table th,
+.preview-table-titer th,
 th {
   background: #ffe5c2;
   color: #a15c00;
 }
 
-.preview-table th,
-.preview-table td {
+.preview-table-titer th,
+.preview-table-titer td {
   padding: 4px 6px;
   border: 1px solid #ddd;
   text-align: left;
 }
 
-.preview-table tr:nth-child(even),
+.preview-table-titer tr:nth-child(even),
 tr:nth-child(even) {
   background: #fff3e0;
 }
 
-.preview-table td,
+.preview-table-titer td, .preview-table-titer
 td {
   background: #fff8f2;
   color: #a15c00;
   font-size: 1.2vw;
 }
 
-.preview-table td:hover,
+.preview-table-titer td:hover, .preview-table-titer
 tr:hover td {
   background: #ffffff;
 }
@@ -264,7 +264,7 @@ button.sheet-tab {
 }
 
 @media screen and (min-width: 1600px) {
-  .preview-table td,
+  .preview-table-titer td, .preview-table-titer
 td{
      font-size: 20px;
   }

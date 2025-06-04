@@ -250,7 +250,7 @@ function SequenceScoringPage1() {
             if (k.length > 0) tableRows.push(<tr key="mhcIAk">{mhcIAkRow}</tr>);
 
             tables.push(
-                <table key={`table-${i}`}>
+                <table id='seq-table' key={`table-${i}`}>
                     <tbody>
                         {tableRows}
                     </tbody>
@@ -260,40 +260,50 @@ function SequenceScoringPage1() {
 
         // 6. If onlyExtracellular is checked, show a summary table of extracellular regions
         let extracellularSummary = null;
-        // Remove !isPrinting from here, so the summary is always generated in React state
         if (onlyExtracellular) {
             // Find all extracellular regions and their sequences
-            let extracellularRows = [];
+            let extracellularSeqs = [];
+            let extracellularLens = [];
             let o3seq = input1Type === 'file' ? sequence : dom[3];
             for (let d = 0; d < dtype1.length; d++) {
                 if (dtype1[d] === "Extracellular") {
                     const start = dstart1[d] - 1; // 0-based
                     const end = dend1[d]; // exclusive
                     const seq = o3seq.slice(start, end);
-                    extracellularRows.push(
-                        <tr key={`extracellular-${d}`}>
-                            <td>{dom[0]?.textContent || "Sample 1"}</td>
-                            <td style={{fontFamily: "monospace"}}>{seq}</td>
-                            <td>{seq.length}</td>
-                        </tr>
+                    extracellularSeqs.push(
+                        <td
+                            key={`extracellular-seq-${d}`}
+                            style={{ fontFamily: "monospace", border: "1px solid black" }}
+                        >
+                            {seq}
+                        </td>
+                    );
+                    extracellularLens.push(
+                        <td
+                            key={`extracellular-len-${d}`}
+                            style={{ border: "1px solid black" }}
+                        >
+                            {seq.length}
+                        </td>
                     );
                 }
             }
-            // Only render the summary if NOT printing
             if (!isPrinting) {
                 extracellularSummary = (
                     <div className='no-print' style={{marginTop: "1em"}}>
                         <h4>Extracellular Region Summary</h4>
-                        <table className="extracellular-summary-table" border="1">
-                            <thead>
-                                <tr>
-                                    <th>Sample Name</th>
-                                    <th>Extracellular Sequence</th>
-                                    <th>Length</th>
-                                </tr>
-                            </thead>
+                        <table
+                            id='seq-table'
+                            border="1"
+                            style={{ borderCollapse: "collapse" }}
+                        >
                             <tbody>
-                                {extracellularRows}
+                                <tr>
+                                    {extracellularSeqs}
+                                </tr>
+                                <tr>
+                                    {extracellularLens}
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -379,11 +389,11 @@ function SequenceScoringPage1() {
                     http://tools.iedb.org/mhcii/
                 </a>
             </div>
-            <div id="outputs1" className="outputs1-section">
+            <div id="outputs1" className="outputs1-section-seq">
                 <div id="legends1" className="legends1-row">
                     <div className="legend" id="samples1">{legend}</div>
                 </div>
-                <div id="tableContainer1" className="table-container1">{tableHtml}</div>
+                <div id="tableContainer1-seq" className="table-container1-seq">{tableHtml}</div>
             </div>
             <div hidden id="i"></div>
         </div>

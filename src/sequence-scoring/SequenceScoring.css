@@ -19,15 +19,18 @@ nav a {
 	padding: 5px 10px;
 }
 
-table {
+table#seq-table{
     border-collapse: collapse;
     margin-bottom: 20px;
-    table-layout: auto;      /* Allow table to expand naturally */
+    table-layout: auto;  
+    min-width: 80%;   
     position: relative;
     page-break-inside: avoid;
     width: auto !important;
     max-width: none !important;
     min-width: 0;
+    background: #fff;
+    color: #000000;
 }
 tr:nth-child(4) {
   font-size: 14px;
@@ -39,16 +42,19 @@ tr:nth-child(6) {
   font-size: 14px;
 }
 
-th, td {
+ th, td {
     border: 1px solid black;
-    padding: 4px 8px;
-    overflow: visible;           /* Show all content */
-    text-overflow: unset;        /* Do not cut off text */
-    white-space: normal;         /* Allow wrapping */
+    padding: 3px 4px;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
     text-align: center;
-    font-size: 0.8vw;           /* Slightly larger, responsive */
-    word-break: break-word;     /* Break long words if needed */
-    max-width: 30vw;            /* Responsive max width */
+    font-size: 0.8vw;           /* Use a fixed font size */
+    word-break: break-word;
+    max-width: 90%;
+    background: #fff;
+    color: #000000;
+    min-width: 40px;           /* Prevent shrinking below a certain width */
 }
 th:first-child,
 td:first-child {
@@ -255,7 +261,7 @@ td:first-child {
     margin-bottom: 1rem;
 }
 
-.table-container1, .table-container2 {
+.table-container1-seq, .table-container2-seq {
     overflow-x: visible !important;
     width: auto !important;
     max-width: none !important;
@@ -263,7 +269,7 @@ td:first-child {
     margin: 0;
 }
 
-#output1.outputs1-section {
+#output1.outputs1-section-seq {
     margin-top: 0;
     margin-bottom: 1rem;
         overflow-x: visible !important;

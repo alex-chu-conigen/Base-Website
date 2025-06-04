@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
-import './TiterAnalysis.css';
 import PercentCVCard from './percentCV';
 import SummaryCard from './dupBG';
 import ODTiterCard from './odAVG';
+import './TiterAnalysis.css';
 import { FinSumCard } from './odAVG';
 import { saveAs } from 'file-saver';
 
@@ -142,7 +142,7 @@ function RawTableCard({
         </div>
       </div>
       <div className="sheet-summary">
-        <div className="preview-table">
+        <div className="preview-table-titer">
           <table>
             <thead>
               <tr>
