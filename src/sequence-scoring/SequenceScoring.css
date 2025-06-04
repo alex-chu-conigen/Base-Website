@@ -20,11 +20,14 @@ nav a {
 }
 
 table {
-	border-collapse: collapse;
-	margin-bottom: 20px;
-	table-layout: fixed;
-	position: relative;
-	page-break-inside: avoid;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    table-layout: auto;      /* Allow table to expand naturally */
+    position: relative;
+    page-break-inside: avoid;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
 }
 tr:nth-child(4) {
   font-size: 14px;
@@ -35,14 +38,17 @@ tr:nth-child(5) {
 tr:nth-child(6) {
   font-size: 14px;
 }
+
 th, td {
-	border: 1px solid black;
-	padding: 4px;
-	/* max-width: 500px;  Adjust this value as needed */
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	text-align: center;
+    border: 1px solid black;
+    padding: 4px 8px;
+    overflow: visible;           /* Show all content */
+    text-overflow: unset;        /* Do not cut off text */
+    white-space: normal;         /* Allow wrapping */
+    text-align: center;
+    font-size: 0.8vw;           /* Slightly larger, responsive */
+    word-break: break-word;     /* Break long words if needed */
+    max-width: 30vw;            /* Responsive max width */
 }
 th:first-child,
 td:first-child {
@@ -237,6 +243,7 @@ td:first-child {
     box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
 
+
 .legends2-row {
     display: flex;
     gap: 2rem;
@@ -246,4 +253,26 @@ td:first-child {
 .table-container2 {
     min-height: 60px;
     margin-bottom: 1rem;
+}
+
+.table-container1, .table-container2 {
+    overflow-x: visible !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 0;
+    margin: 0;
+}
+
+#output1.outputs1-section {
+    margin-top: 0;
+    margin-bottom: 1rem;
+        overflow-x: visible !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
 }
