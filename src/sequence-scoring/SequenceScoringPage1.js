@@ -399,7 +399,7 @@ function SequenceScoringPage1() {
                 <div id="legends1" className="legends1-row">
                     <div className="legend" id="samples1">{legend}</div>
                 </div>
-                <div id="tableContainer1-seq" className="table-container1-seq">{tableHtml}</div>
+                <div id="tableContainer1-seq" className="table-container1-seq" style={{padding:"0 0 5rem 0"}}>{tableHtml}</div>
             </div>
             <div hidden id="i"></div>
         </div>
