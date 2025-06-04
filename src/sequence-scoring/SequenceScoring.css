@@ -56,6 +56,8 @@ tr:nth-child(6) {
     color: #000000;
     min-width: 40px;           /* Prevent shrinking below a certain width */
 }
+
+
 th:first-child,
 td:first-child {
 	font-size: 13px
@@ -281,4 +283,10 @@ td:first-child {
     .no-print {
         display: none !important;
     }
+}
+@media screen and (min-width: 1600px) {
+
+td{
+     font-size: 13.5px;
+  }
 }

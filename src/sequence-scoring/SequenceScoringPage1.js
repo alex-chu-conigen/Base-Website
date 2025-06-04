@@ -262,15 +262,14 @@ function SequenceScoringPage1() {
         let extracellularSummary = null;
         if (onlyExtracellular) {
             // Find all extracellular regions and their sequences
-            let extracellularSeqs = [];
-            let extracellularLens = [];
+            let extracellularCells = [];
             let o3seq = input1Type === 'file' ? sequence : dom[3];
             for (let d = 0; d < dtype1.length; d++) {
                 if (dtype1[d] === "Extracellular") {
                     const start = dstart1[d] - 1; // 0-based
                     const end = dend1[d]; // exclusive
                     const seq = o3seq.slice(start, end);
-                    extracellularSeqs.push(
+                    extracellularCells.push(
                         <td
                             key={`extracellular-seq-${d}`}
                             style={{ fontFamily: "monospace", border: "1px solid black" }}
@@ -278,7 +277,7 @@ function SequenceScoringPage1() {
                             {seq}
                         </td>
                     );
-                    extracellularLens.push(
+                    extracellularCells.push(
                         <td
                             key={`extracellular-len-${d}`}
                             style={{ border: "1px solid black" }}
@@ -293,16 +292,13 @@ function SequenceScoringPage1() {
                     <div className='no-print' style={{marginTop: "1em"}}>
                         <h4>Extracellular Region Summary</h4>
                         <table
-                            id='seq-table'
+                id="extracellular-summary-table"
                             border="1"
                             style={{ borderCollapse: "collapse" }}
                         >
                             <tbody>
                                 <tr>
-                                    {extracellularSeqs}
-                                </tr>
-                                <tr>
-                                    {extracellularLens}
+                                    {extracellularCells}
                                 </tr>
                             </tbody>
                         </table>
@@ -378,6 +374,16 @@ function SequenceScoringPage1() {
                 <button className="add-input-btn" onClick={handleSwitchInput1}>Switch Inputs</button>
                 <button className="run-script-btn" onClick={handleRunScript}>Run Script</button>
                 <button className="print-btn" onClick={handlePrint}>Print this page</button>
+                    <button
+                    className="jump-extracell-btn"
+                    style={{ marginLeft: "1rem" }}
+                    onClick={() => {
+                        const elem = document.getElementById("extracellular-summary-table");
+                        if (elem) elem.scrollIntoView({ behavior: "smooth" });
+                    }}
+                >
+                    Jump to Extracellular Table
+                </button>
             </div>
             <br />
             <div>
