@@ -24,7 +24,6 @@ function App() {
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
             <Link to="/titer-analysis" className="nav-link">Titer Analysis</Link>
             <Link to="/sequence-scoring" className="nav-link">Sequence Scoring</Link>
-            <Link to="/comp-text" className="nav-link">CompText</Link>
 
 
           </div>
@@ -40,20 +39,6 @@ function App() {
             <Route path="/uniprot-search" element={<UniProtSearch />} />
             <Route path="/titer-analysis" element={<TiterAnalysis />} />
             <Route path="/sequence-scoring" element={<SequenceScoring />} />
-            <Route
-              path="/comp-text"
-              element={
-                <div style={{ width: '100%', height: '100vh' }}>
-                  <iframe
-                    src={process.env.PUBLIC_URL + '/comp-text/CompText.html'}
-                    title="CompText"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 'none', minHeight: '800px' }}
-                  />
-                </div>
-              }
-            />
           </Routes>
         </div>
       </div>
