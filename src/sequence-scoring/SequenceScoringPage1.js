@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import styles from './SequenceScoring.module.css';
 
 // Helper: fetch XML content from UniProt
 async function getXMLContent(url) {
@@ -63,7 +64,6 @@ function SequenceScoringPage1() {
     };
 
     // Run Script (core logic)
-// ...existing code...
     const handleRunScript = async () => {
         setLegend('');
         setTableHtml('');
@@ -120,10 +120,10 @@ function SequenceScoringPage1() {
             <div>
                 <h3>Sample 1: {dom[0]?.textContent} ({id})</h3>
                 <div>
-                    <span className="extracellular">Extracellular</span>
-                    <span className="helical">Helical</span>
-                    <span className="cytoplasmic">Cytoplasmic</span>
-                    <span className="threshold">Above Score Threshold</span>
+                    <span className={styles.extracellular}>Extracellular</span>
+                    <span className={styles.helical}>Helical</span>
+                    <span className={styles.cytoplasmic}>Cytoplasmic</span>
+                    <span className={styles.threshold}>Above Score Threshold</span>
                 </div>
             </div>
         );
@@ -266,12 +266,12 @@ function SequenceScoringPage1() {
             let o3seq = input1Type === 'file' ? sequence : dom[3];
             for (let d = 0; d < dtype1.length; d++) {
                 if (dtype1[d] === "Extracellular") {
-                    const start = dstart1[d] - 1; // 0-based
+                    const start = dstart1[d] - 1; // 0_based
                     const end = dend1[d]; // exclusive
                     const seq = o3seq.slice(start, end);
                     extracellularCells.push(
                         <td
-                            key={`extracellular-seq-${d}`}
+                            key={`extracellular_seq_${d}`}
                             style={{ fontFamily: "monospace", border: "1px solid black" }}
                         >
                             {seq}
@@ -279,7 +279,7 @@ function SequenceScoringPage1() {
                     );
                     extracellularCells.push(
                         <td
-                            key={`extracellular-len-${d}`}
+                            key={`extracellular_len_${d}`}
                             style={{ border: "1px solid black" }}
                         >
                             {seq.length}
@@ -289,10 +289,10 @@ function SequenceScoringPage1() {
             }
             if (!isPrinting) {
                 extracellularSummary = (
-                    <div className='no-print' style={{marginTop: "1em"}}>
+                    <div className='no_print' style={{marginTop: "1em"}}>
                         <h4>Extracellular Region Summary</h4>
                         <table
-                id="extracellular-summary-table"
+                id="extracellular_summary_table"
                             border="1"
                             style={{ borderCollapse: "collapse" }}
                         >
@@ -314,19 +314,18 @@ function SequenceScoringPage1() {
             </div>
         );
     };
-// ...existing code...
 
     return (
-        <div className="page scoring-page1">
-            <div id="inputs1" className="inputs1-section">
-                <div className="button-wrapper">
+        <div className={`${styles.class1} ${styles.class2}`}>
+            <div id="inputs1" className={styles.inputs1_section}>
+                <div className={styles.button_wrapper}>
                     <h3>Submit Sequence</h3>
                     {input1Type === 'file' ? (
                         <input
                             type="file"
                             id="Input1"
                             accept=".txt"
-                            className="sequence-file-input"
+                            className={styles.sequence_file_input}
                             onChange={e => setInput1Value(e.target.files[0])}
                         />
                     ) : (
@@ -334,33 +333,33 @@ function SequenceScoringPage1() {
                             type="text"
                             id="Input1"
                             value={input1Value}
-                            className="sequence-text-input"
+                            className={styles.sequence_text_input}
                             onChange={e => setInput1Value(e.target.value)}
                             placeholder="Enter sequence"
                         />
                     )}
                 </div>
-                <div className="button-wrapper">
+                <div className={styles.button_wrapper}>
                     <h3>Submit CSV 1</h3>
                     <input
                         type="file"
                         id="csv1"
                         accept=".csv"
-                        className="sequence-file-input"
+                        className={styles.sequence_file_input}
                         onChange={e => setCsv1File(e.target.files[0])}
                     />
                 </div>
-                <div className="button-wrapper">
+                <div className={styles.button_wrapper}>
                     <h3>Submit Second Type of CSV</h3>
                     <input
                         type="file"
                         id="csv2"
                         accept=".csv"
-                        className="sequence-file-input"
+                        className={styles.sequence_file_input}
                         onChange={e => setCsv2File(e.target.files[0])}
                     />
                 </div>
-                <label className="checkbox-label">
+                <label className={styles.checkbox_label}>
                     <input
                         type="checkbox"
                         id="myCheckbox"
@@ -370,15 +369,15 @@ function SequenceScoringPage1() {
                 </label>
                 <br /><br />
             </div>
-            <div id="buttons1" className="buttons-section">
-                <button className="add-input-btn" onClick={handleSwitchInput1}>Switch Inputs</button>
-                <button className="run-script-btn" onClick={handleRunScript}>Run Script</button>
-                <button className="print-btn" onClick={handlePrint}>Print this page</button>
+            <div id="buttons1" className={styles.buttons_section}>
+                <button className={styles.add_input_btn} onClick={handleSwitchInput1}>Switch Inputs</button>
+                <button className={styles.run_script_btn} onClick={handleRunScript}>Run Script</button>
+                <button className={styles.print_btn} onClick={handlePrint}>Print this page</button>
                     <button
-                    className="jump-extracell-btn"
+                    className={styles.jump_extracell_btn}
                     style={{ marginLeft: "1rem" }}
                     onClick={() => {
-                        const elem = document.getElementById("extracellular-summary-table");
+                        const elem = document.getElementById("extracellular_summary_table");
                         if (elem) elem.scrollIntoView({ behavior: "smooth" });
                     }}
                 >
@@ -395,11 +394,11 @@ function SequenceScoringPage1() {
                     http://tools.iedb.org/mhcii/
                 </a>
             </div>
-            <div id="outputs1" className="outputs1-section-seq">
-                <div id="legends1" className="legends1-row">
-                    <div className="legend" id="samples1">{legend}</div>
+            <div className={styles.outputs1_section_seq}>
+                <div id="legends1" className={styles.legends1_row}>
+                    <div className={styles.legend} id="samples1">{legend}</div>
                 </div>
-                <div id="tableContainer1-seq" className="table-container1-seq" style={{padding:"0 0 5rem 0"}}>{tableHtml}</div>
+                <div id="tableContainer1_seq" className={styles.table_container1_seq} style={{padding:"0 0 5rem 0"}}>{tableHtml}</div>
             </div>
             <div hidden id="i"></div>
         </div>

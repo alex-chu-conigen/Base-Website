@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './SequenceScoring.css';
+import styles from './SequenceScoring.module.css';
 import SequenceScoringPage1 from './SequenceScoringPage1';
 import SequenceScoringPage2 from './SequenceScoringPage2';
 import SequenceScoringPage3 from './SequenceScoringPage3';
@@ -8,22 +8,22 @@ function SequenceScoring() {
     const [activePage, setActivePage] = useState('page1');
 
     return (
-        <div className="page-selector">
-            <div className="page-selection">
+        <div className={styles.page_selector}>
+            <div className={styles.page_selection}>
                 <button 
-                    className={`page-button ${activePage === 'page1' ? 'active' : ''}`}
+                    className={`${styles.page_button} ${activePage === 'page1' ? styles.active : ''}`}
                     onClick={() => setActivePage('page1')}
                 >
                     Scoring
                 </button>
                 <button 
-                    className={`page-button ${activePage === 'page2' ? 'active' : ''}`}
+                    className={`${styles.page_button} ${activePage === 'page2' ? styles.active : ''}`}
                     onClick={() => setActivePage('page2')}
                 >
                     Comparison
                 </button>
                 <button 
-                    className={`page-button ${activePage === 'page3' ? 'active' : ''}`}
+                    className={`${styles.page_button} ${activePage === 'page3' ? styles.active : ''}`}
                     onClick={() => setActivePage('page3')}
                 >
                     Sequence Formatting
