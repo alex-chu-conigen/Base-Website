@@ -262,22 +262,75 @@ tr:nth-child(6) {
 }
 
 /* Print Styles */
-/* ...existing styles... */
-
-/* Print Styles */
 @media print {
-    body{
-        visibility: hidden;
-    }
-    #outputs1_seq, #outputs1_seq * {
-        visibility: visible;
-    }
-    #outputs1_seq {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 80%;
-        background: #fff;
-    }
+  /* Show all tables inside the outputs container */
+  .outputs1_section_seq table {
+    display: table !important;
+    max-width: 95% !important;       /* No wider than page */
+    table-layout: auto !important;    /* Let table adjust columns */
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+    box-sizing: border-box !important; /* Include padding/border in width */
+    margin: 0 0 2rem 0 !important;             /* Remove margins */
+    background: white;
+  }
 
+  .outputs1_section_seq th,
+  .outputs1_section_seq td {
+    max-width: auto !important;       /* Remove max-width to allow wrapping */
+    min-width: auto !important;
+    white-space: normal !important;   /* Allow text wrap */
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    padding: 2px 3px !important;      /* Optional: reduce padding for print */
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    font-size: 8px !important; /* Adjust font size for print */
+  }
+
+    .outputs1_section_seq table tr > td:first-child,
+  .outputs1_section_seq table tr > th:first-child {
+    font-size: 6px !important;  
+    padding: 2px;/* smaller font size */
+  }
+
+
+  .outputs1_section_seq tr {
+    page-break-inside: avoid !important;
+  }
+
+  /* Hide unwanted elements */
+  .no_print,
+  .buttons_section,
+  .inputs1_section,
+  .links_section,
+  nav,
+  :global(.SequenceScoring_page_selection__8GyGR),
+  :global(.SequenceScoring_page_button__b6xGh) {
+    display: none !important;
+  }
+    .outputs1_section_seq table {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Prevent horizontal overflow on the page */
+  @page {
+    background: white;
+    margin: 10mm 10mm 10mm 0;
+    padding-left: 0 !important;
+  }
+
+  .main-content {
+    background: white !important;
+    padding-left: 0;
+    margin-left: 0;
+  }
 }
+
+

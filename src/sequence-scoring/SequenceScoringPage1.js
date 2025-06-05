@@ -55,6 +55,7 @@ function SequenceScoringPage1() {
     
             window.print();
         }
+// Add this function inside your SequenceScoringPage1 component, before the return statement
 
     // Run Script (core logic)
     const handleRunScript = async () => {
@@ -314,7 +315,7 @@ function SequenceScoringPage1() {
     };
 
     return (
-        <div className={`${styles.class1} ${styles.class2}`}>
+        <div className={styles.sequence_scoring_page1}>
             <div id="inputs1" className={styles.inputs1_section}>
                 <div className={styles.button_wrapper}>
                     <h3>Submit Sequence</h3>
@@ -381,9 +382,10 @@ function SequenceScoringPage1() {
                 >
                     Jump to Extracellular Table
                 </button>
+  
             </div>
             <br />
-            <div>
+            <div className={styles.links_section}>
                 <a href="http://tools.iedb.org/bcell/" target="_blank" rel="noopener noreferrer">
                     http://tools.iedb.org/bcell/
                 </a>
