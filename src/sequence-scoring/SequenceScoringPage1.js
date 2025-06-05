@@ -51,17 +51,10 @@ function SequenceScoringPage1() {
     };
 
     // Print page
-    // Track if we are printing
-    const [isPrinting, setIsPrinting] = useState(false);
-
-    // Print page (hide extracellular summary during print)
     const handlePrint = () => {
-        setIsPrinting(true);
-        setTimeout(() => {
+    
             window.print();
-            setIsPrinting(false);
-        }, 100); // Give React time to update
-    };
+        }
 
     // Run Script (core logic)
     const handleRunScript = async () => {
@@ -287,25 +280,30 @@ function SequenceScoringPage1() {
                     );
                 }
             }
-            if (!isPrinting) {
-                extracellularSummary = (
-                    <div className='no_print' style={{marginTop: "1em"}}>
-                        <h4>Extracellular Region Summary</h4>
-                        <table
-                id="extracellular_summary_table"
-                            border="1"
-                            style={{ borderCollapse: "collapse" }}
-                        >
-                            <tbody>
-                                <tr>
-                                    {extracellularCells}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                );
-            }
+            extracellularSummary = (
+                <div className={styles.no_print} style={{marginTop: "1em"}}>
+                    <h4>Extracellular Region Summary</h4>
+                    <table
+                        id="extracellular_summary_table"
+                        border="1"
+                        style={{ borderCollapse: "collapse" }}
+                    >
+                        <tbody>
+                            <tr>
+                                {extracellularCells}
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button
+                        style={{ marginTop: "1em", padding: "0.5em 1.2em", borderRadius: "4px", border: "none", background: "#6366f1", color: "#fff", cursor: "pointer" }}
+                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    >
+                        Back to Top
+                    </button>
+                </div>
+            );
         }
+        
 
         setTableHtml(
             <div>
@@ -394,8 +392,8 @@ function SequenceScoringPage1() {
                     http://tools.iedb.org/mhcii/
                 </a>
             </div>
-            <div className={styles.outputs1_section_seq}>
-                <div id="legends1" className={styles.legends1_row}>
+            <div id="outputs1_seq" className={styles.outputs1_section_seq}>
+                    <div id="legends1" className={styles.legends1_row}>
                     <div className={styles.legend} id="samples1">{legend}</div>
                 </div>
                 <div id="tableContainer1_seq" className={styles.table_container1_seq} style={{padding:"0 0 5rem 0"}}>{tableHtml}</div>

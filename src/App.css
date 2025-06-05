@@ -84,8 +84,8 @@
   margin-top: 64px;  /* This ensures content never hides under the navbar */
   flex: 1;
   max-width: 90%;
-  padding: 0 5rem 5rem 5rem;
-  margin: 0 auto;
+  padding: 0 2rem 2rem 2rem;
+  margin: 0 4rem 0 4rem;
   width: 100%;
 }
 

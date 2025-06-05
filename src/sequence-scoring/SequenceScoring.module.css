@@ -1,3 +1,4 @@
+/* Layout and Page Structure */
 .page_selector {
     height: 100%;
     width: 100%;
@@ -5,112 +6,133 @@
     padding: 0;
 }
 header {
-	background-color: #333;
-	color: #fff;
-	padding: 10px 0;
-	text-align: center;
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
 }
 nav {
-	display: inline-block;
+    display: inline-block;
 }
 nav a {
-	color: #fff;
-	text-decoration: none;
-	padding: 5px 10px;
+    color: #fff;
+    text-decoration: none;
+    padding: 5px 10px;
 }
 
-.seq_table table{
+/* Table Styling */
+.outputs1_section_seq table,
+#seq-table {
+    width: auto ;           /* Table only as wide as content */
+    max-width: 100% ;       /* Never exceed container */
+    min-width: 0;
+    display: table;
     border-collapse: collapse;
-    margin-bottom: 20px;
-    table-layout: auto;  
-    min-width: 80%;   
+    margin: 16px 0 32px 0;
+    background: #fff;
+    color: #000;
+    table-layout: auto;
     position: relative;
     page-break-inside: avoid;
-    width: auto !important;
-    max-width: none !important;
-    min-width: 0;
-    background: #fff;
-    color: #000000;
-}
-tr:nth-child(4) {
-  font-size: 14px;
-}
-tr:nth-child(5) {
-  font-size: 14px;
-}
-tr:nth-child(6) {
-  font-size: 14px;
+    box-sizing: border-box;
 }
 
- .outputs1_section_seq th, .outputs1_section_seq td {
+.outputs1_section_seq th,
+.outputs1_section_seq td {
     border: 1px solid black;
-    padding: 3px 4px;
+    padding: 6px 8px;                 /* Slightly smaller padding */
     overflow: visible;
     text-overflow: unset;
     white-space: normal;
     text-align: center;
-    font-size: 0.8vw;           /* Use a fixed font size */
+    font-size: 0.9em;
     word-break: break-word;
-    max-width: 90%;
     background: #fff;
-    color: #000000;
-    min-width: 40px;           /* Prevent shrinking below a certain width */
+    color: #000;
+    min-width: 30px;                  /* Smaller min-width */
+    max-width: 120px;                 /* Prevents very wide cells */
+    box-sizing: border-box;
 }
 
-
-th:first-child,
-td:first-child {
-	font-size: 13px
+@media screen and (min-width: 1600px) {
+    .outputs1_section_seq td {
+        font-size: 12px;
+    }
 }
 
+.no_print table{
+    width: 100%;
+}
+
+/* Table Row Font Sizes */
+tr:nth-child(4),
+tr:nth-child(5),
+tr:nth-child(6) {
+    font-size: 14px;
+}
+
+/* Table Container and Section Spacing */
+.outputs1_section_seq {
+    margin: 0 0 1rem 0;
+    overflow-x: visible ;   /* No scroll bar */
+    width: 100% ;
+    max-width: 100% ;
+    display: block;
+    box-sizing: border-box;
+}
+
+.table_container1_seq,
+.table_container2_seq {
+    overflow-x: visible ;
+    width: auto ;
+    max-width: none ;
+    padding: 0;
+    margin: 0;
+}
+
+.table_container2 {
+    min-height: 60px;
+    margin-bottom: 1rem;
+}
+
+/* Legends and Color Keys */
 .legend {
-  display: inline-block;
-  padding: 1rem 1rem;
-  vertical-align: middle;
+    display: inline-block;
+    padding: 1rem;
+    vertical-align: middle;
+}
+.extracellular {
+    background-color: #ADD8E6;
+    padding: 1rem;
+    float: left;
+}
+.helical {
+    background-color: #FF7F7F;
+    padding: 1rem;
+    float: left;
+}
+.cytoplasmic {
+    background-color: #90EE90;
+    padding: 1rem;
+    float: left;
+}
+.threshold {
+    background-color: #FADA5E;
+    padding: 1rem;
+    float: left;
 }
 
-.extracellular { 
-  background-color: #ADD8E6; 
-  padding: 1rem 1rem;
-  float: left;
-}
-.helical { 
-  background-color: #FF7F7F; 
-  padding: 1rem 1rem;
-  float: left;
-}
-.cytoplasmic { 
-  background-color: #90EE90; 
-  padding: 1rem 1rem;
-  float: left;
-}
-.threshold { 
-  background-color: #FADA5E; 
-  padding: 1rem 1rem;
-  float: left;
-}
+/* File Upload and Button Styles */
 .file_upload_container {
-	padding: 0.5rem 0.5rem;
+    padding: 0.5rem;
+}
+.button_wrapper {
+    text-align: left;
+    display: inline-block;
+    margin: 10px;
 }
 
-.button_wrapper {text-align:left;display:inline-block; margin:10px;}
-@media print {
-  body {
-    visibility: hidden;
-  }
-  #outputs1 {
-    visibility: visible;
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-  #outputs2 {
-    visibility: visible;
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-}
+/* Page Selection Buttons */
 .page_selection {
     padding: 1rem;
     display: flex;
@@ -132,26 +154,25 @@ td:first-child {
     background-color: #f0f0f0;
     border-color: #999;
 }
-
 .page_button.active {
     background-color: #007bff;
     color: white;
     border-color: #0056b3;
 }
-
 .page_button.active:hover {
     background-color: #0056b3;
 }
 
-.scoring_page2 {
-    background: #f9fafb;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+/* Section Styling */
+.scoring_page2,
+.outputs2_section {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     max-width: 900px;
     margin: 2rem auto;
     padding: 2rem 2.5rem;
 }
-
 .inputs2_section {
     margin-bottom: 2rem;
     background: #fff;
@@ -159,25 +180,21 @@ td:first-child {
     padding: 1.5rem 1rem;
     box-shadow: 0 1px 4px rgba(0,0,0,0.03);
 }
-
 .upload_container h3 {
     margin-top: 0;
     margin-bottom: 0.5rem;
     color: #333;
 }
-
 .csv_input {
     margin-bottom: 1.5rem;
     display: block;
 }
-
 .sequence_input_row {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-bottom: 0.75rem;
 }
-
 .sequence_file_input,
 .sequence_text_input {
     flex: 1;
@@ -187,7 +204,6 @@ td:first-child {
     font-size: 1rem;
     background: #f8fafc;
 }
-
 .toggle_input_btn {
     padding: 0.4rem 1rem;
     background: #e0e7ef;
@@ -197,18 +213,15 @@ td:first-child {
     cursor: pointer;
     transition: background 0.2s;
 }
-
 .toggle_input_btn:hover {
     background: #c7d2fe;
 }
-
 .buttons_section {
     display: flex;
     gap: 1rem;
     margin-bottom: 2rem;
     justify-content: center;
 }
-
 .add_input_btn,
 .run_script_btn,
 .print_btn {
@@ -219,7 +232,6 @@ td:first-child {
     cursor: pointer;
     transition: background 0.2s;
 }
-
 .add_input_btn {
     background: #10b981;
     color: #fff;
@@ -227,7 +239,6 @@ td:first-child {
 .add_input_btn:hover {
     background: #059669;
 }
-
 .run_script_btn {
     background: #6366f1;
     color: #fff;
@@ -235,7 +246,6 @@ td:first-child {
 .run_script_btn:hover {
     background: #4338ca;
 }
-
 .print_btn {
     background: #f59e42;
     color: #fff;
@@ -244,49 +254,30 @@ td:first-child {
     background: #d97706;
 }
 
-.outputs2_section {
-    background: #fff;
-    border-radius: 8px;
-    padding: 1.5rem 1rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
-
-
+/* Legends Row */
 .legends2_row {
     display: flex;
     gap: 2rem;
     margin-bottom: 1rem;
 }
 
-.table_container2 {
-    min-height: 60px;
-    margin-bottom: 1rem;
-}
+/* Print Styles */
+/* ...existing styles... */
 
-.table_container1_seq, .table_container2_seq {
-    overflow-x: visible !important;
-    width: auto !important;
-    max-width: none !important;
-    padding: 0;
-    margin: 0;
-}
-
-.outputs1_section_seq {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    overflow-x: visible !important;
-    width: auto !important;
-    max-width: none !important;
-}
-
+/* Print Styles */
 @media print {
-    .no_print {
-        display: none !important;
+    body{
+        visibility: hidden;
     }
-}
-@media screen and (min-width: 1600px) {
+    #outputs1_seq, #outputs1_seq * {
+        visibility: visible;
+    }
+    #outputs1_seq {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80%;
+        background: #fff;
+    }
 
-.outputs1_section_seq td{
-     font-size: 13.5px;
-  }
 }
