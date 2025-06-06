@@ -304,6 +304,7 @@ function TiterAnalysis() {
     if (!files.length) return;
     setShowInstructions(false);
     setIsLoading(true);
+    setExcludedCells(new Set());
     try {
       const isMultiFile = files.length > 1;
       const summaries = await Promise.all(
