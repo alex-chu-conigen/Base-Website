@@ -53,9 +53,8 @@
 .summary_card h2,
 .summary_card h4 {
   color: #2e7b34;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  margin-top: 0;
 }
 
 .instructions_card ol {
@@ -165,6 +164,17 @@
   transition: opacity 0.2s;
 }
 
+.card_title {
+  padding: 2;
+  margin: 0 !important;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+}
+.card_title .edit_button {
+  display: inline;
+  text-align: center;
+}
 /* Tables */
 
 .preview_table_mean td {
@@ -295,7 +305,7 @@
 
 
 /* Responsive: Match nav bar stacking and alignment */
-@media (max-width: 930px) {
+@media (max-width: 774px) {
   .sheet_tabs_sticky {
     flex-direction: column;
     align-items: center;
@@ -304,10 +314,6 @@
     padding: 4px 0 2px 0;
   }
 
-  @media (max-width: 800px) {
-    .sheet_tabs_sticky {
-      top: 7.4rem; /* Adjust for smaller screens */
-    }
 
     @media (max-width: 768px) {
       .sheet_tabs_sticky {
@@ -315,15 +321,8 @@
       }
     }
   }
-  .sheet_tabs {
-    width: 100%;
-    max-width: 300px;
-    text-align: center;
-    margin-right: 0;
-    border-radius: 8px;
-    font-size: 1.05rem;
-  }
-}
+
+
 
 @media screen and (min-width: 1600px) {
   .preview_table_titer td, .preview_table_titer
