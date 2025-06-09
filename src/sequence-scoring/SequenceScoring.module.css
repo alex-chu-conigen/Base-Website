@@ -143,7 +143,7 @@ tr:nth-child(6) {
     display: flex;
     gap: 1rem;
     justify-content: center;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
 }
 .page_button {
@@ -328,13 +328,19 @@ tr:nth-child(6) {
     padding-left: 0;
     margin-left: 0;
   }
+
+    .legend {
+    font-size: 12px !important; /* Adjust legend font size for print */
+    padding-bottom: 0.5vw !important; /* Adjust padding for print */
+  }
+
 }
 
 @media print {
   /* Show all tables inside the outputs container */
   .outputs2_section_seq table {
     display: table !important;
-    max-width: 95% !important;       /* No wider than page */
+    /* max-width: 95% !important;       No wider than page */
     table-layout: auto !important;    /* Let table adjust columns */
     border-collapse: collapse !important;
     page-break-inside: avoid !important;
@@ -342,7 +348,6 @@ tr:nth-child(6) {
     margin: 0 0 2rem 0 !important;             /* Remove margins */
     background: white;
   }
-
 
   .outputs2_section_seq th,
   .outputs2_section_seq td {
@@ -357,20 +362,20 @@ tr:nth-child(6) {
     font-size: 8px !important; /* Adjust font size for print */
   }
 
-
     .outputs2_section_seq table tr > td:first-child,
   .outputs2_section_seq table tr > th:first-child {
     font-size: 6px !important;  
     padding: 2px;/* smaller font size */
   }
 
-
-
+  .legend {
+    font-size: 12px !important; /* Adjust legend font size for print */
+    padding-bottom: 0.5vw !important; /* Adjust padding for print */
+  }
 
   .outputs2_section_seq tr {
     page-break-inside: avoid !important;
   }
-
 
   /* Hide unwanted elements */
   .no_print,
@@ -397,14 +402,16 @@ tr:nth-child(6) {
   @page {
     background: white;
     margin: 10mm 10mm 10mm 0;
-    padding-left: 0 !important;
   }
-
 
   .main-content {
     background: white !important;
     padding-left: 0;
     margin-left: 0;
+  }
+
+    * {
+    padding: 0 !important;
   }
 }
 
