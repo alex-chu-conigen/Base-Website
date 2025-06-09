@@ -7,6 +7,7 @@ import ODTiterCard from './odAVG';
 import styles from './TiterAnalysis.module.css';
 import { FinSumCard } from './odAVG';
 import { saveAs } from 'file-saver';
+import { useRef } from 'react';
 
 
 
@@ -231,6 +232,8 @@ function TiterAnalysis() {
   const [sampleNames, setSampleNames] = useState({});
   const DEFAULT_RANGE = 'B25:N33';
   const MULTI_FILE_RANGE = 'A7:M15';
+  const finalTableRef = useRef(null);
+
   
 
   const getCellColor = (value, rowKey, colKey) => {
@@ -903,6 +906,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
 
   const [activeTab, setActiveTab] = useState({ file: 0, sheet: 0 });
 
+
   return (
     <>
     {excelSummaries.length > 0 && (
@@ -1030,9 +1034,19 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
                 >
                   Download Summary
                 </button>
+                
               )}
+              
             </div>
           )}
+              {excelSummaries[activeTab.file]?.sheets?.[activeTab.sheet] && (
+                <button
+                  onClick={() => finalTableRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                  className={styles.ft_button}
+                >
+                  Jump to Final Table
+                </button>
+              )}
         </div>
 
 
@@ -1122,6 +1136,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
             />
           )}
        {/* Final Summary Card */}
+       <div ref={finalTableRef}>
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
           excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
@@ -1136,6 +1151,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
               excludedCells={excludedCells}
             />
           )}
+          </div>
         {/* OD 0.5 Titer Polynomial Fit Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
