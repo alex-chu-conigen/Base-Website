@@ -1,3 +1,4 @@
+import styles from './TiterAnalysis.module.css';
 import React from 'react';
 import Plot from 'react-plotly.js';
 
@@ -412,13 +413,13 @@ if (xFit.length === 3) {
   }
 
   return (
-    <div className="summary-card">
-      <div className="card-header">
-        <div className="card-title">
+    <div className={styles.summary_card}>
+      <div className={styles.card_header}>
+        <div className={styles.card_title}>
           <h2>OD 0.5 Titer (Polynomial Fit, BG subtracted)</h2>
         </div>
       </div>
-      <div className="sheet-summary">
+      <div className={styles.sheet_summary}>
         <h3>Plate #{plateNumber}</h3>
        
         {/* Show trendline data and plot for each sample */}
@@ -586,15 +587,15 @@ else {
 }
 
   return (
-    <div className="summary-card">
-      <div className="card-header">
-        <div className="card-title">
+    <div className={styles.summary_card}>
+      <div className={styles.card_header}>
+        <div className={styles.card_title}>
           <h2>Final Titer (OD=0.5 from Trendline)</h2>
         </div>
       </div>
-      <div className="sheet-summary">
+      <div className={styles.sheet_summary}>
         <h3>Plate #{plateNumber}</h3>
-        <div className="preview-table-titer">
+        <div className={styles.preview_table_titer}>
           <table>
             <thead>
               <tr>

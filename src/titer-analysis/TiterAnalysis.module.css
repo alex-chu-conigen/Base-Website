@@ -1,10 +1,6 @@
-/* Base Theme */
-body {
-    padding: 0 !important;
-    margin: 0 !important;
-}
+/* Titer Analysis */
 
-.titer-header {
+.titer_header {
   text-align: center;
   margin: 2rem 0 1.5rem;
   font-size: 2.2rem;
@@ -13,17 +9,17 @@ body {
   letter-spacing: 0.02em;
 }
 
-.main-content1 {
+.main_content1 {
   max-width: 100%;
   margin: 0 auto;
   padding: 1.5rem;
   background: white
 }
 /* Cards & Sections */
-.upload-section,
-.summary-card,
-.sheet-summary,
-.card-header {
+.upload_section,
+.summary_card,
+.sheet_summary,
+.card_header {
   border: 1px solid #ffd6a0;
   border-radius: 10px;
   padding: 1.5rem;
@@ -32,15 +28,15 @@ body {
   color: #000;
 }
 
-.summary-card {
+.summary_card {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.upload-section {
+.upload_section {
     box-shadow: 0 2px 6px rgba(89, 89, 89, 0.12);
 }
 
-.instructions-card {
+.instructions_card {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   border: 1px solid #59d462;
   border-radius: 10px;
@@ -52,41 +48,41 @@ body {
   margin: 0 auto 2rem;
 }
 
-.instructions-card h2,
-.card-title h2,
-.summary-card h2,
-.summary-card h4 {
+.instructions_card h2,
+.card_title h2,
+.summary_card h2,
+.summary_card h4 {
   color: #2e7b34;
   font-size: 1.3rem;
   font-weight: bold;
   margin-top: 0;
 }
 
-.instructions-card ol {
+.instructions_card ol {
   padding-left: 1.2em;
   margin: 0;
 }
 
-.instructions-card li {
+.instructions_card li {
   margin-bottom: 0.5em;
   font-size: 1.05rem;
   list-style-type: none ;
 }
 
-.upload-section {
+.upload_section {
   background: #ffffff;
 }
 
-.file-controls {
+.file_controls {
   background: #ffffff;
   justify-content: center;
 }
 
-.file-input {
+.file_input {
   display: none; /* Hide the native input */
 }
 
-.custom-file-upload {
+.custom_file_upload {
   background: #ffb74d;
   color: #fff;
   border: none;
@@ -100,16 +96,16 @@ body {
   box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
 }
 
-.custom-file-upload:hover {
+.custom_file_upload:hover {
   background: #ffa726;
 }
 
 
 /* Buttons */
-.download-button,
-.save-button,
-.print-button,
-.cancel-button {
+.download_button,
+.save_button,
+.print_button,
+.cancel_button {
   background: #ffb74d;
   color: #fff;
   border: none;
@@ -122,28 +118,36 @@ body {
   transition: background 0.2s, box-shadow 0.2s;
 }
 
-.download-button:hover,
-.save-button:hover,
-.print-button:hover {
+.download_button:hover,
+.save_button:hover,
+.print_button:hover {
   background: #ffa726;
 }
 
-.cancel-button {
+.cancel_button {
   background: #ff7043;
 }
 
-.cancel-button:hover {
+.cancel_button:hover {
   background: #f4511e;
 }
 
-.file-input {
+.file_input {
   display: none;
 }
 
-
+.edit_button {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 0.9em;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
 
 /* Tables */
-.preview-table-titer th,
+.preview_table_titer th,
 th {
   background: #ffe8c9;
   color: #000000;
@@ -152,7 +156,7 @@ th {
   text-align: left;
 }
 
-.preview-table-titer td {
+.preview_table_titer td {
   color: black;
   font-size: 1.2vw;
   padding: 4px 6px;
@@ -160,19 +164,19 @@ th {
   text-align: center;
 }
 
-.preview-table-titer tr:nth-child(even) {
+.preview_table_titer tr:nth-child(even) {
   background: #f4f4f4 !important;
 }
 
-.preview-table-titer td:hover,
-.preview-table-titer tr:hover td {
+.preview_table_titer td:hover,
+.preview_table_titer tr:hover td {
   background: #fff;
 }
 
-.highlight-yellow { background: #ffeeac !important; }
-.highlight-green { background: #cbf1c7 !important; }
+.highlight_yellow { background: #ffeeac !important; }
+.highlight_green { background: #cbf1c7 !important; }
 
-.excluded-cell {
+.excluded_cell {
   background: #ffb3b3 !important;
   color: #b22222 !important;
   text-decoration: line-through;
@@ -182,7 +186,7 @@ th {
 }
 
 /* Sticky Tabs */
-.sheet-tabs-sticky {
+.sheet_tabs_sticky {
   position: sticky;
   top: 4.93rem;
   width: 100%;
@@ -194,7 +198,7 @@ th {
 }
 
 /* Sheet Tabs */
-.sheet-tab {
+.sheetTab {
   background: #d4edda;
   color: #256029;
   border: 1px solid #b7e4c7;
@@ -211,13 +215,13 @@ th {
   transition: background 0.2s, color 0.2s;
 }
 
-.sheet-tab .edit-button {
+.sheetTab .edit_button {
   position: absolute;
   right: 0.7em;
   top: 50%;
   transform: translateY(-50%);
   background: none;
-  border: none;
+  border: none !important;
   color: #888;
   font-size: 0.9em;
   cursor: pointer;
@@ -226,17 +230,17 @@ th {
   z-index: 2;
 }
 
-.sheet-tab:hover .edit-button {
+.sheetTab:hover .edit_button {
   opacity: 1;
 }
 
-.sheet-tab:hover,
-.sheet-tab:focus {
+.sheetTabs:hover,
+.sheetTab:focus {
   background: #b7e4c7;
   color: #155724;
 }
 
-.sheet-tab.active {
+.sheet_tabs.active {
   background: #81c784;
   color: #fff;
   border-bottom: 2px solid #388e3c;
@@ -247,7 +251,7 @@ th {
 /* Responsive */
 
 @media screen and (min-width: 1600px) {
-  .preview-table-titer td {
+  .preview_table_titer td {
     font-size: 20px;
   }
 }
@@ -262,7 +266,7 @@ th {
 
 /* Responsive: Match nav bar stacking and alignment */
 @media (max-width: 930px) {
-  .sheet-tabs-sticky {
+  .sheet_tabs_sticky {
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
@@ -271,17 +275,17 @@ th {
   }
 
   @media (max-width: 800px) {
-    .sheet-tabs-sticky {
+    .sheet_tabs_sticky {
       top: 7.4rem; /* Adjust for smaller screens */
     }
 
     @media (max-width: 768px) {
-      .sheet-tabs-sticky {
+      .sheet_tabs_sticky {
         top: 20rem; /* Further adjust for very small screens */
       }
     }
   }
-  .sheet-tab {
+  .sheet_tabs {
     width: 100%;
     max-width: 300px;
     text-align: center;
@@ -292,7 +296,7 @@ th {
 }
 
 @media screen and (min-width: 1600px) {
-  .preview-table-titer td, .preview-table-titer
+  .preview_table_titer td, .preview_table_titer
 td{
      font-size: 20px;
   }

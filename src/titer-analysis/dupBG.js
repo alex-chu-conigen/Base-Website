@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import styles from './TiterAnalysis.module.css';
+
 
 function SummaryCard({
   summary,
@@ -104,17 +106,17 @@ if (summary && summary.preview && summary.preview.length > 0) {
     <div
       ref={setNodeRef}
       style={style}
-      className="summary-card"
+      className={styles.summary_card}
     >
-      <div className="card-header">
-        <div className="card-title">
+      <div className={styles.card_header}>
+        <div className={styles.card_title}>
           <h2>Mean of Duplicate - Background</h2>
         </div>
       </div>
       {summary && summary.columns && summary.preview ? (
-        <div className="sheet-summary">
+        <div className={styles.sheet_summary}>
           <h3>Plate #{plateNumber}</h3>
-          <div className="preview-table-mean">
+          <div className={styles.preview_table_mean}>
             <table>
               <thead>
                 <tr>

@@ -1,3 +1,4 @@
+import styles from './TiterAnalysis.module.css';
 import React, { useState } from 'react';
 
 
@@ -52,15 +53,15 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
 
   // Render
   return (
-    <div className="summary-card">
-      <div className="card-header">
-        <div className="card-title">
+    <div className={styles.summary_card}>
+      <div className={styles.card_header}>
+        <div className={styles.card_title}>
           <h2>Percent CV</h2>
         </div>
       </div>
-      <div className="sheet-summary">
+      <div className={styles.sheet_summary}>
         <h3>Plate #{plateNumber}</h3>
-        <div className="preview-table-titer">
+        <div className={styles.preview_table_titer}>
           <table>
             <thead>
               <tr>
@@ -115,7 +116,7 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
         {/* Raw Data Table with exclusion buttons */}
         <div style={{ marginTop: 32 }}>
           <h4>Raw Data (click to exclude/include values)</h4>
-          <div className="preview-table-titer">
+          <div className={styles.preview_table_titer}>
             <table>
               <thead>
                 <tr>

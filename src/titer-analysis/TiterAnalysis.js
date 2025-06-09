@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import PercentCVCard from './percentCV';
 import SummaryCard from './dupBG';
 import ODTiterCard from './odAVG';
-import './TiterAnalysis.css';
+import styles from './TiterAnalysis.module.css';
 import { FinSumCard } from './odAVG';
 import { saveAs } from 'file-saver';
 
@@ -84,28 +84,28 @@ function RawTableCard({
 
   // Render header row: label column, then sample names (each spanning 2 columns)
   return (
-    <div className="summary-card">
-      <div className="card-header">
-        <div className="card-title">
+    <div className={styles.summary_card}>
+      <div className={styles.card_header}>
+        <div className={styles.card_title}>
           {isEditingFileName ? (
             <form onSubmit={handleFileNameEditSubmit} style={{ display: "inline-block" }}>
               <input
                 type="text"
                 value={editFileNameValue}
                 onChange={e => setEditFileNameValue(e.target.value)}
-                className="name-edit-input"
+                className={styles.name_edit_input}
                 autoFocus
                 style={{ fontSize: "1.1rem", fontWeight: "bold" }}
               />
-              <button type="submit" className="save-button" style={{ marginLeft: 4 }}>Save</button>
-              <button type="button" className="cancel-button" onClick={handleFileNameEditCancel} style={{ marginLeft: 4 }}>Cancel</button>
+              <button type="submit" className={styles.save_button} style={{ marginLeft: 4 }}>Save</button>
+              <button type="button" className={styles.cancel_button} onClick={handleFileNameEditCancel} style={{ marginLeft: 4 }}>Cancel</button>
             </form>
           ) : (
             <>
               <h2>{customFileName || summary.fileName}</h2>
               <button
                 onClick={handleFileNameEdit}
-                className="edit-button"
+                className={styles.edit_button}
                 style={{ marginLeft: 8 }}
                 title="Edit file name"
               >✎</button>
@@ -120,19 +120,19 @@ function RawTableCard({
           type="text"
           value={editPlateNameValue}
           onChange={e => setEditPlateNameValue(e.target.value)}
-          className="name-edit-input"
+          className={styles.name_edit_input}
           autoFocus
           style={{ fontSize: "1rem" }}
         />
-        <button type="submit" className="save-button" style={{ marginLeft: 2, fontSize: "0.9rem" }}>Save</button>
-        <button type="button" className="cancel-button" onClick={handlePlateNameEditCancel} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Cancel</button>
+        <button type="submit" className={styles.save_button} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Save</button>
+        <button type="button" className={styles.cancel_button} onClick={handlePlateNameEditCancel} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Cancel</button>
       </form>
     ) : (
       <>
         <h3 style={{ display: "inline" }}>{plateName}</h3>
         <button
           onClick={handlePlateNameEdit}
-          className="edit-button"
+          className={styles.edit_button}
           style={{ marginLeft: 4, fontSize: "0.9rem" }}
           title="Edit plate name"
         >✎</button>
@@ -141,8 +141,8 @@ function RawTableCard({
   </div>
         </div>
       </div>
-      <div className="sheet-summary">
-        <div className="preview-table-titer">
+      <div className={styles.sheet_summary}>
+        <div className={styles.preview_table_titer}>
           <table>
             <thead>
               <tr>
@@ -155,19 +155,19 @@ function RawTableCard({
                           type="text"
                           value={editSampleValue}
                           onChange={e => setEditSampleValue(e.target.value)}
-                          className="name-edit-input"
+                          className={styles.name_edit_input}
                           autoFocus
                           style={{ fontSize: "0.5vw" }}
                         />
-                        <button type="submit" className="save-button" style={{ marginLeft: 2, fontSize: "0.9rem" }}>Save</button>
-                        <button type="button" className="cancel-button" onClick={handleSampleEditCancel} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Cancel</button>
+                        <button type="submit" className={styles.save_button} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Save</button>
+                        <button type="button" className={styles.cancel_button} onClick={handleSampleEditCancel} style={{ marginLeft: 2, fontSize: "0.9rem" }}>Cancel</button>
                       </form>
                     ) : (
                       <>
                         {sampleNames[idx] || `Sample ${idx + 1}`}
                         <button
                           onClick={() => handleSampleEdit(idx)}
-                          className="edit-button"
+                          className={styles.edit_button}
                           style={{ marginLeft: 4, fontSize: "0.9rem" }}
                           title="Edit sample name"
                         >✎</button>
@@ -907,7 +907,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
   return (
     <>
     {excelSummaries.length > 0 && (
-<div className="sheet-tabs sheet-tabs-sticky">
+<div className={`${styles.sheet_tabs} ${styles.sheet_tabs_sticky}`}>
   
   {excelSummaries.map((summary, fileIndex) =>
     summary.sheets.map((sheet, sheetIndex) => {
@@ -933,7 +933,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
                 type="text"
                 value={editingTabValue}
                 onChange={e => setEditingTabValue(e.target.value)}
-                className="name-edit-input"
+                className={styles.name_edit_input}
                 style={{ width: '90px', fontSize: '1rem' }}
                 autoFocus
                 onBlur={() => {
@@ -944,7 +944,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
             </form>
           ) : (
             <button
-              className={`sheet-tab${isActive ? ' active' : ''}`}
+              className={`${styles.sheetTab} ${isActive ? styles.active : ''}`}
               onClick={() => setActiveTab({ file: fileIndex, sheet: sheetIndex })}
               onDoubleClick={() => {
                 setEditingTab({ file: fileIndex, sheet: sheetIndex });
@@ -955,7 +955,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
             >
               {tabLabel}
               <span
-                className="edit-button"
+                className={styles.edit_button}
                 style={{
                   marginLeft: 6,
                   fontSize: '0.9em',
@@ -985,10 +985,10 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
 </div>
 )}
 
-    <div className="excel-processor">
-        <h1 className="titer-header">Titer Analysis</h1>
+    <div className={styles.excel_processor}>
+        <h1 className={styles.titer_header}>Titer Analysis</h1>
       {showInstructions && (
-        <div className="instructions-card">
+        <div className={styles.instructions_card}>
           <h2>Instructions</h2>
           <ol>
             <li>Upload one or more Excel files (.xlsx or .xls) using the file input below.</li>
@@ -999,9 +999,9 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
           </ol>
         </div>
       )}
-      <div className="upload-section">
-        <div className="file-controls">
-          <label htmlFor="file-upload" className="custom-file-upload">
+      <div className={styles.upload_section}>
+        <div className={styles.file_controls}>
+          <label htmlFor="file-upload" className={styles.custom_file_upload}>
             Upload Excel Files
           </label>
           <input
@@ -1010,28 +1010,28 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
             multiple
             accept=".xlsx,.xls"
             onChange={handleFileUpload}
-            className="file-input"
+            className={styles.file_input}
           />
           {excelSummaries.length > 0 && (
-            <div className="download-section1">
+            <div className={styles.download_section1}>
               {showFileNameInput ? (
-                <form onSubmit={handleFileNameSubmit} className="file-name-form">
+                <form onSubmit={handleFileNameSubmit} className={styles.file_name_form}>
                   <input
                     type="text"
                     value={fileName}
                     onChange={handleFileNameChange}
                     placeholder="Enter file name"
-                    className="file-name-input"
+                    className={styles.file_name_input}
                     autoFocus
                   />
-                  <button type="submit" className="save-button">Save</button>
+                  <button type="submit" className={styles.save_button}>Save</button>
                   <button
                     type="button"
                     onClick={() => {
                       setShowFileNameInput(false);
                       setFileName('');
                     }}
-                    className="cancel-button"
+                    className={styles.cancel_button}
                   >
                     Cancel
                   </button>
@@ -1039,7 +1039,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
               ) : (
                 <button
                   onClick={handleDownloadClick}
-                  className="download-button"
+                  className={styles.download_button}
                 >
                   Download Summary
                 </button>
@@ -1052,12 +1052,12 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
       </div>
 
       {isLoading && (
-        <div className="loading">
+        <div className={styles.loading}>
           Processing files...
         </div>
       )}
 
-            <div className="main-content1">
+            <div className={styles.main_content1}>
        {/* Raw Table Card */}
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
