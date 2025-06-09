@@ -955,18 +955,6 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
               {tabLabel}
               <span
                 className={styles.edit_button}
-                style={{
-                  marginLeft: 6,
-                  fontSize: '0.9em',
-                  cursor: 'pointer',
-                  color: '#888',
-                  background: 'none',
-                  border: 'none',
-                  position: 'absolute',
-                  right: 6,
-                  top: '50%',
-                  transform: 'translateY(-50%)'
-                }}
                 onClick={e => {
                   e.stopPropagation();
                   setEditingTab({ file: fileIndex, sheet: sheetIndex });
