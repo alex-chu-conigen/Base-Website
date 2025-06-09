@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { diffChars } from 'diff';
+import styles from './SequenceScoring.module.css';
+
 
 function SequenceScoringPage2() {
     const [inputs2, setInputs2] = useState([{ type: 'file', value: '' }]);
@@ -92,10 +94,10 @@ function SequenceScoringPage2() {
                     ))}
                 </div>
                 <div>
-                    <span className="extracellular">Extracellular</span>
-                    <span className="helical">Helical</span>
-                    <span className="cytoplasmic">Cytoplasmic</span>
-                    <span className="threshold">Above Score Threshold</span>
+                    <span className={styles.extracellular}>Extracellular</span>
+                    <span className={styles.helical}>Helical</span>
+                    <span className={styles.cytoplasmic}>Cytoplasmic</span>
+                    <span className={styles.threshold}>Above Score Threshold</span>
                 </div>
             </>
         );
@@ -278,53 +280,53 @@ function SequenceScoringPage2() {
     const handlePrint = () => window.print();
 
     return (
-        <div className="page scoring-page2">
-            <div id="inputs2" className="inputs2-section">
-                <div className="button-wrapper upload-container">
+        <div className={`${styles.page} ${styles.scoring_page2}`}>
+            <div id="inputs2" className={styles.inputs2_section}>
+                <div className={`${styles.button_wrapper} ${styles.upload_container}`}>
                     <h3>Reference CSV</h3>
                     <input
                         type="file"
                         id="csv"
                         accept=".csv"
                         onChange={e => setCsvRefFile(e.target.files[0])}
-                        className="sequence-file-input"
+                        className={styles.sequence_file_input}
                     />
                     <h3>Sequences</h3>
                     {inputs2.map((input, idx) => (
-                        <div className="file-upload-container sequence-input-row" key={idx}>
+                        <div className={`${styles.file_upload_container} ${styles.sequence_input_row}`} key={idx}>
                             {input.type === 'file' ? (
                                 <input
                                     type="file"
-                                    className="upload-input sequence-file-input"
+                                    className={`${styles.upload_input} ${styles.sequence_file_input}`}
                                     accept=".txt"
                                     onChange={e => handleInput2Change(idx, e)}
                                 />
                             ) : (
                                 <input
                                     type="text"
-                                    className="upload-input sequence-text-input"
+                                    className={`${styles.upload_input} ${styles.sequence_text_input}`}
                                     placeholder="Enter UniProt ID"
                                     value={typeof input.value === 'string' ? input.value : ''}
                                     onChange={e => handleInput2Change(idx, e)}
                                 />
                             )}
-                            <button type="button" className="toggle-input-btn" onClick={() => handleToggleInput2(idx)}>
+                            <button type="button" className={styles.toggle_input_btn} onClick={() => handleToggleInput2(idx)}>
                                 Toggle Input
                             </button>
                         </div>
                     ))}
                 </div>
             </div>
-            <div id="buttons2" className="buttons-section">
-                <button className="add-input-btn" onClick={handleAddInput2}>Add New Input</button>
-                <button className="run-script-btn" onClick={handleRunScript}>Run Script</button>
-                <button className="print-btn" onClick={handlePrint}>Print this page</button>
+            <div id="buttons2" className={styles.buttons_section}>
+                <button className={styles.add_input_btn} onClick={handleAddInput2}>Add New Input</button>
+                <button className={styles.run_script_btn} onClick={handleRunScript}>Run Script</button>
+                <button className={styles.print_btn} onClick={handlePrint}>Print this page</button>
             </div>
-            <div id="outputs2" className="outputs2-section">
-                <div id="legends2" className="legends2-row">
-                    <div className="legend" id="samples2">{legend}</div>
+            <div id="outputs2" className={styles.outputs2_section_seq}>
+                <div id="legend" className={styles.legends2_row}>
+                    <div className={styles.legend} id="samples2">{legend}</div>
                 </div>
-                <div id="tableContainer2" className="table-container2">{tableHtml}</div>
+                <div id="tableContainer2" className={styles.table_container2_seq}>{tableHtml}</div>
             </div>
         </div>
     );

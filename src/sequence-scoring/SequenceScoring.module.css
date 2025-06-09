@@ -21,7 +21,7 @@ nav a {
 }
 
 /* Table Styling */
-.outputs1_section_seq table,
+.outputs1_section_seq table, .outputs2_section_seq table,
 #seq-table {
     width: auto ;           /* Table only as wide as content */
     max-width: 100% ;       /* Never exceed container */
@@ -38,7 +38,9 @@ nav a {
 }
 
 .outputs1_section_seq th,
-.outputs1_section_seq td {
+.outputs1_section_seq td,
+.outputs2_section_seq th,
+.outputs2_section_seq td {
     border: 1px solid black;
     padding: 6px 8px;                 /* Slightly smaller padding */
     overflow: visible;
@@ -55,7 +57,7 @@ nav a {
 }
 
 @media screen and (min-width: 1600px) {
-    .outputs1_section_seq td {
+    .outputs1_section_seq td, .outputs2_section_seq td{
         font-size: 12px;
     }
 }
@@ -72,7 +74,7 @@ tr:nth-child(6) {
 }
 
 /* Table Container and Section Spacing */
-.outputs1_section_seq {
+.outputs1_section_seq, .outputs2_section_seq {
     margin: 0 0 1rem 0;
     overflow-x: visible ;   /* No scroll bar */
     width: 100% ;
@@ -90,7 +92,7 @@ tr:nth-child(6) {
     margin: 0;
 }
 
-.table_container2 {
+.table_container2_seq {
     min-height: 60px;
     margin-bottom: 1rem;
 }
@@ -100,6 +102,9 @@ tr:nth-child(6) {
     display: inline-block;
     padding: 1rem;
     vertical-align: middle;
+}
+.legends2_row{
+    justify-content: center;
 }
 .extracellular {
     background-color: #ADD8E6;
@@ -164,16 +169,8 @@ tr:nth-child(6) {
 }
 
 /* Section Styling */
-.scoring_page2,
-.outputs2_section {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 2rem 2.5rem;
-}
-.inputs2_section {
+
+.inputs2_section, .inputs1_section {
     margin-bottom: 2rem;
     background: #fff;
     border-radius: 8px;
@@ -332,5 +329,86 @@ tr:nth-child(6) {
     margin-left: 0;
   }
 }
+
+@media print {
+  /* Show all tables inside the outputs container */
+  .outputs2_section_seq table {
+    display: table !important;
+    max-width: 95% !important;       /* No wider than page */
+    table-layout: auto !important;    /* Let table adjust columns */
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+    box-sizing: border-box !important; /* Include padding/border in width */
+    margin: 0 0 2rem 0 !important;             /* Remove margins */
+    background: white;
+  }
+
+
+  .outputs2_section_seq th,
+  .outputs2_section_seq td {
+    max-width: auto !important;       /* Remove max-width to allow wrapping */
+    min-width: auto !important;
+    white-space: normal !important;   /* Allow text wrap */
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    padding: 2px 3px !important;      /* Optional: reduce padding for print */
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    font-size: 8px !important; /* Adjust font size for print */
+  }
+
+
+    .outputs2_section_seq table tr > td:first-child,
+  .outputs2_section_seq table tr > th:first-child {
+    font-size: 6px !important;  
+    padding: 2px;/* smaller font size */
+  }
+
+
+
+
+  .outputs2_section_seq tr {
+    page-break-inside: avoid !important;
+  }
+
+
+  /* Hide unwanted elements */
+  .no_print,
+  .buttons_section,
+  .inputs2_section,
+  .links_section,
+  nav,
+  :global(.SequenceScoring_page_selection__8GyGR),
+  :global(.SequenceScoring_page_button__b6xGh) {
+    display: none !important;
+  }
+    .outputs2_section_seq table {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+
+  /* Prevent horizontal overflow on the page */
+  @page {
+    background: white;
+    margin: 10mm 10mm 10mm 0;
+    padding-left: 0 !important;
+  }
+
+
+  .main-content {
+    background: white !important;
+    padding-left: 0;
+    margin-left: 0;
+  }
+}
+
+
+
 
 
