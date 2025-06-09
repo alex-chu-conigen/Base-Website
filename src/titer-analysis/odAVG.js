@@ -594,7 +594,7 @@ else {
       </div>
       <div className="sheet-summary">
         <h3>Plate #{plateNumber}</h3>
-        <div className="preview-table">
+        <div className="preview-table-titer">
           <table>
             <thead>
               <tr>

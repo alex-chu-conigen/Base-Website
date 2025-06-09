@@ -114,7 +114,7 @@ if (summary && summary.preview && summary.preview.length > 0) {
       {summary && summary.columns && summary.preview ? (
         <div className="sheet-summary">
           <h3>Plate #{plateNumber}</h3>
-          <div className="preview-table">
+          <div className="preview-table-mean">
             <table>
               <thead>
                 <tr>

@@ -1001,7 +1001,11 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
       )}
       <div className="upload-section">
         <div className="file-controls">
+          <label htmlFor="file-upload" className="custom-file-upload">
+            Upload Excel Files
+          </label>
           <input
+            id="file-upload"
             type="file"
             multiple
             accept=".xlsx,.xls"

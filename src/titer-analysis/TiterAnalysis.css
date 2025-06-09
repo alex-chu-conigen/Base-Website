@@ -1,67 +1,92 @@
-/* Pastel Orange Theme */
-body, .excel-processor {
-  background: #f5f5f5;
+/* Base Theme */
+body {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .titer-header {
   text-align: center;
-  margin: 2rem 0 1.5rem 0;
+  margin: 2rem 0 1.5rem;
   font-size: 2.2rem;
-  color: #d97706;
+  color: #206625;
   font-weight: bold;
   letter-spacing: 0.02em;
 }
 
-/* Instructions Card */
-.instructions-card {
-  background: #fff1de;
-  border: 1px solid #ffd6a0;
-  border-radius: 12px;
-  max-width: 700px;
-  margin: 0 auto 2rem auto;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 8px rgba(255, 183, 77, 0.08);
-  color: #a15c00;
+.main-content1 {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: white
 }
-.instructions-card h2 {
-  margin-top: 0;
-  color: #d97706;
+/* Cards & Sections */
+.upload-section,
+.summary-card,
+.sheet-summary,
+.card-header {
+  border: 1px solid #ffd6a0;
+  border-radius: 10px;
+  padding: 1.5rem;
+  background: #fff;
+  margin-bottom: 1.5rem;
+  color: #000;
+}
+
+.summary-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.upload-section {
+    box-shadow: 0 2px 6px rgba(89, 89, 89, 0.12);
+}
+
+.instructions-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid #59d462;
+  border-radius: 10px;
+  padding: 1.5rem;
+  background: #fff;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+  color: #000;
+  margin: 0 auto 2rem;
+}
+
+.instructions-card h2,
+.card-title h2,
+.summary-card h2,
+.summary-card h4 {
+  color: #2e7b34;
   font-size: 1.3rem;
   font-weight: bold;
+  margin-top: 0;
 }
+
 .instructions-card ol {
-  margin: 0;
   padding-left: 1.2em;
+  margin: 0;
 }
+
 .instructions-card li {
   margin-bottom: 0.5em;
   font-size: 1.05rem;
+  list-style-type: none ;
 }
 
-/* Controls & Upload */
 .upload-section {
-  background: #fff3e0;
-  border-radius: 10px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border: 1px solid #ffd6a0;
-  box-shadow: 0 1px 4px rgba(255, 183, 77, 0.07);
+  background: #ffffff;
 }
 
 .file-controls {
-  background: #fff7f0;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 1px 4px rgba(255, 183, 77, 0.05);
-  border: 1px solid #ffe0b2;
+  background: #ffffff;
   justify-content: center;
 }
 
-/* Buttons */
-.download-button,
-.save-button,
-.cancel-button,
-.print-button {
+.file-input {
+  display: none; /* Hide the native input */
+}
+
+.custom-file-upload {
   background: #ffb74d;
   color: #fff;
   border: none;
@@ -70,119 +95,107 @@ body, .excel-processor {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
+  display: inline-block;
   transition: background 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
 }
+
+.custom-file-upload:hover {
+  background: #ffa726;
+}
+
+
+/* Buttons */
+.download-button,
+.save-button,
+.print-button,
+.cancel-button {
+  background: #ffb74d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
 .download-button:hover,
 .save-button:hover,
 .print-button:hover {
   background: #ffa726;
 }
+
 .cancel-button {
   background: #ff7043;
 }
+
 .cancel-button:hover {
   background: #f4511e;
 }
 
-/* Table & Card Styling */
-.summary-card,
-.sheet-summary,
-.preview-table-titer,
-.percent-cv-card,
-.card-header {
-  background: #ffffff;
-  border: 1px solid #ffd6a0;
-  border-radius: 10px;
-  box-shadow: 0 1px 6px rgba(255, 183, 77, 0.07);
-  margin-bottom: 1.5rem;
-  padding: 1.2rem;
-  
+.file-input {
+  display: none;
 }
 
-.summary-card h2,
-.card-title h2 {
-  color: #d97706;
-}
 
+
+/* Tables */
 .preview-table-titer th,
 th {
-  background: #ffe5c2;
-  color: #a15c00;
-}
-
-.preview-table-titer th,
-.preview-table-titer td {
+  background: #ffe8c9;
+  color: #000000;
   padding: 4px 6px;
   border: 1px solid #ddd;
   text-align: left;
 }
 
-.preview-table-titer tr:nth-child(even),
-tr:nth-child(even) {
-  background: #fff3e0;
-}
-
-.preview-table-titer td, .preview-table-titer
-td {
-  background: #fff8f2;
-  color: #a15c00;
+.preview-table-titer td {
+  color: black;
   font-size: 1.2vw;
+  padding: 4px 6px;
+  border: 1px solid #cfcfcf;
+  text-align: center;
 }
 
-.preview-table-titer td:hover, .preview-table-titer
-tr:hover td {
-  background: #ffffff;
+.preview-table-titer tr:nth-child(even) {
+  background: #f4f4f4 !important;
+}
+
+.preview-table-titer td:hover,
+.preview-table-titer tr:hover td {
+  background: #fff;
 }
 
 .highlight-yellow { background: #ffeeac !important; }
 .highlight-green { background: #cbf1c7 !important; }
 
 .excluded-cell {
-  background: #ffb3b3 !important; /* Brighter pastel red for excluded cells */
-  color: #b22222 !important;      /* Stronger red text for visibility */
+  background: #ffb3b3 !important;
+  color: #b22222 !important;
   text-decoration: line-through;
   font-weight: bold;
-  border: 2px solid #ff7043 !important; /* Orange-red border for extra emphasis */
+  border: 2px solid #ff7043 !important;
   box-shadow: 0 0 0 2px #ffd6a0;
 }
-
 
 /* Sticky Tabs */
 .sheet-tabs-sticky {
   position: sticky;
   top: 4.93rem;
+  width: 100%;
   z-index: 1000;
-  background: #fff7f0;
-  padding: 8px 0 4px 0;
-  border-bottom: 2px solid #ffd6a0;
-  border-radius: 0 0 8px 8px
-
+  background: #ffffff;
+  padding: 8px 0 4px;
+  border-bottom: 3px solid #ffd6a0;
+  border-radius: 0 0 8px 8px;
 }
 
-button.sheet-tab {
-  background: #ffe0b2;           /* Pastel orange */
-  color: #a15c00;
-  border: 1px solid #ffd6a0;
-  border-radius: 8px 8px 0 0;
-  /* padding: 0.5rem 1.2rem; */
-  margin-right: 0.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-}
-
-/* Misc */
-.loading {
-  color: #d97706;
-  font-style: italic;
-  text-align: center;
-  margin: 1.5rem 0;
-}
-
+/* Sheet Tabs */
 .sheet-tab {
-  background: #d4edda;           /* Pastel green */
+  background: #d4edda;
   color: #256029;
   border: 1px solid #b7e4c7;
   border-radius: 8px 8px 0 0;
@@ -191,11 +204,11 @@ button.sheet-tab {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(44, 130, 87, 0.07);
-  padding-right: 3em; /* Add extra space for the edit icon */
+  padding-right: 3em;
   position: relative;
   overflow: hidden;
+  transition: background 0.2s, color 0.2s;
 }
 
 .sheet-tab .edit-button {
@@ -203,12 +216,11 @@ button.sheet-tab {
   right: 0.7em;
   top: 50%;
   transform: translateY(-50%);
-  margin-left: 0;
   background: none;
   border: none;
   color: #888;
-  cursor: pointer;
   font-size: 0.9em;
+  cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s;
   z-index: 2;
@@ -231,6 +243,22 @@ button.sheet-tab {
   font-weight: bold;
   z-index: 2;
 }
+
+/* Responsive */
+
+@media screen and (min-width: 1600px) {
+  .preview-table-titer td {
+    font-size: 20px;
+  }
+}
+
+.loading {
+  color: #d97706;
+  font-style: italic;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
 
 /* Responsive: Match nav bar stacking and alignment */
 @media (max-width: 930px) {

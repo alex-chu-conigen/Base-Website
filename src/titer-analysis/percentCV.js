@@ -60,7 +60,7 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
       </div>
       <div className="sheet-summary">
         <h3>Plate #{plateNumber}</h3>
-        <div className="preview-table">
+        <div className="preview-table-titer">
           <table>
             <thead>
               <tr>
@@ -97,8 +97,8 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
           <td
             key={sampleIdx}
             style={{
-              background: !isNaN(cvNum) && cvNum > 20 ? '#baf7f4' : undefined,
-              color: !isNaN(cvNum) && cvNum > 20 ? '#508582' : undefined,
+              background: !isNaN(cvNum) && cvNum > 20 ? 'rgb(203, 241, 199)' : undefined,
+              color: !isNaN(cvNum) && cvNum > 20 ? 'rgb(12, 60, 6)' : undefined,
 
               fontWeight: !isNaN(cvNum) && cvNum > 20 ? 600 : undefined,
             }}
@@ -115,7 +115,7 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
         {/* Raw Data Table with exclusion buttons */}
         <div style={{ marginTop: 32 }}>
           <h4>Raw Data (click to exclude/include values)</h4>
-          <div className="preview-table">
+          <div className="preview-table-titer">
             <table>
               <thead>
                 <tr>
@@ -126,15 +126,7 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
                     </th>
                   ))}
                 </tr>
-                <tr>
-                  <th></th>
-                  {Array.from({ length: sampleCount }).map((_, idx) => (
-                    <React.Fragment key={idx}>
-                      <th>1</th>
-                      <th>2</th>
-                    </React.Fragment>
-                  ))}
-                </tr>
+
               </thead>
               <tbody>
               {summary.preview.map((row, rowIdx) => (
@@ -156,26 +148,25 @@ function PercentCVCard({ summary, sampleNames = [], plateNumber, excludedCells =
                             background: isExcluded
                               ? '#ffa1c5'
                               : highlight
-                              ? '#baf7f4'
+                              ? '#cbf1c7' // You can optionally replace this too with a green, e.g., '#cbf1c7'
                               : undefined,
                             textDecoration: isExcluded ? 'line-through' : undefined,
-                            color: isExcluded ? '#888' : highlight ? '#508582': undefined,
+                            color: isExcluded ? '#888' : highlight ? 'rgb(12, 60, 6)' : undefined,
                             fontWeight: isExcluded ? 600 : highlight ? 600 : undefined,
                             cursor: 'pointer',
                             position: 'relative',
 
                             border: isExcluded
-                              ? '1.5px solid #c93059'   // solid red border when excluded
+                              ? '1.5px solid #c93059'
                               : highlight
-                              ? '1.5px solid #32bab2'      // white border when highlighted
+                              ? '1.5px solid rgb(50, 186, 50)'
                               : undefined,
 
                             boxShadow: isExcluded
-                              ? '0 0 8px #ff4d4d, 0 0 15px #ff1a1a, 0 0 20px #ff1a1a, 0 0 30px #ff0000'  // red glow layers
+                              ? '0 0 8px #ff4d4d, 0 0 15px #ff1a1a, 0 0 20px #ff1a1a, 0 0 30px #ff0000'
                               : highlight
-                              ? '0 0 8px #00ffff, 0 0 15px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff'  // cyan glow layers
+                              ? '0 0 8px #4cff4c, 0 0 15px #33ff33, 0 0 20px #33ff33, 0 0 30px #00cc00' // green glow
                               : undefined,
-
                           }}
                           title={
                             isExcluded
