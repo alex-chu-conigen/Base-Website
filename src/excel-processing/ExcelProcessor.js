@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import SummaryCard from './SummaryCard';
-import './ExcelProcessor.css';
+import styles from './ExcelProcessor.module.css';
 
 function ExcelProcessor() {
   const [excelSummaries, setExcelSummaries] = useState([]);
@@ -517,11 +517,11 @@ function ExcelProcessor() {
   };
 
   return (
-    <div className="excel-processor">
+    <div className={styles.excel_processor}>
       <h1>Excel File Processor</h1>
-      <div className="upload-section">
-        <div className="threshold-inputs">
-          <div className="threshold-input">
+      <div className={styles.upload_section}>
+        <div className={styles.threshold_inputs}>
+          <div className={styles.threshold_input}>
             <label htmlFor="lowerThreshold">Lower Threshold:</label>
             <input
               type="text"
@@ -529,10 +529,10 @@ function ExcelProcessor() {
               value={lowerThreshold}
               onChange={(e) => handleThresholdChange(e, setLowerThreshold)}
               placeholder="Enter lower threshold"
-              className="threshold-field"
+              className={styles.threshold_field}
             />
           </div>
-          <div className="threshold-input">
+          <div className={styles.threshold_input}>
             <label htmlFor="higherThreshold">Higher Threshold:</label>
             <input
               type="text"
@@ -540,38 +540,38 @@ function ExcelProcessor() {
               value={higherThreshold}
               onChange={(e) => handleThresholdChange(e, setHigherThreshold)}
               placeholder="Enter higher threshold"
-              className="threshold-field"
+              className={styles.threshold_field}
             />
           </div>
         </div>
-        <div className="file-controls">
+        <div className={styles.file_controls}>
           <input
             type="file"
             multiple
             accept=".xlsx,.xls"
             onChange={handleFileUpload}
-            className="file-input"
+            className={styles.file_input}
           />
           {excelSummaries.length > 0 && (
-            <div className="download-section">
+            <div className={styles.download_section}>
               {showFileNameInput ? (
-                <form onSubmit={handleFileNameSubmit} className="file-name-form">
+                <form onSubmit={handleFileNameSubmit} className={styles.file_name_form}>
                   <input
                     type="text"
                     value={fileName}
                     onChange={handleFileNameChange}
                     placeholder="Enter file name"
-                    className="file-name-input"
+                    className={styles.file_name_input}
                     autoFocus
                   />
-                  <button type="submit" className="save-button">Save</button>
+                  <button type="submit" className={styles.save_button}>Save</button>
                   <button 
                     type="button" 
                     onClick={() => {
                       setShowFileNameInput(false);
                       setFileName('');
                     }}
-                    className="cancel-button"
+                    className={styles.cancel_button}
                   >
                     Cancel
                   </button>
@@ -579,7 +579,7 @@ function ExcelProcessor() {
               ) : (
                 <button 
                   onClick={handleDownloadClick}
-                  className="download-button"
+                  className={styles.download_button}
                 >
                   Download Summary
                 </button>
@@ -590,18 +590,18 @@ function ExcelProcessor() {
       </div>
 
       {isLoading && (
-        <div className="loading">
+        <div className={styles.loading}>
           Processing files...
         </div>
       )}
 
-      <div className="main-content2">
+      <div className={styles.main_content2}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <div className="tables-container">
+          <div className={styles.tables_container}>
             <SortableContext
               items={excelSummaries.map((_, index) => `file-${index}`)}
               strategy={verticalListSortingStrategy}
@@ -622,14 +622,14 @@ function ExcelProcessor() {
           </div>
         </DndContext>
         {excelSummaries.length > 0 && (
-          <div className="global-threshold-summary1">
-            <div className="summary-header1">
+          <div className={styles.global_threshold_summary1}>
+            <div className={styles.summary_header1}>
               <h4>Combined Threshold Summary</h4>
-              <button onClick={handlePrint} className="print-button">
+              <button onClick={handlePrint} className={styles.print_button}>
                 Print Summary
               </button>
             </div>
-            <div className="summary-list">
+            <div className={styles.summary_list}>
               {getAllThresholdSummaries().map((item, index) => {
                 const rowLetter = item.rowKey.match(/[A-Za-z]+/)?.[0] || item.rowKey;
                 const colNumber = item.colKey.match(/\d+/)?.[0] || item.colKey;
@@ -640,7 +640,7 @@ function ExcelProcessor() {
                 return (
                   <div 
                     key={index} 
-                    className={`summary-item ${item.threshold === 'higher' ? 'highlight-green' : 'highlight-yellow'}`}
+                    className={`${styles['summary_item']} ${item.threshold === 'higher' ? styles['highlight-green'] : styles['highlight-yellow']}`}
                   >
                     {displayLocation}: {item.value}
                   </div>
