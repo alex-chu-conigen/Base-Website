@@ -32,10 +32,10 @@ function ExcelProcessor() {
     
     // Check if cell is excluded - now using just rowKey and colKey
     const location = `${rowKey}${colKey}`;
-    if (excludedCells.has(location)) return 'excluded-cell';
+    if (excludedCells.has(location)) return styles.excluded_cell;
     
-    if (numValue >= parseFloat(higherThreshold)) return 'highlight-green';
-    if (numValue >= parseFloat(lowerThreshold)) return 'highlight-yellow';
+    if (higherThreshold !== '' && numValue >= parseFloat(higherThreshold)) return styles.highlight_green;
+    if (lowerThreshold !== '' && numValue >= parseFloat(lowerThreshold)) return styles.highlight_yellow;
     return '';
   };
 
@@ -358,8 +358,21 @@ function ExcelProcessor() {
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
-    const tablesContent = document.querySelector('.tables-container').innerHTML;
-    const summaryContent = document.querySelector('.global-threshold-summary1').innerHTML;
+    if (!printWindow) {
+      alert('Please disable your pop-up blocker to print the summary.');
+      return;
+    }
+
+    const tablesContainerElement = document.querySelector(`.${styles.tables_container}`);
+    const summaryContainerElement = document.querySelector(`.${styles.global_threshold_summary1}`);
+
+    if (!tablesContainerElement || !summaryContainerElement) {
+      console.error('Could not find elements to print.');
+      printWindow.close();
+      return;
+    }
+    const tablesContent = tablesContainerElement.innerHTML;
+    const summaryContent = summaryContainerElement.innerHTML;
     printWindow.document.write(`
       <html>
         <head>
@@ -370,29 +383,29 @@ function ExcelProcessor() {
               padding: 20px;
               margin: 0;
             }
-            .print-layout {
+            .print_layout {
               display: flex;
               gap: 2rem;
             }
-            .tables-section {
+            .tables_section {
               flex: 1;
             }
-            .summary-section {
+            .summary_section {
               width: 300px;
             }
-            .summary-card {
+            .summary_card {
               background-color: white;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
               padding: 1rem;
               margin-bottom: 1rem;
             }
-            .summary-card h2 {
+            .summary_card h2 {
               margin: 0 0 1rem 0;
               font-size: 1.2rem;
               color: #333;
             }
-            .sheet-summary {
+            .sheet_summary {
               margin-bottom: 1.5rem;
             }
             table {
@@ -413,18 +426,18 @@ function ExcelProcessor() {
             tr:nth-child(even) {
               background-color: #f9f9f9;
             }
-            .highlight-yellow {
+            .highlight_yellow {
               background-color: #fff3cd;
             }
-            .highlight-green {
+            .highlight_green {
               background-color: #d4edda;
             }
-            .summary-list {
+            .summary_list {
               display: flex;
               flex-direction: column;
               gap: 0.25rem;
             }
-            .summary-item {
+            .summary_item {
               padding: 0.25rem 0.5rem;
               border-radius: 4px;
               font-family: monospace;
@@ -437,31 +450,31 @@ function ExcelProcessor() {
               body {
                 padding: 0;
               }
-              .print-layout {
+              .print_layout {
                 display: flex;
                 gap: 2rem;
               }
-              .summary-card, .summary-section {
+              .summary_card, .summary_section {
                 break-inside: avoid;
               }
               table {
                 break-inside: avoid;
               }
-              .summary-item {
+              .summary_item {
                 break-inside: avoid;
               }
-              .print-button {
+              .print_button {
                 display: none;
               }
             }
           </style>
         </head>
         <body>
-          <div class="print-layout">
-            <div class="tables-section">
+          <div class="print_layout">
+            <div class="tables_section">
               ${tablesContent}
             </div>
-            <div class="summary-section">
+            <div class="summary_section">
               ${summaryContent}
             </div>
           </div>
@@ -640,7 +653,7 @@ function ExcelProcessor() {
                 return (
                   <div 
                     key={index} 
-                    className={`${styles['summary_item']} ${item.threshold === 'higher' ? styles['highlight-green'] : styles['highlight-yellow']}`}
+                    className={`${styles['summary_item']} ${item.threshold === 'higher' ? styles['highlight_green'] : styles['highlight_yellow']}`}
                   >
                     {displayLocation}: {item.value}
                   </div>
