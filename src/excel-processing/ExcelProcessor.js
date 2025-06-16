@@ -383,17 +383,25 @@ function ExcelProcessor() {
               padding: 20px;
               margin: 0;
             }
-            .print_layout {
+            .print_layout { /* Class for print window structure */
               display: flex;
               gap: 2rem;
             }
-            .tables_section {
+            .tables_section { /* Class for print window structure */
               flex: 1;
             }
-            .summary_section {
+            .summary_section { /* Class for print window structure */
               width: 300px;
             }
             .summary_card {
+              background-color: white;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              padding: 1rem;
+              margin-bottom: 1rem;
+            }
+            /* Corrected selector to match className in SummaryCard.js */
+            .summary-card1 { 
               background-color: white;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -405,6 +413,7 @@ function ExcelProcessor() {
               font-size: 1.2rem;
               color: #333;
             }
+            /* Styles for classes from SummaryCard.js */
             .sheet_summary {
               margin-bottom: 1.5rem;
             }
@@ -426,18 +435,25 @@ function ExcelProcessor() {
             tr:nth-child(even) {
               background-color: #f9f9f9;
             }
-            .highlight_yellow {
-              background-color: #fff3cd;
+
+            /* Dynamically inject CSS Module class definitions */
+            .${styles.highlight_yellow} {
+              background-color: #fff3cd !important; /* Ensure this color matches your module definition */
             }
-            .highlight_green {
-              background-color: #d4edda;
+            .${styles.highlight_green} {
+              background-color: #d4edda !important; /* Ensure this color matches your module definition */
             }
-            .summary_list {
+            .${styles.excluded_cell} {
+              background-color: #e9ecef !important; /* Example: light grey, adjust as needed */
+              color: #adb5bd !important; /* Example: muted text */
+              text-decoration: line-through !important;
+            }
+            .${styles.summary_list} {
               display: flex;
               flex-direction: column;
               gap: 0.25rem;
             }
-            .summary_item {
+            .${styles.summary_item} {
               padding: 0.25rem 0.5rem;
               border-radius: 4px;
               font-family: monospace;
@@ -445,6 +461,7 @@ function ExcelProcessor() {
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
+              /* Background color will be applied by .${styles.highlight_yellow} or .${styles.highlight_green} */
             }
             @media print {
               body {
@@ -457,15 +474,32 @@ function ExcelProcessor() {
               .summary_card, .summary_section {
                 break-inside: avoid;
               }
+              /* Corrected selector for summary card */
+              .summary-card1, .summary_section {
+                break-inside: avoid;
+              }
               table {
                 break-inside: avoid;
               }
-              .summary_item {
+              .${styles.summary_item} {
                 break-inside: avoid;
               }
-              .print_button {
-                display: none;
+              .${styles.print_button} {
+                display: none !important;
               }
+              .tables_section {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                flex: 1;
+                padding-right: 3rem;
+              }
+              .summary_section {
+                width: 20%;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
             }
           </style>
         </head>
