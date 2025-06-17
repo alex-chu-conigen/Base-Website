@@ -5,16 +5,24 @@ import Plot from 'react-plotly.js';
 
 // --- Regression and Solvers ---
 function fit4PL(x, y) {
-  let a = Math.min(...y);
-  let d = Math.max(...y);
-  let c = x[Math.floor(x.length / 2)];
-  let b = 1;
+  const a_init = Math.min(...y);
+  const d_init = Math.max(...y);
+  const halfMax = (a_init + d_init) / 2;
 
-  const maxIter = 500;
+  // Find index of y closest to halfMax
+  const closestIdx = y.reduce((bestIdx, val, idx) =>
+    Math.abs(val - halfMax) < Math.abs(y[bestIdx] - halfMax) ? idx : bestIdx, 0);
+
+  let d = a_init;
+  let a = d_init;
+  let c = x[closestIdx];  // better guess for inflection point
+  let b = 2;              // reasonable slope start
+
+  const maxIter = 1000;
   const tol = 1e-6;
 
-  function f(x, a, b, c, d) {
-    return d + (a - d) / (1 + Math.pow(x / c, b));
+  function f(xi, a, b, c, d) {
+    return d + (a - d) / (1 + Math.pow(xi / c, b));
   }
 
   for (let iter = 0; iter < maxIter; iter++) {
@@ -23,26 +31,30 @@ function fit4PL(x, y) {
 
     for (let i = 0; i < x.length; i++) {
       const xi = x[i], yi = y[i];
-      const denom = 1 + Math.pow(xi / c, b);
+      const safeXiOverC = Math.max(xi / c, 1e-6);
+      const denom = 1 + Math.pow(safeXiOverC, b);
       const fx = d + (a - d) / denom;
       const err = fx - yi;
       error += err ** 2;
 
-      // Avoid division by zero or log of non-positive
-      const safeXiOverC = Math.max(xi / c, 1e-6);
       const lnxc = Math.log(safeXiOverC);
 
       grad[0] += (err / denom);
       grad[1] += (err * (a - d) * -Math.pow(safeXiOverC, b) * lnxc / (denom ** 2));
-      grad[2] += (err * (a - d) * b * Math.pow(safeXiOverC, b) * lnxc / (c * (denom ** 2)));
+      grad[2] += (err * (a - d) * b * Math.pow(safeXiOverC, b) * lnxc / (c * denom ** 2));
       grad[3] += (err * (1 - 1 / denom));
     }
 
-    const lr = 1e-2; // Increased learning rate for faster convergence
+    const lr = 0.01 / (1 + iter * 0.05); // Adaptive learning rate
+
     a -= lr * grad[0];
     b -= lr * grad[1];
     c -= lr * grad[2];
     d -= lr * grad[3];
+
+    // Parameter constraints
+    b = Math.max(0.1, Math.min(b, 10));
+    c = Math.max(Math.min(...x), Math.min(c, Math.max(...x)));
 
     if (Math.sqrt(error) < tol) break;
   }
@@ -50,8 +62,9 @@ function fit4PL(x, y) {
   return {
     a, b, c, d,
     predict: (xVal) => {
-      if (xVal <= 0 || c <= 0) return NaN;
-      return d + (a - d) / (1 + Math.pow(xVal / c, b));
+      const safeX = Math.max(xVal, 1e-6);
+      const denom = 1 + Math.pow(safeX / c, b);
+      return d + (a - d) / denom;
     }
   };
 }
@@ -155,7 +168,7 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
     const minX = Math.min(...x);
     const maxX = Math.max(...x);
     const xSmooth = [], ySmooth = [];
-
+    
     if (fit && fit.predict) {
 
       for (let i = 0; i <= 40; i++) {
@@ -260,6 +273,7 @@ export function FinSumCard({ summaries }) {
               }
               r2 = calculateR2(x, y, fit);
             }
+
             if (!titer) {
               if (y[0] < 0.5) titer = '<1,000';
               else if (y[y.length - 1] >= 0.5) titer = '>2,187,000';
