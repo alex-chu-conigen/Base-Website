@@ -242,8 +242,8 @@ function TiterAnalysis() {
     if (isNaN(numValue)) return '';
     const location = `${rowKey}${colKey}`;
     if (excludedCells.has(location)) return 'excluded-cell';
-    if (numValue >= 0.5) return 'highlight-green';
-    if (numValue < 0.5) return 'highlight-yellow';
+    if (numValue >= 0.5) return 'highlight_green';
+    if (numValue < 0.5) return 'highlight_yellow';
   };
 
   const getCellKey = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
