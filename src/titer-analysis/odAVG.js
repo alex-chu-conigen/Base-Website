@@ -15,7 +15,81 @@ function fit4PL(x, y) {
   let d = a_init;
   let a = d_init;
   let c = x[closestIdx];  // better guess for inflection point
-  let b = 10;              // reasonable slope start
+  // let b = 10;              // reasonable slope start
+
+    // Dynamically estimate initial b (Hill slope parameter for the model (logX/logC)^b)
+  // x contains log10(dilution) values.
+  let b_initial_guess = 4.0; // Default initial guess, more moderate than the previous 10
+
+  // Ensure there's enough data and a valid y-range to attempt dynamic estimation
+  if (x.length >= 2 && (d_init - a_init) > 1e-6) {
+    const y_target_upper_norm_level = 0.80; // Target 80% of response range from min_y
+    const y_target_lower_norm_level = 0.20; // Target 20% of response range from min_y
+
+    const y_target_80_percent_response = a_init + y_target_upper_norm_level * (d_init - a_init);
+    const y_target_20_percent_response = a_init + y_target_lower_norm_level * (d_init - a_init);
+
+    const findClosestYPoint = (targetY, xs_coords, ys_coords) => {
+      let minDiff = Infinity;
+      let bestX = xs_coords[0]; // Default to first point
+      let bestY = ys_coords[0];
+      for (let i = 0; i < ys_coords.length; i++) {
+        const diff = Math.abs(ys_coords[i] - targetY);
+        if (diff < minDiff) {
+          minDiff = diff;
+          bestX = xs_coords[i];
+          bestY = ys_coords[i];
+        }
+      }
+      return { x: bestX, y: bestY };
+    };
+
+    const point_near_80_response = findClosestYPoint(y_target_80_percent_response, x, y);
+    const point_near_20_response = findClosestYPoint(y_target_20_percent_response, x, y);
+
+    // For a decreasing curve (OD vs log_dilution), y_upper_OD > y_lower_OD,
+    // and x_for_y_upper_OD (log_dilution) < x_for_y_lower_OD (log_dilution).
+    // Assign x1,y1 to the point with higher OD, and x2,y2 to the point with lower OD.
+    const x1_log_dil = point_near_80_response.y > point_near_20_response.y ? point_near_80_response.x : point_near_20_response.x;
+    const y1_od_actual = point_near_80_response.y > point_near_20_response.y ? point_near_80_response.y : point_near_20_response.y;
+    const x2_log_dil = point_near_80_response.y > point_near_20_response.y ? point_near_20_response.x : point_near_80_response.x;
+    const y2_od_actual = point_near_80_response.y > point_near_20_response.y ? point_near_20_response.y : point_near_80_response.y;
+
+    if (x1_log_dil !== x2_log_dil && y1_od_actual !== y2_od_actual && (d_init - a_init) > 1e-6) {
+      let Y1_norm = (y1_od_actual - a_init) / (d_init - a_init); // Normalized OD for y1_od_actual (closer to 0.8)
+      let Y2_norm = (y2_od_actual - a_init) / (d_init - a_init); // Normalized OD for y2_od_actual (closer to 0.2)
+
+      // Clamp normalized values to avoid issues with log or division by zero
+      Y1_norm = Math.max(0.01, Math.min(0.99, Y1_norm));
+      Y2_norm = Math.max(0.01, Math.min(0.99, Y2_norm));
+
+      if (Y1_norm > Y2_norm && x2_log_dil !== 0) { // Ensure Y1_norm is higher and x2_log_dil (denominator for x-ratio) is not zero
+        const term_numerator_y_norm = (1 / Y1_norm) - 1;
+        const term_denominator_y_norm = (1 / Y2_norm) - 1;
+
+        if (term_denominator_y_norm !== 0) {
+          const log_argument_y_ratio = term_numerator_y_norm / term_denominator_y_norm;
+          const log_argument_x_ratio = x1_log_dil / x2_log_dil; // x1_log_dil < x2_log_dil for decreasing curve, so ratio < 1
+
+          if (log_argument_y_ratio > 0 && log_argument_x_ratio > 0 && log_argument_x_ratio !== 1) {
+            // b = log( ((1/Y1_norm)-1) / ((1/Y2_norm)-1) ) / log(x1/x2)
+            // For decreasing curve, Y1_norm > Y2_norm => log_arg_y_ratio < 1 => log(log_arg_y_ratio) is negative.
+            // x1_log_dil < x2_log_dil => log_arg_x_ratio < 1 => log(log_arg_x_ratio) is negative.
+            // So, b_calculated should be positive.
+            const b_calculated = Math.log(log_argument_y_ratio) / Math.log(log_argument_x_ratio);
+            
+            if (!isNaN(b_calculated) && isFinite(b_calculated)) {
+              if (b_calculated <= 0.1) b_initial_guess = 0.5; // Floor for very small calculated slopes
+              else if (b_calculated >= 25.0) b_initial_guess = 20.0; // Cap if calculated slope is extremely high
+              else b_initial_guess = b_calculated;
+            }
+          }
+        }
+      }
+    }
+  }
+  let b = b_initial_guess; // Use the dynamically calculated or default guess
+
 
   const maxIter = 1000;
   const tol = 1e-6;
@@ -52,7 +126,7 @@ function fit4PL(x, y) {
     d -= lr * grad[3];
 
     // Parameter constraints
-    b = Math.max(0.1, Math.min(b, 10));
+    b = Math.max(0.1, Math.min(b, 25.0)); 
     c = Math.max(Math.min(...x), Math.min(c, Math.max(...x)));
 
     if (Math.sqrt(error) < tol) break;

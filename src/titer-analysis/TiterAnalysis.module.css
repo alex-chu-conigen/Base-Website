@@ -87,7 +87,7 @@
 
 /* Buttons */
 .custom_file_upload {
-  background: #ffa31a;
+  background: #ff9900;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -101,28 +101,11 @@
 }
 
 .custom_file_upload:hover {
-  background: #ffc549;
+  background: #d68000;
 }
 
 .download_button {
-  background: #0c9521;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-block;
-  transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
-}
-
-.ft_button:hover {
-  background: #ffec1d;
-}
-.ft_button {
-  background: #ffcc00;
+  background: #00c01d;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -136,8 +119,26 @@
 }
 
 .download_button:hover {
-  background: #4fcd15;
+  background: #009416;
 }
+
+.ft_button:hover {
+  background: #d1b200;
+}
+.ft_button {
+  background: #f4d000;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
+}
+
 
 .save_button,
 .print_button,
