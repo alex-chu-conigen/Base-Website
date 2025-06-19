@@ -478,4 +478,3 @@ export function FinSumCard({ summary: currentSheetSummary, sampleNames = [], exc
     </div>
   );
 }
-// --- ODTiterCard component is already 4PL-based and unchanged from previous ---

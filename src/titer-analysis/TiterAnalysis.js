@@ -581,6 +581,8 @@ ws.columns.forEach((col, idx) => {
 });
 currentRow++;
 
+
+
 // Calculate background (average of last row's last two columns)
 let background = 0;
 const lastRow = sheet.preview[sheet.preview.length - 1] || [];
@@ -692,153 +694,271 @@ ws.columns.forEach((col, idx) => {
 });
 currentRow += 1;
 
-// Calculate titers and R2 using cubic regression (poly3Regression)
-const averagedRows = sheet.preview.map((row, rowIdx) => {
-  const newRow = [];
-  for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-    const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
-    const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? NaN : parseFloat(row[2 + sampleIdx * 2]);
-    let avg = '';
-    if (!isNaN(n1) && !isNaN(n2)) avg = ((n1 + n2) / 2);
-    else if (!isNaN(n1)) avg = n1;
-    else if (!isNaN(n2)) avg = n2;
-    newRow.push(avg !== '' && !isNaN(avg) ? avg : '');
-  }
-  return newRow;
-});
+// // // Calculate titers and R2 using cubic regression (poly3Regression)
+// // const averagedRows = sheet.preview.map((row, rowIdx) => {
+// //   const newRow = [];
+// //   for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
+// //     const n1 = excludedCells.has(`r${rowIdx}s${sampleIdx}d0`) ? NaN : parseFloat(row[1 + sampleIdx * 2]);
+// //     const n2 = excludedCells.has(`r${rowIdx}s${sampleIdx}d1`) ? NaN : parseFloat(row[2 + sampleIdx * 2]);
+// //     let avg = '';
+// //     if (!isNaN(n1) && !isNaN(n2)) avg = ((n1 + n2) / 2);
+// //     else if (!isNaN(n1)) avg = n1;
+// //     else if (!isNaN(n2)) avg = n2;
+// //     newRow.push(avg !== '' && !isNaN(avg) ? avg : '');
+// //   }
+// //   return newRow;
+// // });
 
-// Poly3 regression helper (copy from odAVG.js)
-function poly3Regression(x, y) {
-  const n = x.length;
-  let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0, sumX5 = 0, sumX6 = 0;
-  let sumY = 0, sumXY = 0, sumX2Y = 0, sumX3Y = 0;
-  for (let i = 0; i < n; i++) {
-    const xi = x[i], yi = y[i];
-    const xi2 = xi * xi, xi3 = xi2 * xi, xi4 = xi3 * xi, xi5 = xi4 * xi, xi6 = xi5 * xi;
-    sumX += xi;
-    sumX2 += xi2;
-    sumX3 += xi3;
-    sumX4 += xi4;
-    sumX5 += xi5;
-    sumX6 += xi6;
-    sumY += yi;
-    sumXY += xi * yi;
-    sumX2Y += xi2 * yi;
-    sumX3Y += xi3 * yi;
-  }
-  const A = [
-    [n, sumX, sumX2, sumX3],
-    [sumX, sumX2, sumX3, sumX4],
-    [sumX2, sumX3, sumX4, sumX5],
-    [sumX3, sumX4, sumX5, sumX6]
-  ];
-  const B = [sumY, sumXY, sumX2Y, sumX3Y];
-  function gauss(A, B) {
-    const n = B.length;
-    for (let i = 0; i < n; i++) {
-      let maxEl = Math.abs(A[i][i]);
-      let maxRow = i;
-      for (let k = i + 1; k < n; k++) {
-        if (Math.abs(A[k][i]) > maxEl) {
-          maxEl = Math.abs(A[k][i]);
-          maxRow = k;
+// // Poly3 regression helper (copy from odAVG.js)
+// function poly3Regression(x, y) {
+//   const n = x.length;
+//   let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0, sumX5 = 0, sumX6 = 0;
+//   let sumY = 0, sumXY = 0, sumX2Y = 0, sumX3Y = 0;
+//   for (let i = 0; i < n; i++) {
+//     const xi = x[i], yi = y[i];
+//     const xi2 = xi * xi, xi3 = xi2 * xi, xi4 = xi3 * xi, xi5 = xi4 * xi, xi6 = xi5 * xi;
+//     sumX += xi;
+//     sumX2 += xi2;
+//     sumX3 += xi3;
+//     sumX4 += xi4;
+//     sumX5 += xi5;
+//     sumX6 += xi6;
+//     sumY += yi;
+//     sumXY += xi * yi;
+//     sumX2Y += xi2 * yi;
+//     sumX3Y += xi3 * yi;
+//   }
+//   const A = [
+//     [n, sumX, sumX2, sumX3],
+//     [sumX, sumX2, sumX3, sumX4],
+//     [sumX2, sumX3, sumX4, sumX5],
+//     [sumX3, sumX4, sumX5, sumX6]
+//   ];
+//   const B = [sumY, sumXY, sumX2Y, sumX3Y];
+//   function gauss(A, B) {
+//     const n = B.length;
+//     for (let i = 0; i < n; i++) {
+//       let maxEl = Math.abs(A[i][i]);
+//       let maxRow = i;
+//       for (let k = i + 1; k < n; k++) {
+//         if (Math.abs(A[k][i]) > maxEl) {
+//           maxEl = Math.abs(A[k][i]);
+//           maxRow = k;
+//         }
+//       }
+//       for (let k = i; k < n; k++) {
+//         let tmp = A[maxRow][k];
+//         A[maxRow][k] = A[i][k];
+//         A[i][k] = tmp;
+//       }
+//       let tmp = B[maxRow];
+//       B[maxRow] = B[i];
+//       B[i] = tmp;
+//       for (let k = i + 1; k < n; k++) {
+//         let c = -A[k][i] / A[i][i];
+//         for (let j = i; j < n; j++) {
+//           if (i === j) {
+//             A[k][j] = 0;
+//           } else {
+//             A[k][j] += c * A[i][j];
+//           }
+//         }
+//         B[k] += c * B[i];
+//       }
+//     }
+//     const x = Array(n).fill(0);
+//     for (let i = n - 1; i >= 0; i--) {
+//       x[i] = B[i] / A[i][i];
+//       for (let k = i - 1; k >= 0; k--) {
+//         B[k] -= A[k][i] * x[i];
+//       }
+//     }
+//     return x;
+//   }
+//   const [d, c, b, a] = gauss(A, B);
+//   return { a, b, c, d };
+// }
+
+// // R2 for cubic fit
+// function calculateR2(x, y, fit) {
+//   const yMean = y.reduce((a, b) => a + b, 0) / y.length;
+//   let ssTot = 0, ssRes = 0;
+//   for (let i = 0; i < x.length; i++) {
+//     const yPred = fit.a * x[i] * x[i] * x[i] + fit.b * x[i] * x[i] + fit.c * x[i] + fit.d;
+//     ssTot += (y[i] - yMean) ** 2;
+//     ssRes += (y[i] - yPred) ** 2;
+//   }
+//   return 1 - ssRes / ssTot;
+// }
+
+
+  // --- Helper functions for 4PL fitting (copied from odAVG.js or similar logic) ---
+  function fit4PL(x_coords, y_coords) { // x_coords are log10(dilution)
+    const a_init = Math.min(...y_coords);
+    const d_init = Math.max(...y_coords);
+    const halfMax = (a_init + d_init) / 2;
+    const closestIdx = y_coords.reduce((bestIdx, val, idx) =>
+      Math.abs(val - halfMax) < Math.abs(y_coords[bestIdx] - halfMax) ? idx : bestIdx, 0);
+
+    let d_param = a_init; // min asymptote
+    let a_param = d_init; // max asymptote
+    let c_param = x_coords[closestIdx]; // EC50 (log10 dilution)
+
+    let b_initial_guess = 4.0;
+    if (x_coords.length >= 2 && (d_init - a_init) > 1e-6) {
+      const y_target_upper_norm_level = 0.80;
+      const y_target_lower_norm_level = 0.20;
+      const y_target_80_percent_response = a_init + y_target_upper_norm_level * (d_init - a_init);
+      const y_target_20_percent_response = a_init + y_target_lower_norm_level * (d_init - a_init);
+
+      const findClosestYPoint = (targetY, xs, ys) => {
+        let minDiff = Infinity; let bestX = xs[0]; let bestY = ys[0];
+        for (let i = 0; i < ys.length; i++) {
+          const diff = Math.abs(ys[i] - targetY);
+          if (diff < minDiff) { minDiff = diff; bestX = xs[i]; bestY = ys[i]; }
         }
-      }
-      for (let k = i; k < n; k++) {
-        let tmp = A[maxRow][k];
-        A[maxRow][k] = A[i][k];
-        A[i][k] = tmp;
-      }
-      let tmp = B[maxRow];
-      B[maxRow] = B[i];
-      B[i] = tmp;
-      for (let k = i + 1; k < n; k++) {
-        let c = -A[k][i] / A[i][i];
-        for (let j = i; j < n; j++) {
-          if (i === j) {
-            A[k][j] = 0;
-          } else {
-            A[k][j] += c * A[i][j];
+        return { x: bestX, y: bestY };
+      };
+      const p80 = findClosestYPoint(y_target_80_percent_response, x_coords, y_coords);
+      const p20 = findClosestYPoint(y_target_20_percent_response, x_coords, y_coords);
+      const x1 = p80.y > p20.y ? p80.x : p20.x; const y1 = p80.y > p20.y ? p80.y : p20.y;
+      const x2 = p80.y > p20.y ? p20.x : p80.x; const y2 = p80.y > p20.y ? p20.y : p80.y;
+
+      if (x1 !== x2 && y1 !== y2 && (d_init - a_init) > 1e-6) {
+        let Y1_n = Math.max(0.01, Math.min(0.99, (y1 - a_init) / (d_init - a_init)));
+        let Y2_n = Math.max(0.01, Math.min(0.99, (y2 - a_init) / (d_init - a_init)));
+        if (Y1_n > Y2_n && x2 !== 0) {
+          const tNum = (1 / Y1_n) - 1; const tDenom = (1 / Y2_n) - 1;
+          if (tDenom !== 0) {
+            const logYRatio = tNum / tDenom; const logXRatio = x1 / x2;
+            if (logYRatio > 0 && logXRatio > 0 && logXRatio !== 1) {
+              const b_calc = Math.log(logYRatio) / Math.log(logXRatio);
+              if (!isNaN(b_calc) && isFinite(b_calc)) {
+                b_initial_guess = Math.max(0.5, Math.min(20.0, b_calc));
+              }
+            }
           }
         }
-        B[k] += c * B[i];
       }
     }
-    const x = Array(n).fill(0);
-    for (let i = n - 1; i >= 0; i--) {
-      x[i] = B[i] / A[i][i];
-      for (let k = i - 1; k >= 0; k--) {
-        B[k] -= A[k][i] * x[i];
+    let b_param = b_initial_guess; // Hill slope
+
+    const maxIter = 1000; const tol = 1e-6;
+    for (let iter = 0; iter < maxIter; iter++) {
+      let grad = [0, 0, 0, 0]; let error = 0;
+      for (let i = 0; i < x_coords.length; i++) {
+        const xi = x_coords[i], yi = y_coords[i];
+        const safeXiOverC = Math.max(xi / c_param, 1e-9); // Avoid log(0) or division by zero if c_param is 0
+        const powVal = Math.pow(safeXiOverC, b_param);
+        const denom = 1 + powVal;
+        const fx = d_param + (a_param - d_param) / denom;
+        const err_i = fx - yi; error += err_i ** 2;
+        const lnxc = (c_param === 0 || xi === 0) ? 0 : Math.log(safeXiOverC); // Handle cases where xi or c_param is 0
+
+        grad[0] += (err_i / denom); // d_error / d_a_param
+        grad[1] += (err_i * (a_param - d_param) * -powVal * lnxc / (denom ** 2)); // d_error / d_b_param
+        grad[2] += (err_i * (a_param - d_param) * b_param * powVal / (c_param * denom ** 2)); // d_error / d_c_param (simplified, assumes c_param != 0)
+        grad[3] += (err_i * (1 - 1 / denom)); // d_error / d_d_param
       }
+      const lr = 0.01 / (1 + iter * 0.05);
+      a_param -= lr * grad[0]; b_param -= lr * grad[1]; 
+      if (c_param !== 0) c_param -= lr * grad[2]; // Only update c_param if it's not zero
+      d_param -= lr * grad[3];
+
+      b_param = Math.max(0.1, Math.min(b_param, 25.0));
+      c_param = Math.max(Math.min(...x_coords), Math.min(c_param, Math.max(...x_coords)));
+      if (Math.sqrt(error) < tol) break;
     }
-    return x;
+    return {
+      a: a_param, b: b_param, c: c_param, d: d_param,
+      predict: (xVal) => {
+        const safeX = (c_param === 0) ? 0 : Math.max(xVal / c_param, 1e-9);
+        const denom = 1 + Math.pow(safeX, b_param);
+        return d_param + (a_param - d_param) / denom;
+      }
+    };
   }
-  const [d, c, b, a] = gauss(A, B);
-  return { a, b, c, d };
-}
 
-// R2 for cubic fit
-function calculateR2(x, y, fit) {
-  const yMean = y.reduce((a, b) => a + b, 0) / y.length;
-  let ssTot = 0, ssRes = 0;
-  for (let i = 0; i < x.length; i++) {
-    const yPred = fit.a * x[i] * x[i] * x[i] + fit.b * x[i] * x[i] + fit.c * x[i] + fit.d;
-    ssTot += (y[i] - yMean) ** 2;
-    ssRes += (y[i] - yPred) ** 2;
+  function solve4PL({ a, b, c, d }, y0_target) {
+    if (y0_target <= Math.min(a, d) + 1e-4 || y0_target >= Math.max(a, d) - 1e-4) return null;
+    const ratio_val = (a - d) / (y0_target - d) - 1;
+    if (ratio_val <= 0) return null;
+    return c * Math.pow(ratio_val, 1 / b);
   }
-  return 1 - ssRes / ssTot;
-}
 
+  function calculateR2_4PL(x_data, y_data, fit_model) {
+    if (!fit_model || typeof fit_model.predict !== 'function' || y_data.length === 0) return null;
+    const yMean = y_data.reduce((acc, val) => acc + val, 0) / y_data.length;
+    let ssTot = 0, ssRes = 0;
+    for (let i = 0; i < x_data.length; i++) {
+      const yPred = fit_model.predict(x_data[i]);
+      ssTot += (y_data[i] - yMean) ** 2;
+      ssRes += (y_data[i] - yPred) ** 2;
+    }
+    return ssTot === 0 ? 1 : (1 - ssRes / ssTot); // if ssTot is 0, all y_data are same, R2 is 1 if prediction matches
+  }
+
+  // Helper to get exclusion key, consistent with the main component
+  const getCellKeyForDownload = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
+
+  // calculating 4PL
+   const averagedRows = summary.preview.map((row, rowIdx) => {
+    const newRow = [];
+    for (let i = 1, sampleIdx = 0; i < row.length - 1; i += 2, sampleIdx++) {
+      const n1 = isExcluded(rowIdx, sampleIdx, 0) ? NaN : parseFloat(row[i]);
+      const n2 = isExcluded(rowIdx, sampleIdx, 1) ? NaN : parseFloat(row[i + 1]);
+      let avg_raw = !isNaN(n1) && !isNaN(n2) ? (n1 + n2) / 2 : (!isNaN(n1) ? n1 : n2);
+      newRow.push(isNaN(avg_raw) ? NaN : parseFloat((avg_raw - background).toFixed(3))); // Store as number
+    }
+    if (rowIdx === summary.preview.length - 1 && newRow.length > 0) {
+        newRow[newRow.length - 1] = 0.000;
+    }
+    return [row[0], ...newRow];
+  });
+
+  
 const titers = [];
 const r2s = [];
 for (let sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++) {
-  const ods = averagedRows.map(row => parseFloat(row[sampleIdx]));
-  const x = [];
-  const y = [];
-  for (let i = 0; i < ods.length && i < dilutionFactors.length; i++) {
-    if (!isNaN(ods[i])) {
-      x.push(Math.log10(dilutionFactors[i]));
-      y.push(ods[i]);
+  const ods_for_sample = averagedRows.map(row => parseFloat(row[sampleIdx + 1])); // +1 because row[0] is dilution label
+  const x_log_dilutions = [];
+  const y_ods = [];
+  for (let i = 0; i < ods_for_sample.length && i < dilutionFactors.length; i++) {
+    if (!isNaN(ods_for_sample[i])) {
+        x_log_dilutions.push(Math.log10(dilutionFactors[i]));
+        y_ods.push(ods_for_sample[i]);
+      }
     }
-  }
-  let titer = "N/A";
-  let r2 = "";
-  if (x.length >= 4) {
-    const fit = poly3Regression(x, y);
-    r2 = calculateR2(x, y, fit);
-    // Bisection method to find log10(dilution) at OD=0.5
-    const f = xi => fit.a * xi ** 3 + fit.b * xi ** 2 + fit.c * xi + fit.d - 0.5;
-    let minX = Math.min(...x), maxX = Math.max(...x);
-    let left = minX, right = maxX, mid, fLeft = f(left), fRight = f(right);
-    let found = false;
-    if (fLeft * fRight < 0) {
-      for (let i = 0; i < 50; i++) {
-        mid = (left + right) / 2;
-        let fMid = f(mid);
-        if (Math.abs(fMid) < 1e-6) { found = true; break; }
-        if (fLeft * fMid < 0) {
-          right = mid;
-          fRight = fMid;
-        } else {
-          left = mid;
-          fLeft = fMid;
+
+  let titerStr = "N/A";
+  let r2Val = null;
+
+  if (x_log_dilutions.length >= 4) {
+    const fit = fit4PL(x_log_dilutions, y_ods);
+    if (fit && typeof fit.predict === 'function') {
+      const root = solve4PL(fit, 0.5); // Target OD = 0.5
+      if (root !== null && isFinite(root)) {
+        const dilutionAt05 = Math.pow(10, root);
+        if (!isNaN(dilutionAt05)) {
+          titerStr = Math.round(dilutionAt05).toLocaleString();
         }
       }
-      if (found || Math.abs(f(mid)) < 1e-3) {
-        const dilutionAt05 = Math.pow(10, mid);
-        titer = Math.round(dilutionAt05).toLocaleString();
-      }
+      r2Val = calculateR2_4PL(x_log_dilutions, y_ods, fit);
     }
-    if (titer === "N/A" || titer === "0") {
-      if (y[0] < 0.5) titer = "<1,000";
-      else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
-    }
-  } else {
-    if (y[0] < 0.5) titer = "<1,000";
-    else if (y[y.length - 1] >= 0.5) titer = ">2,187,000";
   }
-  titers.push(titer);
-  r2s.push(r2);
+
+  if (titerStr === "N/A" || titerStr === "0" || x_log_dilutions.length < 4) {
+    if (y_ods.length > 0) {
+      const firstDilutionStr = (dilutionFactors[0] || 1000).toLocaleString();
+      const lastDilutionStr = (dilutionFactors[dilutionFactors.length - 1] || 2187000).toLocaleString();
+      if (y_ods[0] < 0.5 && y_ods.every(val => val < 0.5)) titerStr = `<${firstDilutionStr}`;
+      else if (y_ods[y_ods.length - 1] >= 0.5 && y_ods.every(val => val >= 0.5)) titerStr = `>${lastDilutionStr}`;
+      else if (y_ods[0] < 0.5) titerStr = `<${firstDilutionStr}`;
+      else if (y_ods[y_ods.length - 1] >= 0.5) titerStr = `>${lastDilutionStr}`;
+    }
+  }
+  titers.push(titerStr);
+  r2s.push(r2Val);
 }
 ws.addRow(["Dilution", ...titers]);
 ws.getRow(currentRow).alignment = { horizontal: "center", vertical: "middle" };
