@@ -898,15 +898,12 @@ currentRow += 1;
     return ssTot === 0 ? 1 : (1 - ssRes / ssTot); // if ssTot is 0, all y_data are same, R2 is 1 if prediction matches
   }
 
-  // Helper to get exclusion key, consistent with the main component
-  const getCellKeyForDownload = (rowIdx, sampleIdx, dupIdx) => `r${rowIdx}s${sampleIdx}d${dupIdx}`;
-
   // calculating 4PL
    const averagedRows = summary.preview.map((row, rowIdx) => {
     const newRow = [];
     for (let i = 1, sampleIdx = 0; i < row.length - 1; i += 2, sampleIdx++) {
-      const n1 = isExcluded(rowIdx, sampleIdx, 0) ? NaN : parseFloat(row[i]);
-      const n2 = isExcluded(rowIdx, sampleIdx, 1) ? NaN : parseFloat(row[i + 1]);
+      const n1 = excludedCells(rowIdx, sampleIdx, 0) ? NaN : parseFloat(row[i]);
+      const n2 = excludedCells(rowIdx, sampleIdx, 1) ? NaN : parseFloat(row[i + 1]);
       let avg_raw = !isNaN(n1) && !isNaN(n2) ? (n1 + n2) / 2 : (!isNaN(n1) ? n1 : n2);
       newRow.push(isNaN(avg_raw) ? NaN : parseFloat((avg_raw - background).toFixed(3))); // Store as number
     }
