@@ -1,5 +1,5 @@
-// odavg.js
-import styles from './TiterAnalysis.module.css';
+// 4pl.js
+import styles from './compound-dr.module.css';
 import Plot from 'react-plotly.js';
 
 // --- Regression and Solvers ---
@@ -19,7 +19,7 @@ function fit4PL(x, y) {
 
     // Dynamically estimate initial b (Hill slope parameter for the model (logX/logC)^b)
   // x contains log10(dilution) values.
-  let b_initial_guess = 4.0; // Default initial guess, more moderate than the previous 10
+  let b_initial_guess = 4.0; // Default initial guess
 
   // Ensure there's enough data and a valid y-range to attempt dynamic estimation
   if (x.length >= 2 && (d_init - a_init) > 1e-6) {
@@ -93,6 +93,10 @@ function fit4PL(x, y) {
 
   const maxIter = 1000;
   const tol = 1e-6;
+
+  function f(xi, a, b, c, d) {
+    return d + (a - d) / (1 + Math.pow(xi / c, b));
+  }
 
   for (let iter = 0; iter < maxIter; iter++) {
     let grad = [0, 0, 0, 0];
@@ -238,6 +242,8 @@ function renderPlotly(sampleIdx) {
   const { x, y, fit } = trendlineData[sampleIdx];
   if (!x || x.length === 0) return null;
 
+  const minOD = Math.min(...y);
+  const maxOD = Math.max(...y);
   const smoothOD = [], smoothLogDilution = [];
 
 const minModelY = Math.min(fit.a, fit.d);

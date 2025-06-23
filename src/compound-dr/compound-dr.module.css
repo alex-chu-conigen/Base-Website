@@ -1,0 +1,350 @@
+/* Titer Analysis */
+
+.titer_header {
+  text-align: center;
+  margin: 2rem 0 1.5rem;
+  font-size: 2.2rem;
+  color: #206625;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+
+.main_content1 {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: white
+}
+/* Cards & Sections */
+.upload_section,
+.summary_card,
+.sheet_summary,
+.card_header {
+  border: 1px solid #ffd6a0;
+  border-radius: 10px;
+  padding: 1.5rem;
+  background: #fff;
+  margin-bottom: 1.5rem;
+  color: #000;
+}
+
+.summary_card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.upload_section {
+    box-shadow: 0 2px 6px rgba(89, 89, 89, 0.12);
+}
+
+.instructions_card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid #59d462;
+  border-radius: 10px;
+  padding: 1.5rem;
+  background: #fff;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+  color: #000;
+  margin: 0 auto 2rem;
+}
+
+.instructions_card h2,
+.card_title h2,
+.summary_card h2,
+.summary_card h4 {
+  color: #2e7b34;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.instructions_card ol {
+  padding-left: 1.2em;
+  margin: 0;
+}
+
+.instructions_card li {
+  margin-bottom: 0.5em;
+  font-size: 1.05rem;
+  list-style-type: none ;
+}
+
+.upload_section {
+  background: #ffffff;
+  
+}
+
+.file_controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.file_input {
+  display: none;
+}
+
+/* Buttons */
+.custom_file_upload {
+  background: #ff9900;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
+}
+
+.custom_file_upload:hover {
+  background: #d68000;
+}
+
+.download_button {
+  background: #00c01d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
+}
+
+.download_button:hover {
+  background: #009416;
+}
+
+.ft_button:hover {
+  background: #d1b200;
+}
+.ft_button {
+  background: #f4d000;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
+}
+
+
+.save_button,
+.print_button,
+.cancel_button {
+  background: #ffb74d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(255, 183, 77, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.save_button:hover,
+.print_button:hover {
+  background: #ffa726;
+}
+
+.cancel_button {
+  background: #ff7043;
+}
+
+.cancel_button:hover {
+  background: #f4511e;
+}
+
+.file_input {
+  display: none;
+}
+
+.edit_button {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 0.9em;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.card_title {
+  padding: 2;
+  margin: 0 !important;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+}
+.card_title .edit_button {
+  display: inline;
+  text-align: center;
+}
+/* Tables */
+
+.preview_table_mean td {
+  color: black;
+  font-size: 1.2vw;
+  padding: 6px 8px;
+  border: 1px solid #a8a8a8;
+  text-align: center;
+}
+
+.preview_table_titer th, .preview_table_mean th, .main_content1 th {
+  background: #ffe8c9;
+  color: #000000;
+  padding: 4px 6px;
+  border: none;
+  border-bottom: 1px solid #d9a90b;
+}
+
+.preview_table_titer td {
+  color: black;
+  font-size: 1.2vw;
+  padding: 6px 8px;
+  border: 1px solid #cfcfcf;
+  text-align: center;
+}
+
+.preview_table_titer tr:nth-child(even) {
+  background: #f4f4f4 !important;
+}
+
+.preview_table_titer td:hover,
+.preview_table_titer tr:hover td {
+  background: #fff;
+}
+
+.highlight_yellow { background: #ffeeac !important; }
+.highlight_green { background: #cbf1c7 !important; }
+
+.excluded_cell {
+  background: #ffb3b3 !important;
+  color: #b22222 !important;
+  text-decoration: line-through;
+  font-weight: bold;
+  border: 2px solid #ff7043 !important;
+  box-shadow: 0 0 0 2px #ffd6a0;
+}
+
+/* Sticky Tabs */
+.sheet_tabs_sticky {
+  position: sticky;
+  top: 4.93rem;
+  width: 100%;
+  z-index: 1000;
+  background: #ffffff;
+  padding: 8px 0 4px;
+  border-bottom: 3px solid #ffd6a0;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Sheet Tabs */
+.sheetTab {
+  background: #d4edda;
+  color: #256029;
+  border: 1px solid #b7e4c7;
+  border-radius: 8px 8px 0 0;
+  padding: 0.5rem 1.2rem;
+  margin-right: 0.5rem;
+  font-size: 1rem;
+  font-weight: 550;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(44, 130, 87, 0.07);
+  padding-right: 3em;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sheetTab .edit_button {
+  position: absolute;
+  right: 0.7em;
+  margin-left: 5;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none !important;
+  color: #066608;
+  font-size: 0.9em;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  z-index: 2;
+  font-weight: bold;
+}
+
+.sheetTab:hover .edit_button {
+  opacity: 1;
+}
+
+.sheetTab:hover, .sheetTab:focus {
+  background: #86dd96;
+  color: #155724;
+  border-bottom: 2pt #155724;
+}
+
+
+.sheet_tabs.active {
+  background: #74c578;
+  color: #fff;
+  border-bottom: 2px solid #388e3c;
+  font-weight: bold;
+  z-index: 2;
+}
+
+/* Responsive */
+
+@media screen and (min-width: 1600px) {
+  .preview_table_titer td {
+    font-size: 20px;
+  }
+}
+
+.loading {
+  color: #d97706;
+  font-style: italic;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+
+/* Responsive: Match nav bar stacking and alignment */
+@media (max-width: 774px) {
+  .sheet_tabs_sticky {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    top: 7.4rem; /* Match your mobile nav bar height if it grows */
+    padding: 4px 0 2px 0;
+  }
+
+
+    @media (max-width: 768px) {
+      .sheet_tabs_sticky {
+        top: 20rem; /* Further adjust for very small screens */
+      }
+    }
+  }
+
+
+
+@media screen and (min-width: 1600px) {
+  .preview_table_titer td, .preview_table_titer
+td{
+     font-size: 20px;
+  }
+}
