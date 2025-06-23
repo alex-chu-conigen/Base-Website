@@ -166,7 +166,7 @@ function calculateR2(x, y, fit) {
 }
 
 // --- Main Card Components ---
-function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
+function PLCard({ summary, sampleNames = [], plateNumber, excludedCells }) {
   if (!summary || !summary.columns || !summary.preview) return null;
   const sampleCount = Math.floor((summary.columns.length - 1) / 2);
   const dilutions = [1000, 3000, 9000, 27000, 81000, 243000, 729000, 2187000];
@@ -211,16 +211,22 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
 
     let titer = '', fit = null, r2 = null;
     if (x.length >= 4) {
-      fit = fit4PL(x, y);
-      if (fit && fit.predict) {
-        const root = solve4PL(fit, 0.5);
-        if (root !== null && isFinite(root)) {
-          const dilutionAt05 = Math.pow(10, root);
-          titer = Math.round(dilutionAt05).toLocaleString();
+        try {
+            fit = fit4PL(x, y);
+            if (fit && typeof fit.predict === 'function') {
+            const root = solve4PL(fit, 0.5);
+            if (root !== null && isFinite(root)) {
+                const dilutionAt05 = Math.pow(10, root);
+                titer = Math.round(dilutionAt05).toLocaleString();
+            }
+            r2 = calculateR2(x, y, fit);
+            }
+        } catch (e) {
+            console.warn(`Sample ${sampleIdx + 1} failed to fit 4PL model:`, e);
+            fit = null;
         }
-        r2 = calculateR2(x, y, fit);
-      }
     }
+
     if (!titer || titer === "0") { // Fallback if no titer or fit failed/produced zero
       if (y.length > 0) {
         const firstDilutionStr = dilutions[0].toLocaleString();
@@ -240,10 +246,8 @@ function ODTiterCard({ summary, sampleNames = [], plateNumber, excludedCells }) 
   
 function renderPlotly(sampleIdx) {
   const { x, y, fit } = trendlineData[sampleIdx];
-  if (!x || x.length === 0) return null;
-
-  const minOD = Math.min(...y);
-  const maxOD = Math.max(...y);
+  if (!x || x.length === 0 || !fit || fit.a == null || fit.d == null) return null;
+  
   const smoothOD = [], smoothLogDilution = [];
 
 const minModelY = Math.min(fit.a, fit.d);
@@ -321,7 +325,7 @@ yaxis: {
   );
 }
 
-export default ODTiterCard;
+export default PLCard;
 
 // --- FinSumCard ---
 export function FinSumCard({ summary: currentSheetSummary, sampleNames = [], excludedCells = new Set(), plateNumber }) {

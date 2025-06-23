@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 // import PercentCVCard from './percentCV';
 // import SummaryCard from './dupBG';
-import ODTiterCard from './4pl.js';
+import PLCard from './4pl.js';
 import styles from './compound-dr.module.css';
 import { FinSumCard } from './4pl.js';
 import { saveAs } from 'file-saver';
@@ -250,46 +250,52 @@ function CompoundDR() {
     });
   };
 
-  const processExcelFile = (file, isMultiFile) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = e.target.result;
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetsToProcess = isMultiFile ? [workbook.SheetNames[0]] : workbook.SheetNames;
-          const cellRange = isMultiFile ? MULTI_FILE_RANGE : DEFAULT_RANGE;
-          const sheetSummaries = sheetsToProcess.map(sheetName => {
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-              range: cellRange,
-              header: 1,
-              defval: '',
-              raw: false
-            });
-            const headers = jsonData[0] || Array(13).fill('');
-            const dataRows = jsonData.slice(1);
-            return {
-              sheetName,
-              columns: headers,
-              preview: dataRows.slice(0, 9),
-              dataRows: dataRows
-            };
+  const processExcelFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = e.target.result;
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetSummaries = workbook.SheetNames.map(sheetName => {
+          const worksheet = workbook.Sheets[sheetName];
+          const fullData = XLSX.utils.sheet_to_json(worksheet, {
+            header: 1,
+            defval: '',
+            raw: false,
           });
-          const summary = {
-            fileName: file.name,
-            sheets: sheetSummaries
+
+          // Step 1: Find header row (e.g., the row containing "inhibitor conc")
+          const headerRowIndex = fullData.findIndex(row =>
+            row.some(cell => typeof cell === 'string' && cell.toLowerCase().includes("inhibitor conc"))
+          );
+          if (headerRowIndex === -1) throw new Error("Could not find header row.");
+
+          const headers = fullData[headerRowIndex + 1]; // e.g. row below concentrations
+          const dataRows = fullData.slice(headerRowIndex + 2); // actual numeric data
+
+          return {
+            sheetName,
+            columns: headers,
+            preview: dataRows.slice(0, 9),
+            dataRows,
           };
-          resolve(summary);
-        } catch (error) {
-          console.error('Error processing file:', error);
-          reject(error);
-        }
-      };
-      reader.onerror = (error) => reject(error);
-      reader.readAsArrayBuffer(file);
-    });
-  };
+        });
+
+        resolve({
+          fileName: file.name,
+          sheets: sheetSummaries
+        });
+      } catch (error) {
+        console.error("Error processing Excel:", error);
+        reject(error);
+      }
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsArrayBuffer(file);
+  });
+};
+
 
   const handleFileUpload = async (event) => {
     const files = event.target.files;
@@ -1265,7 +1271,7 @@ const handlePlateNameChange = (fileIdx, sheetIdx, newName) => {
         {excelSummaries[activeTab.file] &&
           excelSummaries[activeTab.file].sheets &&
           excelSummaries[activeTab.file].sheets[activeTab.sheet] && (
-            <ODTiterCard
+            <PLCard
               summary={excelSummaries[activeTab.file].sheets[activeTab.sheet]}
               plateNumber={activeTab.sheet + 1}
               sampleNames={
