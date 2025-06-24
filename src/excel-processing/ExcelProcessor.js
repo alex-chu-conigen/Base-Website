@@ -423,10 +423,13 @@ function ExcelProcessor() {
 
             /* Dynamically inject CSS Module class definitions */
             .${styles.highlight_yellow} {
-              background-color: #fff3cd !important; /* Ensure this color matches your module definition */
+              background-color: #fff3cd !important; 
+            }
+            .${styles.highlight_red} {
+              background-color: #f8d7da !important;
             }
             .${styles.highlight_green} {
-              background-color: #d4edda !important; /* Ensure this color matches your module definition */
+              background-color: #d4edda !important; 
             }
             .${styles.excluded_cell} {
               background-color: #e9ecef !important; /* Example: light grey, adjust as needed */
