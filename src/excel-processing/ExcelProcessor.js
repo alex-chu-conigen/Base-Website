@@ -11,6 +11,7 @@ function ExcelProcessor() {
   const [isLoading, setIsLoading] = useState(false);
   const [lowerThreshold, setLowerThreshold] = useState('');
   const [higherThreshold, setHigherThreshold] = useState('');
+  const [lowestThreshold, setLowestThreshold] = useState(''); // New: lowest threshold
   const [showFileNameInput, setShowFileNameInput] = useState(false);
   const [fileName, setFileName] = useState('');
   const [excludedCells, setExcludedCells] = useState(new Set()); // Store excluded cell locations
@@ -29,13 +30,11 @@ function ExcelProcessor() {
     if (value === '') return '';
     const numValue = parseFloat(value);
     if (isNaN(numValue)) return '';
-    
-    // Check if cell is excluded - now using just rowKey and colKey
     const location = `${rowKey}${colKey}`;
     if (excludedCells.has(location)) return styles.excluded_cell;
-    
     if (higherThreshold !== '' && numValue >= parseFloat(higherThreshold)) return styles.highlight_green;
     if (lowerThreshold !== '' && numValue >= parseFloat(lowerThreshold)) return styles.highlight_yellow;
+    if (lowestThreshold !== '' && numValue >= parseFloat(lowestThreshold) && (lowerThreshold === '' || numValue < parseFloat(lowerThreshold))) return styles.highlight_red;
     return '';
   };
 
@@ -55,41 +54,24 @@ function ExcelProcessor() {
   };
 
   const getThresholdSummary = (data, sheetName, headers, fileIndex) => {
-    if (!lowerThreshold && !higherThreshold) return [];
-    
+    if (!lowestThreshold && !lowerThreshold && !higherThreshold) return [];
     const summary = [];
     data.forEach((row, rowIndex) => {
       row.forEach((cell, colIndex) => {
-        // Skip the first data point (C25)
         if (rowIndex === 0 && colIndex === 0) return;
-        
         if (cell === '') return;
         const numValue = parseFloat(cell);
         if (isNaN(numValue)) return;
-        
         const rowKey = data[rowIndex][0] || `Row ${rowIndex + 1}`;
         const colKey = headers[colIndex] || `Column ${String.fromCharCode(66 + colIndex)}`;
         const location = `${rowKey}${colKey}`;
-        
-        // Skip excluded cells
         if (excludedCells.has(location)) return;
-        
         if (higherThreshold && numValue >= parseFloat(higherThreshold)) {
-          summary.push({
-            value: numValue,
-            rowKey,
-            colKey,
-            threshold: 'higher',
-            sheetName
-          });
+          summary.push({ value: numValue, rowKey, colKey, threshold: 'higher', sheetName });
         } else if (lowerThreshold && numValue >= parseFloat(lowerThreshold)) {
-          summary.push({
-            value: numValue,
-            rowKey,
-            colKey,
-            threshold: 'lower',
-            sheetName
-          });
+          summary.push({ value: numValue, rowKey, colKey, threshold: 'lower', sheetName });
+        } else if (lowestThreshold && numValue >= parseFloat(lowestThreshold) && (lowerThreshold === '' || numValue < parseFloat(lowerThreshold))) {
+          summary.push({ value: numValue, rowKey, colKey, threshold: 'lowest', sheetName });
         }
       });
     });
@@ -237,7 +219,7 @@ function ExcelProcessor() {
     
     // Set up columns
     thresholdWs.columns = [
-      { header: 'Location', key: 'location', width: 25 }, // Increased width for custom names
+      { header: 'Location', key: 'location', width: 25 },
       { header: 'Value', key: 'value', width: 15 }
     ];
 
@@ -251,7 +233,8 @@ function ExcelProcessor() {
       
       return {
         location: displayLocation,
-        value: item.value
+        value: item.value,
+        threshold: item.threshold
       };
     });
 
@@ -265,9 +248,7 @@ function ExcelProcessor() {
           type: 'pattern',
           pattern: 'solid',
           fgColor: {
-            argb: value >= parseFloat(higherThreshold) ? 'FFD4EDDA' : // Green
-                  value >= parseFloat(lowerThreshold) ? 'FFFFF3CD' : // Yellow
-                  'FFFFFFFF' // White
+            argb: row.threshold === 'higher' ? 'FFD4EDDA' : row.threshold === 'lower' ? 'FFFFF3CD' : row.threshold === 'lowest' ? 'FFFFC7CE' : 'FFFFFFFF'
           }
         };
       }
@@ -333,9 +314,13 @@ function ExcelProcessor() {
                   type: 'pattern',
                   pattern: 'solid',
                   fgColor: {
-                    argb: value >= parseFloat(higherThreshold) ? 'FFD4EDDA' : // Green
-                          value >= parseFloat(lowerThreshold) ? 'FFFFF3CD' : // Yellow
-                          'FFFFFFFF' // White
+                    argb: value >= parseFloat(higherThreshold)
+                      ? 'FFD4EDDA'
+                      : value >= parseFloat(lowerThreshold)
+                        ? 'FFFFF3CD'
+                        : value >= parseFloat(lowestThreshold) && (lowerThreshold === '' || value < parseFloat(lowerThreshold))
+                          ? 'FFFFC7CE'
+                          : 'FFFFFFFF'
                   }
                 };
               }
@@ -569,7 +554,18 @@ function ExcelProcessor() {
       <div className={styles.upload_section}>
         <div className={styles.threshold_inputs}>
           <div className={styles.threshold_input}>
-            <label htmlFor="lowerThreshold">Lower Threshold:</label>
+            <label htmlFor="lowestThreshold">Lowest Threshold (Red):</label>
+            <input
+              type="text"
+              id="lowestThreshold"
+              value={lowestThreshold}
+              onChange={(e) => handleThresholdChange(e, setLowestThreshold)}
+              placeholder="Enter lowest threshold"
+              className={styles.threshold_field}
+            />
+          </div>
+          <div className={styles.threshold_input}>
+            <label htmlFor="lowerThreshold">Lower Threshold (Yellow):</label>
             <input
               type="text"
               id="lowerThreshold"
@@ -580,7 +576,7 @@ function ExcelProcessor() {
             />
           </div>
           <div className={styles.threshold_input}>
-            <label htmlFor="higherThreshold">Higher Threshold:</label>
+            <label htmlFor="higherThreshold">Higher Threshold (Green):</label>
             <input
               type="text"
               id="higherThreshold"
@@ -687,7 +683,7 @@ function ExcelProcessor() {
                 return (
                   <div 
                     key={index} 
-                    className={`${styles['summary_item']} ${item.threshold === 'higher' ? styles['highlight_green'] : styles['highlight_yellow']}`}
+                    className={`${styles['summary_item']} ${item.threshold === 'higher' ? styles['highlight_green'] : item.threshold === 'lower' ? styles['highlight_yellow'] : styles['highlight_red']}`}
                   >
                     {displayLocation}: {item.value}
                   </div>
@@ -701,4 +697,4 @@ function ExcelProcessor() {
   );
 }
 
-export default ExcelProcessor; 
+export default ExcelProcessor;

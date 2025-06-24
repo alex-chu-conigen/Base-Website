@@ -197,6 +197,10 @@
   background-color: #d4edda;
 }
 
+.highlight_red {
+  background-color: #f8d7da;
+}
+
 .global_threshold_summary1 {
   width: 20%;
   background-color: white;
