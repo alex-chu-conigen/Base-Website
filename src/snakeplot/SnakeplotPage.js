@@ -21,6 +21,7 @@ const defaultSeqs = {
   ic4: ""
 };
 
+
 function SnakeplotPage() {
   // Color and size states
   const [pcirc, setPcirc] = useState("#74786F");
@@ -44,11 +45,12 @@ function SnakeplotPage() {
     const baseY = [-0.00000002987013, -1.212121, -2.424242, -1.818182, -3.030303, -4.242424, -5.454545];
     for (let i = 0; i < n; ++i) {
       const group = Math.floor(i / 7);
-      const idx = direction === 1 ? i % 7 : 6 - (i % 7);
+      const idx = i % 7;
       const x = x0 + baseX[idx];
-      const y = direction === 1 ? y0 + baseY[idx] - group * 5.454545 : y0 + baseY[idx] + group * 5.454545;
+      const y = y0 + baseY[idx] - group * 5.454545;
       coords.push([x, y]);
     }
+    if (direction === -1) coords.reverse();
     return coords;
   }
 
@@ -114,7 +116,8 @@ function SnakeplotPage() {
       return [...circ_part_x, ...xa.reverse()].map((x, i) => [x, (circ_part_y[i] || ya.reverse()[i])]);
     } else {
       circ_part_y = circ_part_y.map(y => y + Math.max(...ya, y0));
-      return [...circ_part_x, ...xa.reverse()].map((x, i) => [x, (circ_part_y[i] || ya.reverse()[i])]);
+      let combine_y = [...circ_part_y, ...ya.reverse()];
+      return [...circ_part_x, ...xa.reverse()].map((x, i) => [x, combine_y[i]]);
     }
   }
 
@@ -155,12 +158,12 @@ function SnakeplotPage() {
     TM6 = tmToCenter(TM6, y_center);
     TM7 = tmToCenter(TM7, y_center);
 
-    const EC1 = endCurve(20, TM1[0]?.[1] ?? 90, ec1Len, 1);
-    const IC1 = smoothCurve(20, 30, TM1[TM1.length - 1]?.[1] - 1 ?? 90, TM2[0]?.[1] - 1 ?? 90, ic1Len, -1);
+    const EC1 = endCurve(20, (TM1[0]?.[1] ?? 90) + 1 , ec1Len, 1);
+    const IC1 = smoothCurve(20, 30, TM1[TM1.length - 1]?.[1] - 1 ?? 90, (TM2[0]?.[1] ?? 90) - 1, ic1Len, -1);
     const EC2 = smoothCurve(30, 40, TM2[TM2.length - 1]?.[1] ?? 90, TM3[0]?.[1] ?? 90, ec2Len, 1);
-    const IC2 = smoothCurve(40, 50, TM3[TM3.length - 1]?.[1] - 1 ?? 90, TM4[0]?.[1] - 1 ?? 90, ic2Len, -1);
+    const IC2 = smoothCurve(40, 50, TM3[TM3.length - 1]?.[1] - 1 ?? 90, (TM4[0]?.[1] ?? 90) - 1, ic2Len, -1);
     const EC3 = smoothCurve(50, 60, TM4[TM4.length - 1]?.[1] ?? 90, TM5[0]?.[1] ?? 90, ec3Len, 1);
-    const IC3 = smoothCurve(60, 70, TM5[TM5.length - 1]?.[1] - 1 ?? 90, TM6[0]?.[1] - 1 ?? 90, ic3Len, -1);
+    const IC3 = smoothCurve(60, 70, TM5[TM5.length - 1]?.[1] - 1 ?? 90, (TM6[0]?.[1] ?? 90) - 1, ic3Len, -1);
     const EC4 = smoothCurve(70, 80, TM6[TM6.length - 1]?.[1] ?? 90, TM7[0]?.[1] ?? 90, ec4Len, 1);
     const IC4 = endCurve(80, TM7[TM7.length - 1]?.[1] - 1 ?? 90, ic4Len, -1);
 
@@ -270,9 +273,6 @@ function SnakeplotPage() {
           <div className="snakeplot-form-group">
             <label>Color of residue text:</label>
             <HexColorPicker color={aacol} onChange={setAacol} />
-          </div>
-          <div className="snakeplot-credit">
-            by Yue Jiang, rivehill@gmail.com, 2016
           </div>
         </form>
         <div className="snakeplot-plot">

@@ -9,6 +9,7 @@ import EntryDetails from './pages/EntryDetails/EntryDetails';
 import UniProtSearch from './pages/UniProtSearch/UniProtSearch';
 import SequenceScoring from './sequence-scoring/SequenceScoring';
 import CompoundDR from './compound-dr/CompoundDR';
+import SnakeplotPage from './snakeplot/SnakeplotPage';
 
 import './App.css';
 /*
@@ -25,6 +26,7 @@ function App() {
             <Link to="/uniprot-search" className="nav-link">UniProt Search</Link>
             <Link to="/titer-analysis" className="nav-link">Titer Analysis</Link>
             <Link to="/sequence-scoring" className="nav-link">Sequence Scoring</Link>
+            <Link to="/snakeplot" className="nav-link">Snakeplot</Link>
             <Link to="/compound-dr" className="nav-link">Bradley test</Link>
 
 
@@ -42,6 +44,7 @@ function App() {
             <Route path="/uniprot-search" element={<UniProtSearch />} />
             <Route path="/titer-analysis" element={<TiterAnalysis />} />
             <Route path="/sequence-scoring" element={<SequenceScoring />} />
+            <Route path="/snakeplot" element={<SnakeplotPage />} />
             <Route path="/compound-dr" element={<CompoundDR />} />
           </Routes>
         </div>

@@ -51,11 +51,17 @@ function SequenceScoringPage1() {
     };
 
     // Print page
+    // Track if we are printing
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    // Print page (hide extracellular summary during print)
     const handlePrint = () => {
-    
+        setIsPrinting(true);
+        setTimeout(() => {
             window.print();
-        }
-// Add this function inside your SequenceScoringPage1 component, before the return statement
+            setIsPrinting(false);
+        }, 100); // Give React time to update
+    };
 
     // Run Script (core logic)
     const handleRunScript = async () => {
@@ -281,30 +287,25 @@ function SequenceScoringPage1() {
                     );
                 }
             }
-            extracellularSummary = (
-                <div className={styles.no_print} style={{marginTop: "1em"}}>
-                    <h4>Extracellular Region Summary</h4>
-                    <table
-                        id="extracellular_summary_table"
-                        border="1"
-                        style={{ borderCollapse: "collapse" }}
-                    >
-                        <tbody>
-                            <tr>
-                                {extracellularCells}
-                            </tr>
-                        </tbody>
-                    </table>
-                    <button
-                        style={{ marginTop: "1em", padding: "0.5em 1.2em", borderRadius: "4px", border: "none", background: "#6366f1", color: "#fff", cursor: "pointer" }}
-                        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                    >
-                        Back to Top
-                    </button>
-                </div>
-            );
+            if (!isPrinting) {
+                extracellularSummary = (
+                    <div className='no_print' style={{marginTop: "1em"}}>
+                        <h4>Extracellular Region Summary</h4>
+                        <table
+                id="extracellular_summary_table"
+                            border="1"
+                            style={{ borderCollapse: "collapse" }}
+                        >
+                            <tbody>
+                                <tr>
+                                    {extracellularCells}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }
         }
-        
 
         setTableHtml(
             <div>
@@ -315,7 +316,7 @@ function SequenceScoringPage1() {
     };
 
     return (
-        <div className={styles.sequence_scoring_page1}>
+        <div className={`${styles.class1} ${styles.class2}`}>
             <div id="inputs1" className={styles.inputs1_section}>
                 <div className={styles.button_wrapper}>
                     <h3>Submit Sequence</h3>
@@ -382,10 +383,9 @@ function SequenceScoringPage1() {
                 >
                     Jump to Extracellular Table
                 </button>
-  
             </div>
             <br />
-            <div className={styles.links_section}>
+            <div>
                 <a href="http://tools.iedb.org/bcell/" target="_blank" rel="noopener noreferrer">
                     http://tools.iedb.org/bcell/
                 </a>
@@ -394,8 +394,8 @@ function SequenceScoringPage1() {
                     http://tools.iedb.org/mhcii/
                 </a>
             </div>
-            <div id="outputs1_seq" className={styles.outputs1_section_seq}>
-                    <div id="legends1" className={styles.legends1_row}>
+            <div className={styles.outputs1_section_seq}>
+                <div id="legends1" className={styles.legends1_row}>
                     <div className={styles.legend} id="samples1">{legend}</div>
                 </div>
                 <div id="tableContainer1_seq" className={styles.table_container1_seq} style={{padding:"0 0 5rem 0"}}>{tableHtml}</div>
