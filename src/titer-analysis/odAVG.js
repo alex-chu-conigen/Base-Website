@@ -245,37 +245,42 @@ function renderPlotly(sampleIdx) {
 
   const smoothOD = [], smoothLogDilution = [];
 
-const minModelY = Math.min(fit.a, fit.d);
-const maxModelY = Math.max(fit.a, fit.d);
-const odBuffer = 0.05; // avoids edge instability
+  // Make the trendline much longer by expanding the OD range
+  const minDataOD = Math.min(...y);
+  const maxDataOD = Math.max(...y);
+  const odBuffer = 0.08 * (maxDataOD - minDataOD || 1); // 8% buffer or 0.08 if flat
+  const odStart = minDataOD - 3 * odBuffer;
+  const odEnd = maxDataOD + 1 * odBuffer;
 
-for (let i = 0; i <= 100; i++) {
-  const od = minModelY + odBuffer + (maxModelY - minModelY - 2 * odBuffer) * (i / 100);
-  const logDil = solve4PL(fit, od);
-  if (logDil !== null && isFinite(logDil)) {
-    smoothOD.push(od);
-    smoothLogDilution.push(logDil);
+  for (let i = 0; i <= 300; i++) {
+    const od = odStart + (odEnd - odStart) * (i / 300);
+    const logDil = solve4PL(fit, od);
+    if (logDil !== null && isFinite(logDil)) {
+      smoothOD.push(od);
+      smoothLogDilution.push(logDil);
+    }
   }
-}
 
   return (
     <Plot
       data={[
-        { x: y, y: x, mode: 'markers', marker: { color: '#1976d2', size: 12 }, name: 'Data' },
-        { x: smoothOD, y: smoothLogDilution, mode: 'lines', line: { color: '#43a047', width: 3 }, name: '4PL Fit' },
-        { x: [0.5, 0.5], y: [Math.min(...x), Math.max(...x)], mode: 'lines', line: { color: '#e55', dash: 'dash', width: 2 }, name: 'OD = 0.5' }
+        { x: y, y: x, mode: 'markers', marker: { color: '#006c02', size: 10 }, name: 'Data' },
+        { x: smoothOD, y: smoothLogDilution, mode: 'lines', line: { color: '#00c60d', width: 2 }, name: '4PL Fit' },
+        { x: [0.5, 0.5], y: [Math.min(...x), Math.max(...x)], mode: 'lines', line: { color: '#f1b100', dash: 'dash', width: 2 }, name: 'OD = 0.5' }
       ]}
       layout={{
-        width: 400,
-        height: 300,
+        width: 550,
+        height: 400,
         margin: { l: 60, r: 30, t: 30, b: 60 },
-        xaxis: { title: { text: 'OD' } },
-yaxis: {
-  title: { text: 'log₁₀(Dilution)' },
-  autorange: 'reversed',
-  range: [Math.max(...x), Math.min(...x)], // or clamp manually if needed
-}
-,
+        xaxis: {
+          title: { text: 'OD' },
+          range: [odStart, odEnd],
+        },
+        yaxis: {
+          title: { text: 'log₁₀(Dilution)' },
+          autorange: 'reversed',
+          range: [Math.max(...x), Math.min(...x)],
+        },
         showlegend: true
       }}
       config={{ displayModeBar: false }}
