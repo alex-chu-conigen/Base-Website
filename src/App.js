@@ -10,6 +10,7 @@ import UniProtSearch from './pages/UniProtSearch/UniProtSearch';
 import SequenceScoring from './sequence-scoring/SequenceScoring';
 import CompoundDR from './compound-dr/CompoundDR';
 import SnakeplotPage from './snakeplot/SnakeplotPage';
+import FusionCalc from './fusion-calc/FusionCalc';
 
 import './App.css';
 /*
@@ -28,6 +29,8 @@ function App() {
             <Link to="/sequence-scoring" className="nav-link">Sequence Scoring</Link>
             <Link to="/snakeplot" className="nav-link">Snakeplot</Link>
             <Link to="/compound-dr" className="nav-link">Bradley test</Link>
+            <Link to="/fusion-calc" className="nav-link">Fusion Calculator</Link>
+          
 
 
 
@@ -46,6 +49,7 @@ function App() {
             <Route path="/sequence-scoring" element={<SequenceScoring />} />
             <Route path="/snakeplot" element={<SnakeplotPage />} />
             <Route path="/compound-dr" element={<CompoundDR />} />
+            <Route path="/fusion-calc" element={<FusionCalc />} />
           </Routes>
         </div>
       </div>
